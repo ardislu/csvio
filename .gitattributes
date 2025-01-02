@@ -1,0 +1,2 @@
+# Do not do any EOL conversions for CSV files
+*.csv -text

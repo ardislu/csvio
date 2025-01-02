@@ -1,0 +1,28 @@
+name,value
+Three spaces,   
+Three commas,",,,"
+Three newlines,"
+
+
+"
+Three unescaped double quotes,a"""
+Three escaped double quotes,""""""""
+Unescaped double quotes around delimiter 1 ",a
+Unescaped double quotes around delimiter 2 "",a
+Unescaped double quotes around delimiter 3 """,a
+Unescaped double quotes around delimiter 4, "
+Unescaped double quotes around delimiter 5, ""
+Unescaped double quotes around delimiter 6, """
+Spaces before and after a value,   abc   
+Spaces before and after three unescaped double quotes,   """   
+Spaces trailing escaped double quotes,"abc"   
+Characters trailing escaped double quotes,"abc" def
+Unescaped double quotes trailing escaped double quotes,"abc "" def" 123 """ 456
+"Unescaped ""double quotes"" trailing escaped double" quotes,"abc """""" def" 123 """ 456
+Unicode test 1,你好
+Unicode test 2,😂👌👍
+Unicode test 3,🏴‍☠️👨‍👩‍👧‍👦
+Mixed,",
+"",
+"",
+"""

@@ -1,0 +1,8 @@
+extraColumn1,string col,numberCol,BIGINT_COL,date-col,extraColumn2
+extra1,abc 👨‍👩‍👧‍👦," 123,456,789.123456 ",1E+18,45292,extra2
+extra1,", "" 🏴‍☠️"," 1,000.00 ",-1.23456789E+25,45444,extra2
+extra1,,,,,extra2
+extra1,,"123,100",1000000000000000000,12/31/24,extra2
+,,,,,
+,,,,,
+,,,,,
