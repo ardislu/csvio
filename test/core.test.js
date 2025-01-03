@@ -157,6 +157,26 @@ suite('createCSVReadableStream', { concurrency: true }, () => {
 });
 
 suite('createCSVTransformStream', { concurrency: true }, () => {
+  test('passes through CSV', { concurrency: true }, async () => {
+    const csv = [
+      ['columnA', 'columnB'],
+      ['a', 'b']
+    ];
+    await createCSVMockStream(csv)
+      .pipeThrough(createCSVTransformStream(r => r))
+      .pipeTo(csvStreamEqualWritable(csv));
+  });
+  test('passes through raw output', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'columnB'],
+      ['a', 'b']
+    ])
+      .pipeThrough(createCSVTransformStream(() => '["abc", "def"]', { includeHeaders: true, rawOutput: true }))
+      .pipeTo(csvStreamEqualWritable([
+        ['abc', 'def'],
+        ['abc', 'def']
+      ]));
+  });
   test('transforms data in place', { concurrency: true }, async () => {
     function timesTwo(row) {
       return [Number(row[0]) * 2, Number(row[1]) * 2];
