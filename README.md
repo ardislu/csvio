@@ -18,7 +18,11 @@ columnA,columnB
 Run:
 
 ```javascript
-import { createCSVReadableStream, createCSVTransformStream, createCSVWritableStream } from './src/index.js';
+import {
+  createCSVReadableStream,
+  createCSVTransformStream,
+  createCSVWritableStream
+} from './src/index.js';
 
 function timesTwo(row) {
   return [Number(row[0]) * 2, Number(row[1]) * 2];
