@@ -1,5 +1,5 @@
 import { createReadStream } from 'node:fs';
-import { writeFile, mkdir, open } from 'node:fs/promises';
+import { mkdir, open } from 'node:fs/promises';
 import { dirname, normalize } from 'node:path';
 import { Readable } from 'node:stream';
 /** @import { PathLike } from 'node:fs' */
@@ -170,8 +170,7 @@ export function createCSVWritableStream(path) {
   return new WritableStream({
     async start() {
       await mkdir(dir, { recursive: true });
-      await writeFile(fullPath, '', { flush: true });
-      handle = await open(fullPath, 'a');
+      handle = await open(fullPath, 'w');
     },
     async write(chunk) {
       let data;
@@ -182,7 +181,6 @@ export function createCSVWritableStream(path) {
         data = chunk;
       }
       await handle.write(data);
-      await handle.sync();
     },
     async close() {
       await handle.close();
