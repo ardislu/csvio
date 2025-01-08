@@ -1,4 +1,4 @@
-import { deepStrictEqual } from 'node:assert/strict';
+import { deepStrictEqual, notStrictEqual } from 'node:assert/strict';
 import { tmpdir } from 'node:os';
 import { open } from 'node:fs/promises';
 import { normalize } from 'node:path';
@@ -60,6 +60,43 @@ export function csvStreamEqualWritable(csv) {
       const row = JSON.parse(chunk);
       for (let j = 0; j < csv[i].length; j++) {
         deepStrictEqual(row[j], csv[i][j]);
+      }
+      i++;
+    }
+  });
+}
+
+/**
+ * Negative version of `csvStreamEqual`. Tests that the given stream is NOT equal to the given CSV.
+ * 
+ * @param {ReadableStream} stream A stream of CSV data.
+ * @param {Array<Array<any>>} csv A 2-D array representing the CSV file, where each inner array
+ */
+export async function csvStreamNotEqual(stream, csv) {
+  let i = 0;
+  for await (const value of stream) {
+    const row = JSON.parse(value);
+    for (let j = 0; j < csv[i].length; j++) {
+      notStrictEqual(row[j], csv[i][j]);
+    }
+    i++;
+  }
+}
+
+/**
+ * Negative version of `csvStreamEqualWritable`. Tests that the piped stream is NOT equal to the given CSV.
+ * 
+ * @param {Array<Array<string>>} csv A 2-D array representing the CSV file, where each inner array
+ * is a row of the CSV.
+ * @returns {WritableStream} A `WritableStream` sink of a CSV stream that will be compared against the given array.
+ */
+export function csvStreamNotEqualWritable(csv) {
+  let i = 0;
+  return new WritableStream({
+    write(chunk) {
+      const row = JSON.parse(chunk);
+      for (let j = 0; j < csv[i].length; j++) {
+        notStrictEqual(row[j], csv[i][j]);
       }
       i++;
     }

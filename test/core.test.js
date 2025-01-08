@@ -2,7 +2,7 @@ import { suite, test } from 'node:test';
 import { deepStrictEqual } from 'node:assert/strict';
 import { unlink } from 'node:fs/promises';
 
-import { csvStreamEqualWritable, createCSVMockStream, createTempFile } from './utils.js';
+import { csvStreamEqualWritable, csvStreamNotEqualWritable, createCSVMockStream, createTempFile } from './utils.js';
 import { arrayToCSVString, createCSVReadableStream, createCSVTransformStream, createCSVWritableStream } from '../src/core.js';
 
 suite('arrayToCSVString', { concurrency: true }, () => {
@@ -146,12 +146,18 @@ suite('createCSVReadableStream', { concurrency: true }, () => {
       input: './test/data/blank.csv',
       output: [
         ['']
+      ],
+      negativeOutput: [
+        ['a']
       ]
     }
   ];
-  for (const { name, input, output } of vectors) {
+  for (const { name, input, output, negativeOutput } of vectors) {
     test(name, { concurrency: true }, async () => {
       await createCSVReadableStream(input).pipeTo(csvStreamEqualWritable(output));
+      if (negativeOutput !== undefined) {
+        await createCSVReadableStream(input).pipeTo(csvStreamNotEqualWritable(negativeOutput));
+      }
     });
   }
 });

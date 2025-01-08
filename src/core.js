@@ -95,6 +95,9 @@ export function createCSVReadableStream(path) {
         row.push(field); // Last field is always un-pushed if CSV terminated with nothing
         controller.enqueue(JSON.stringify(row));
       }
+      else if (lastChar === null) { // CSV is blank
+        controller.enqueue(JSON.stringify(['']));
+      }
     }
   }));
 }
