@@ -22,7 +22,7 @@ function calculate(obj) {
   return [name, paddedId];
 }
 
-createCSVReadableStream('./data/ex3-in.csv')
+createCSVReadableStream(new URL('./data/ex3-in.csv', import.meta.url))
   .pipeThrough(createCSVTransformStream(parse, { includeHeaders: true, rawOutput: true }))
   .pipeThrough(createCSVTransformStream(calculate, { includeHeaders: true, rawInput: true }))
-  .pipeTo(createCSVWritableStream('./data/ex3-out.csv'));
+  .pipeTo(createCSVWritableStream(new URL('./data/ex3-out.csv', import.meta.url)));

@@ -24,6 +24,6 @@ function parse(row) {
   return [report, id, date, ...row];
 }
 
-createCSVReadableStream('./data/ex5-in.csv')
+createCSVReadableStream(new URL('./data/ex5-in.csv', import.meta.url))
   .pipeThrough(createCSVTransformStream(parse, { includeHeaders: true }))
-  .pipeTo(createCSVWritableStream('./data/ex5-out.csv'));
+  .pipeTo(createCSVWritableStream(new URL('./data/ex5-out.csv', import.meta.url)));
