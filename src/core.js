@@ -168,12 +168,21 @@ export function createCSVTransformStream(fn, options = {}) {
  * A simple wrapper around Node.js's [`fs.writeFile`](https://nodejs.org/api/fs.html#fspromiseswritefilefile-data-options) to write
  * streamed data to a file. If the input data is JSON, the data is converted to a string representing a RFC 4180 CSV record. If the
  * data is not JSON (e.g., if it is already converted to a CSV string), the data is written to the CSV file directly.
- * @param {string} path A `string` representing a path to a local CSV file destination. If the file already exists, its **data
- * will be overwritten**.
+ * @param {PathLike} path A `string`, `Buffer`, or `URL` representing a path to a local CSV file destination. If the file already
+ * exists, its **data will be overwritten**.
  * @returns {WritableStream} A `WritableStream` to write data to a file on disk.
  */
 export function createCSVWritableStream(path) {
-  const fullPath = normalize(path);
+  let fullPath;
+  if (typeof path === 'string') {
+    fullPath = normalize(path);
+  }
+  else if (ArrayBuffer.isView(path) || path instanceof ArrayBuffer) {
+    fullPath = normalize(new TextDecoder().decode(path));
+  }
+  else { // Assuming URL
+    fullPath = normalize(path.pathname.substring(1));
+  }
   const dir = dirname(fullPath);
   let handle;
 
