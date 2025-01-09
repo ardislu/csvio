@@ -232,6 +232,25 @@ suite('createCSVTransformStream', { concurrency: true }, () => {
         ['536368', '676147', 1212515]
       ]));
   });
+  test('consumes input row without output row when null is returned', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'columnB'],
+      ['should be deleted', 'should be deleted'],
+      ['a', 'b'],
+      ['should be deleted', 'should be deleted'],
+      ['a', 'b'],
+      ['should be deleted', 'should be deleted'],
+      ['a', 'b'],
+      ['should be deleted', 'should be deleted']
+    ])
+      .pipeThrough(createCSVTransformStream(r => r.length % 2 ? r : null))
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA', 'columnB'],
+        ['a', 'b'],
+        ['a', 'b'],
+        ['a', 'b'],
+      ]));
+  });
 });
 
 suite('createCSVWritableStream', { concurrency: true }, () => {

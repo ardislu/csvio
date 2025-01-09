@@ -118,13 +118,15 @@ export function createCSVReadableStream(path) {
 /**
  * Create a new [TransformStream](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream) to process CSV data.
  * 
- * @param {function(Array<string>|string):Array<any>|string} fn A function to process a row of CSV data from `createCSVReadableStream`.
+ * @param {function(Array<string>|string):Array<any>|string|null} fn A function to process a row of CSV data from `createCSVReadableStream`.
  * 
  * If `options.rawInput` is `false` (default), the input will be a `Array<string>` representing the CSV row. If `options.rawInput` is `true`,
  * the input will be a JSON `string` representing the CSV row.
  * 
  * If `options.rawOutput` is `false` (default), the expected output is a `Array<string>` which will be serialized with `JSON.stringify()`. If
  * `options.rawOutput` is `true`, the raw output will be sent the next stream unmodified.
+ * 
+ * Return `null` to consume an input row without emitting an output row.
  * @param {createCSVTransformStreamOptions} options Object containing flags to configure the stream logic.
  * @returns {TransformStream} A `TransformStream` where each chunk is one row of the CSV file, after transformations applied by `fn()`.
  */
@@ -145,6 +147,11 @@ export function createCSVTransformStream(fn, options = {}) {
       else {
         out = await fn(row);
       }
+
+      if (out === null || out === undefined) { // Input row is consumed without emitting any output row
+        return;
+      }
+
       if (options.rawOutput || typeof out === 'string') {
         controller.enqueue(out);
       }
