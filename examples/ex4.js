@@ -30,7 +30,7 @@ const headers = [
   }
 ];
 
-createCSVReadableStream(new URL('./data/ex4-in.csv', import.meta.url))
+await createCSVReadableStream(new URL('./data/ex4-in.csv', import.meta.url))
   .pipeThrough(createCSVNormalizationStream(headers))
   .pipeThrough(createCSVDenormalizationStream())
   .pipeTo(createCSVWritableStream(new URL('./data/ex4-out.csv', import.meta.url)));

@@ -18,6 +18,6 @@ function sum(row) {
   return [...row, Number(row[0]) + Number(row[1])];
 }
 
-createCSVReadableStream(new URL('./data/ex2-in.csv', import.meta.url))
+await createCSVReadableStream(new URL('./data/ex2-in.csv', import.meta.url))
   .pipeThrough(createCSVTransformStream(sum, { includeHeaders: true }))
   .pipeTo(createCSVWritableStream(new URL('./data/ex2-out.csv', import.meta.url)));
