@@ -164,7 +164,7 @@ export function fixExcelDate(str) {
 
 /**
  * Metadata about CSV columns used to normalize raw CSV data.
- * @typedef {Object} createCSVNormalizationStreamHeader
+ * @typedef {Object} CreateCSVNormalizationStreamHeader
  * @property {string} name The name of the CSV column, in camelCase. Values in the header row of the CSV will be
  * transformed to camelCase for comparison purposes and for downstream usage (e.g., a header with the value `Example Column`
  * in the input CSV will match with a `name` value of `exampleColumn`).
@@ -177,7 +177,7 @@ export function fixExcelDate(str) {
 
 /**
  * Options to configure `createCSVNormalizationStream`.
- * @typedef {Object} createCSVNormalizationStreamOptions
+ * @typedef {Object} CreateCSVNormalizationStreamOptions
  * @property {boolean} [passthroughEmptyRows=false] Set to `true` to send empty rows (i.e., rows where all field values are
  * `''`) downstream. Otherwise, empty rows will be removed. The default value is `false`.
  * @property {boolean} [passthroughNumber=false] Set to `true` to NOT apply data casting to `type='number'` columns. Otherwise,
@@ -190,7 +190,7 @@ export function fixExcelDate(str) {
 
 /**
  * The output of `createCSVNormalizationStream`.
- * @typedef {Object} createCSVNormalizationStreamRow
+ * @typedef {Object} CreateCSVNormalizationStreamRow
  * @property {string} name The column name after normalization to camelCase.
  * @property {string} displayName The desired column name in the output CSV.
  * @property {string|number} value The value of the field after attempted data casting. If the original field was empty, this value
@@ -203,9 +203,9 @@ export function fixExcelDate(str) {
  * 
  * Use this function to undo common CSV data mangling caused by spreadsheet programs such as Excel and perform other common 
  * cleanup such as renaming headers and removing empty rows.
- * @param {Array<createCSVNormalizationStreamHeader>} headers An array of metadata objects to configure the data casting and
+ * @param {Array<CreateCSVNormalizationStreamHeader>} headers An array of metadata objects to configure the data casting and
  * cleanup transformations.
- * @param {createCSVNormalizationStreamOptions} options Object containing flags to configure the stream logic. 
+ * @param {CreateCSVNormalizationStreamOptions} options Object containing flags to configure the stream logic. 
  * @returns {TransformStream} A `TransformStream` where each chunk is one row of the CSV file after normalization, represented
  * as a JSON string of a `createCSVNormalizationStreamRow` object.
  */

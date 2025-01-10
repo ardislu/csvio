@@ -104,7 +104,7 @@ export function createCSVReadableStream(path) {
 
 /**
  * Options to configure `createCSVTransformStream`.
- * @typedef {Object} createCSVTransformStreamOptions
+ * @typedef {Object} CreateCSVTransformStreamOptions
  * @property {boolean} [includeHeaders=false] Set to `true` to pass the header row (assumed to be the first row of the CSV) to `fn()`. Otherwise,
  * the header row will flow through to the next stream without going through `fn()`. The default value is `false`.
  * 
@@ -128,7 +128,7 @@ export function createCSVReadableStream(path) {
  * output will be sent the next stream unmodified.
  * 
  * Return `null` to consume an input row without emitting an output row.
- * @param {createCSVTransformStreamOptions} options Object containing flags to configure the stream logic.
+ * @param {CreateCSVTransformStreamOptions} options Object containing flags to configure the stream logic.
  * @returns {TransformStream} A `TransformStream` where each chunk is one row of the CSV file, after transformations applied by `fn()`.
  */
 export function createCSVTransformStream(fn, options = {}) {
