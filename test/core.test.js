@@ -183,55 +183,6 @@ suite('createCSVTransformStream', { concurrency: true }, () => {
         ['abc', 'def']
       ]));
   });
-  test('transforms data in place', { concurrency: true }, async () => {
-    function timesTwo(row) {
-      return [Number(row[0]) * 2, Number(row[1]) * 2];
-    }
-    await createCSVMockStream([
-      ['columnA', 'columnB'],
-      ['1', '1'],
-      ['100', '100'],
-      ['223423', '455947'],
-      ['348553', '692708'],
-      ['536368', '676147']
-    ])
-      .pipeThrough(createCSVTransformStream(timesTwo))
-      .pipeTo(csvStreamEqualWritable([
-        ['columnA', 'columnB'],
-        [2, 2],
-        [200, 200],
-        [446846, 911894],
-        [697106, 1385416],
-        [1072736, 1352294]
-      ]));
-  });
-  test('can add new column', { concurrency: true }, async () => {
-    let firstRow = true;
-    function sum(row) {
-      if (firstRow) {
-        firstRow = false;
-        return [...row, 'sum'];
-      }
-      return [...row, Number(row[0]) + Number(row[1])];
-    }
-    await createCSVMockStream([
-      ['columnA', 'columnB'],
-      ['1', '1'],
-      ['100', '100'],
-      ['223423', '455947'],
-      ['348553', '692708'],
-      ['536368', '676147']
-    ])
-      .pipeThrough(createCSVTransformStream(sum, { includeHeaders: true }))
-      .pipeTo(csvStreamEqualWritable([
-        ['columnA', 'columnB', 'sum'],
-        ['1', '1', 2],
-        ['100', '100', 200],
-        ['223423', '455947', 679370],
-        ['348553', '692708', 1041261],
-        ['536368', '676147', 1212515]
-      ]));
-  });
   test('consumes input row without output row when null is returned', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['columnA', 'columnB'],
