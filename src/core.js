@@ -118,13 +118,14 @@ export function createCSVReadableStream(path) {
 /**
  * Create a new [TransformStream](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream) to process CSV data.
  * 
- * @param {function(Array<string>|string):Array<any>|string|null} fn A function to process a row of CSV data from `createCSVReadableStream`.
+ * @param {function(Array<string>|string):Array<Array<any>>|Array<any>|string|null} fn A function to process a row of CSV data from `createCSVReadableStream`.
  * 
  * If `options.rawInput` is `false` (default), the input will be a `Array<string>` representing the CSV row. If `options.rawInput` is `true`,
  * the input will be a JSON `string` representing the CSV row.
  * 
- * If `options.rawOutput` is `false` (default), the expected output is a `Array<string>` which will be serialized with `JSON.stringify()`. If
- * `options.rawOutput` is `true`, the raw output will be sent the next stream unmodified.
+ * If `options.rawOutput` is `false` (default), the expected output is a `Array<any>` which will be serialized with `JSON.stringify()` and enqueued,
+ * or a `Array<Array<any>>` which will have each of its sub-arrays serialized and enqueued separately. If `options.rawOutput` is `true`, the raw
+ * output will be sent the next stream unmodified.
  * 
  * Return `null` to consume an input row without emitting an output row.
  * @param {createCSVTransformStreamOptions} options Object containing flags to configure the stream logic.
@@ -154,6 +155,9 @@ export function createCSVTransformStream(fn, options = {}) {
 
       if (options.rawOutput || typeof out === 'string') {
         controller.enqueue(out);
+      }
+      else if (Array.isArray(out) && Array.isArray(out[0])) { // Multiple rows returned, enqueue each row separately
+        out.forEach(row => controller.enqueue(JSON.stringify(row)));
       }
       else {
         controller.enqueue(JSON.stringify(out));

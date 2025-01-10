@@ -202,6 +202,20 @@ suite('createCSVTransformStream', { concurrency: true }, () => {
         ['a', 'b'],
       ]));
   });
+  test('enqueues multiple rows when Array<Array<any>> is returned', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'columnB'],
+      ['a', 'b']
+    ])
+      .pipeThrough(createCSVTransformStream(r => ([r, r, r, r])))
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA', 'columnB'],
+        ['a', 'b'],
+        ['a', 'b'],
+        ['a', 'b'],
+        ['a', 'b']
+      ]));
+  });
 });
 
 suite('createCSVWritableStream', { concurrency: true }, () => {
