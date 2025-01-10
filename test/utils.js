@@ -130,6 +130,16 @@ export function createCSVMockStream(data) {
 }
 
 /**
+ * Create a new temporary folder for testing purposes.
+ * 
+ * @returns {Promise<string>} A `Promise<string>` for the full path to a newly-created temporary folder.
+ */
+export async function createTempFolder() {
+  const path = normalize(`${tmpdir()}/scsv_test_`);
+  return mkdtemp(path);
+}
+
+/**
  * Create a new empty temporary file for testing purposes.
  * 
  * @returns {Promise<string>} A `Promise<string>` for the full path to a newly-created temporary file.
