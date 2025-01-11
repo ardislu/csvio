@@ -1,5 +1,6 @@
 import { createReadStream } from 'node:fs';
 import { mkdir, open } from 'node:fs/promises';
+import { platform } from 'node:os';
 import { dirname, normalize } from 'node:path';
 import { Readable } from 'node:stream';
 /** @import { PathLike } from 'node:fs' */
@@ -185,7 +186,12 @@ export function createCSVWritableStream(path) {
     fullPath = normalize(new TextDecoder().decode(path));
   }
   else { // Assuming URL
-    fullPath = normalize(path.pathname.substring(1));
+    if (platform() === 'win32' && path.pathname.startsWith('/')) {
+      fullPath = normalize(decodeURIComponent(path.pathname.substring(1)));
+    }
+    else {
+      fullPath = normalize(decodeURIComponent(path.pathname));
+    }
   }
   const dir = dirname(fullPath);
   let handle;
