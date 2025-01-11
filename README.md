@@ -63,7 +63,7 @@ Streamed CSV provides the bare minimum functions to accomplish **this specific w
 - No dependencies other than the Node.js standard library
 - Reads and writes [RFC 4180](https://www.ietf.org/rfc/rfc4180.txt) compliant CSV files
 - Single `core.js` file contains *all* core API code
-- Uses web standard APIs (i.e., the [Web Streams API](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API) over [Node.js Streams](https://nodejs.org/api/stream.html))
+- Prioritizes Web Platform APIs (e.g., the [Web Streams API](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API) over [Node.js Streams](https://nodejs.org/api/stream.html))
 
 ## Core API
 
@@ -113,7 +113,7 @@ In addition to the core API, optional utilities are provided to address common C
 
 ## Tests
 
-Example and test CSVs use `CRLF` (`\r\n`) as the record delimiter, as required by [RFC 4180](https://www.ietf.org/rfc/rfc4180.txt).
+Example and test CSVs use `CRLF` (`\r\n`) as the record delimiter, as suggested by [RFC 4180](https://www.ietf.org/rfc/rfc4180.txt).
 
 If your IDE is configured to automatically convert `CRLF` line endings to `LF`, you must undo this conversion for all the CSV files inside `/test/data` and `/examples/data`.
 
