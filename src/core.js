@@ -1,8 +1,8 @@
 import { createReadStream } from 'node:fs';
 import { mkdir, open } from 'node:fs/promises';
-import { platform } from 'node:os';
 import { dirname, normalize } from 'node:path';
 import { Readable } from 'node:stream';
+import { fileURLToPath } from 'node:url';
 /** @import { PathLike } from 'node:fs' */
 
 /**
@@ -23,6 +23,36 @@ export function arrayToCSVString(arr) {
     }
   }
   return `${out.slice(0, -1)}\r\n`;
+}
+
+/**
+ * Parse and normalize a `PathLike` object into a string.
+ * 
+ * @param {PathLike} path A `string`, `Buffer`, or `URL` representing a path to a local file.
+ * @returns {string} The normalized file path in string form.
+ * @throws {TypeError} If `path` is not a `string`, `Buffer`, or `URL`.
+ * @throws {URIError} If `path` is a URL but it cannot be parsed.
+ */
+export function parsePathLike(path) {
+  let parsedPath;
+  if (typeof path === 'string') {
+    parsedPath = normalize(path);
+  }
+  else if (ArrayBuffer.isView(path) || path instanceof ArrayBuffer) {
+    parsedPath = normalize(new TextDecoder().decode(path));
+  }
+  else if (path instanceof URL) {
+    if (URL.canParse(path)) {
+      parsedPath = fileURLToPath(path);
+    }
+    else {
+      throw new URIError('URL could not be parsed.');
+    }
+  }
+  else {
+    throw new TypeError(`Expected a string, Buffer, or URL, but received ${typeof path}.`);
+  }
+  return parsedPath;
 }
 
 /**
@@ -178,21 +208,7 @@ export function createCSVTransformStream(fn, options = {}) {
  * @returns {WritableStream} A `WritableStream` to write data to a file on disk.
  */
 export function createCSVWritableStream(path) {
-  let fullPath;
-  if (typeof path === 'string') {
-    fullPath = normalize(path);
-  }
-  else if (ArrayBuffer.isView(path) || path instanceof ArrayBuffer) {
-    fullPath = normalize(new TextDecoder().decode(path));
-  }
-  else { // Assuming URL
-    if (platform() === 'win32' && path.pathname.startsWith('/')) {
-      fullPath = normalize(decodeURIComponent(path.pathname.substring(1)));
-    }
-    else {
-      fullPath = normalize(decodeURIComponent(path.pathname));
-    }
-  }
+  const fullPath = parsePathLike(path);
   const dir = dirname(fullPath);
   let handle;
 
