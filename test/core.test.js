@@ -1,9 +1,11 @@
 import { suite, test } from 'node:test';
-import { deepStrictEqual } from 'node:assert/strict';
+import { deepStrictEqual, throws } from 'node:assert/strict';
 import { unlink } from 'node:fs/promises';
+import { normalize, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { csvStreamEqualWritable, csvStreamNotEqualWritable, createCSVMockStream, createTempFile } from './utils.js';
-import { arrayToCSVString, createCSVReadableStream, createCSVTransformStream, createCSVWritableStream } from '../src/core.js';
+import { arrayToCSVString, parsePathLike, createCSVReadableStream, createCSVTransformStream, createCSVWritableStream } from '../src/core.js';
 
 suite('arrayToCSVString', { concurrency: true }, () => {
   const vectors = [
@@ -19,6 +21,33 @@ suite('arrayToCSVString', { concurrency: true }, () => {
   for (const { name, input, output } of vectors) {
     test(name, { concurrency: true }, () => {
       deepStrictEqual(arrayToCSVString(input), output);
+    });
+  }
+});
+
+suite('parsePathLike', { concurrency: true }, () => {
+  const vectors = [
+    { name: 'parses string relative path', input: './folder/example.txt', output: './folder/example.txt' },
+    { name: 'parses string absolute path', input: '/absolute/path/to/file.txt', output: '/absolute/path/to/file.txt' },
+    { name: 'parses Buffer relative path', input: new TextEncoder().encode('./folder/example.txt'), output: './folder/example.txt' },
+    { name: 'parses Buffer absolute path', input: new TextEncoder().encode('/absolute/path/to/file.txt'), output: '/absolute/path/to/file.txt' },
+    { name: 'parses URL relative path', input: pathToFileURL('./folder/example.txt'), output: resolve('./folder/example.txt') }, // Must use resolve because URLs automatically resolve to absolute path
+    { name: 'parses URL absolute path', input: pathToFileURL('/absolute/path/to/file.txt'), output: resolve('/absolute/path/to/file.txt') },
+    { name: 'parses URL with percent-encoding', input: pathToFileURL('./folder/example%20chars.txt'), output: resolve('./folder/example%20chars.txt') },
+    { name: 'parses empty string', input: '', output: '' },
+    { name: 'throws TypeError for unsupported type (number)', input: 12345, error: TypeError },
+    { name: 'throws TypeError for unsupported type (object)', input: { path: './example.txt' }, error: TypeError },
+    { name: 'throws TypeError for unsupported type (null)', input: null, error: TypeError },
+    { name: 'throws TypeError for unsupported URL schema', input: new URL('http://example.com/example.txt'), error: TypeError },
+  ];
+  for (const { name, input, output, error } of vectors) {
+    test(name, { concurrency: true }, () => {
+      if (error !== undefined) {
+        throws(() => parsePathLike(input), error);
+      }
+      else {
+        deepStrictEqual(parsePathLike(input), normalize(output));
+      }
     });
   }
 });

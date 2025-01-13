@@ -30,8 +30,7 @@ export function arrayToCSVString(arr) {
  * 
  * @param {PathLike} path A `string`, `Buffer`, or `URL` representing a path to a local file.
  * @returns {string} The normalized file path in string form.
- * @throws {TypeError} If `path` is not a `string`, `Buffer`, or `URL`.
- * @throws {URIError} If `path` is a URL but it cannot be parsed.
+ * @throws {TypeError} If `path` is not a `string`, `Buffer`, or `URL`, or it is a `URL` that is not using the `file` schema.
  */
 export function parsePathLike(path) {
   let parsedPath;
@@ -42,12 +41,7 @@ export function parsePathLike(path) {
     parsedPath = normalize(new TextDecoder().decode(path));
   }
   else if (path instanceof URL) {
-    if (URL.canParse(path)) {
-      parsedPath = fileURLToPath(path);
-    }
-    else {
-      throw new URIError('URL could not be parsed.');
-    }
+    parsedPath = fileURLToPath(path);
   }
   else {
     throw new TypeError(`Expected a string, Buffer, or URL, but received ${typeof path}.`);
