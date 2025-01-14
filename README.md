@@ -28,7 +28,7 @@ function timesTwo(row) {
   return [Number(row[0]) * 2, Number(row[1]) * 2];
 }
 
-createCSVReadableStream('./data/example-in.csv')
+await createCSVReadableStream('./data/example-in.csv')
   .pipeThrough(createCSVTransformStream(timesTwo))
   .pipeTo(createCSVWritableStream('./data/example-out.csv'));
 ```
