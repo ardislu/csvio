@@ -1,5 +1,5 @@
 import { suite, test } from 'node:test';
-import { deepStrictEqual, throws } from 'node:assert/strict';
+import { deepStrictEqual, throws, rejects } from 'node:assert/strict';
 import { unlink } from 'node:fs/promises';
 import { normalize, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -244,6 +244,33 @@ suite('createCSVTransformStream', { concurrency: true }, () => {
         ['a', 'b'],
         ['a', 'b']
       ]));
+  });
+  test('passes errors to onError function', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA'],
+      ['1'],
+      ['2']
+    ])
+      .pipeThrough(createCSVTransformStream(() => { throw new Error(); }, { onError: r => [`${r[0]}: caught`] }))
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA'],
+        ['1: caught'],
+        ['2: caught']
+      ]));
+  });
+  test('bubbles up errors re-raised by onError function', { concurrency: true }, async () => {
+    await rejects(
+      createCSVMockStream([
+        ['columnA'],
+        ['1']
+      ])
+        .pipeThrough(createCSVTransformStream(() => { throw new Error('outer'); }, { onError: () => { throw new Error('inner') } }))
+        .pipeTo(csvStreamEqualWritable([
+          ['columnA'],
+          ['1']
+        ])),
+      { name: 'Error', message: 'inner' }
+    );
   });
 });
 

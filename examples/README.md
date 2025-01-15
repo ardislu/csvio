@@ -19,3 +19,5 @@ node ./examples/ex1.js
 [Example 4: Using `createCSVNormalizationStream` and `createCSVDenormalizationStream`](./ex4.js)
 
 [Example 5: Handling an irregularly-shaped CSV file](./ex5.js)
+
+[Example 6: Handling a flaky transformation (basic retry strategy)](./ex6.js)

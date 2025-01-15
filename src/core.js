@@ -138,6 +138,9 @@ export function createCSVReadableStream(path) {
  * using `JSON.parse()` before being sent to `fn()`. The default value is `false`.
  * @property {boolean} [rawOutput=false] Set to `true` to send the raw return value of `fn()` to the next stream. Otherwise, the return value of
  * `fn()` will be serialized using `JSON.stringify()` before being sent to the next stream. The default value is `false`.
+ * @property {null|function(Array<string>|string,Error,function(Array<string>|string):Array<Array<any>>|Array<any>|string|null):Array<Array<any>>|Array<any>|string|null} [onError=null]
+ * Set to a function to catch errors thrown by the transformation function. The CSV row, the error that was thrown, and the transformation function
+ * itself will be passed to the `onError` function. The default value is `null` (errors will not be caught).
  */
 
 /**
@@ -160,6 +163,13 @@ export function createCSVTransformStream(fn, options = {}) {
   options.includeHeaders ??= false;
   options.rawInput ??= false;
   options.rawOutput ??= false;
+  options.onError ??= null;
+
+  async function wrappedFn(row) {
+    if (options.onError === null) { return await fn(row); }
+    try { return await fn(row); }
+    catch (e) { return await options.onError(row, e, fn); }
+  }
 
   let firstChunk = true;
   return new TransformStream({
@@ -168,10 +178,10 @@ export function createCSVTransformStream(fn, options = {}) {
       let out;
       if (firstChunk) {
         firstChunk = false;
-        out = options.includeHeaders ? await fn(row) : row;
+        out = options.includeHeaders ? await wrappedFn(row) : row;
       }
       else {
-        out = await fn(row);
+        out = await wrappedFn(row);
       }
 
       if (out === null || out === undefined) { // Input row is consumed without emitting any output row
