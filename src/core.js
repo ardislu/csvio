@@ -128,6 +128,13 @@ export function createCSVReadableStream(path) {
 }
 
 /**
+ * A function to process a row of CSV data from `createCSVReadableStream`.
+ * @callback TransformationFunction
+ * @param {Array<string>|string} row A row of input CSV data.
+ * @returns {Array<Array<any>>|Array<any>|string|null} A row or rows of output CSV data, or null to skip a row.
+ */
+
+/**
  * Options to configure `createCSVTransformStream`.
  * @typedef {Object} CreateCSVTransformStreamOptions
  * @property {boolean} [includeHeaders=false] Set to `true` to pass the header row (assumed to be the first row of the CSV) to `fn()`. Otherwise,
@@ -138,7 +145,7 @@ export function createCSVReadableStream(path) {
  * using `JSON.parse()` before being sent to `fn()`. The default value is `false`.
  * @property {boolean} [rawOutput=false] Set to `true` to send the raw return value of `fn()` to the next stream. Otherwise, the return value of
  * `fn()` will be serialized using `JSON.stringify()` before being sent to the next stream. The default value is `false`.
- * @property {null|function(Array<string>|string,Error,function(Array<string>|string):Array<Array<any>>|Array<any>|string|null):Array<Array<any>>|Array<any>|string|null} [onError=null]
+ * @property {null|function(Array<string>|string,Error,TransformationFunction):Array<Array<any>>|Array<any>|string|null} [onError=null]
  * Set to a function to catch errors thrown by the transformation function. The CSV row, the error that was thrown, and the transformation function
  * itself will be passed to the `onError` function. The default value is `null` (errors will not be caught).
  */
@@ -146,7 +153,7 @@ export function createCSVReadableStream(path) {
 /**
  * Create a new [TransformStream](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream) to process CSV data.
  * 
- * @param {function(Array<string>|string):Array<Array<any>>|Array<any>|string|null} fn A function to process a row of CSV data from `createCSVReadableStream`.
+ * @param {TransformationFunction} fn A function to process a row of CSV data from `createCSVReadableStream`.
  * 
  * If `options.rawInput` is `false` (default), the input will be a `Array<string>` representing the CSV row. If `options.rawInput` is `true`,
  * the input will be a JSON `string` representing the CSV row.
