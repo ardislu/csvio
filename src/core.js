@@ -128,10 +128,20 @@ export function createCSVReadableStream(path) {
 }
 
 /**
+ * A row of input CSV data.
+ * @typedef {Array<string>|string} TransformationInput
+ */
+
+/**
+ * A row or rows of output CSV data, or null to skip a row.
+ * @typedef {Array<Array<any>>|Array<any>|string|null} TransformationOutput
+ */
+
+/**
  * A function to process a row of CSV data from `createCSVReadableStream`.
  * @callback TransformationFunction
- * @param {Array<string>|string} row A row of input CSV data.
- * @returns {Array<Array<any>>|Array<any>|string|null} A row or rows of output CSV data, or null to skip a row.
+ * @param {TransformationInput} row
+ * @returns {TransformationOutput}
  */
 
 /**
@@ -145,9 +155,9 @@ export function createCSVReadableStream(path) {
  * using `JSON.parse()` before being sent to `fn()`. The default value is `false`.
  * @property {boolean} [rawOutput=false] Set to `true` to send the raw return value of `fn()` to the next stream. Otherwise, the return value of
  * `fn()` will be serialized using `JSON.stringify()` before being sent to the next stream. The default value is `false`.
- * @property {null|function(Array<string>|string,Error,TransformationFunction):Array<Array<any>>|Array<any>|string|null} [onError=null]
- * Set to a function to catch errors thrown by the transformation function. The CSV row, the error that was thrown, and the transformation function
- * itself will be passed to the `onError` function. The default value is `null` (errors will not be caught).
+ * @property {null|function(TransformationInput,Error,TransformationFunction):TransformationOutput} [onError=null] Set to a function to catch
+ * errors thrown by the transformation function. The input data, the error that was thrown, and the transformation function itself will be passed
+ * to the `onError` function. The default value is `null` (errors will not be caught).
  */
 
 /**
