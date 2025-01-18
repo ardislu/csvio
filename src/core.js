@@ -128,8 +128,8 @@ export function createCSVReadableStream(path) {
 }
 
 /**
- * A row of input CSV data.
- * @typedef {Array<string>|string} TransformationInput
+ * A row or rows of input CSV data.
+ * @typedef {Array<Array<string>>|Array<string>|string} TransformationInput
  */
 
 /**
@@ -138,7 +138,7 @@ export function createCSVReadableStream(path) {
  */
 
 /**
- * A function to process a row of CSV data from `createCSVReadableStream`.
+ * A function to process a row or rows of CSV data from `createCSVReadableStream`.
  * @callback TransformationFunction
  * @param {TransformationInput} row
  * @returns {TransformationOutput}
@@ -158,19 +158,26 @@ export function createCSVReadableStream(path) {
  * @property {null|function(TransformationInput,Error,TransformationFunction):TransformationOutput} [onError=null] Set to a function to catch
  * errors thrown by the transformation function. The input data, the error that was thrown, and the transformation function itself will be passed
  * to the `onError` function. The default value is `null` (errors will not be caught).
+ * @property {Number} [maxBatchSize=1] The maximum number of rows that will be passed to the transformation function per function call (greedy).
+ * The default value is `1`.
  */
 
 /**
  * Create a new [TransformStream](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream) to process CSV data.
  * 
- * @param {TransformationFunction} fn A function to process a row of CSV data from `createCSVReadableStream`.
+ * @param {TransformationFunction} fn A function to process a row or rows of CSV data from `createCSVReadableStream`.
  * 
- * If `options.rawInput` is `false` (default), the input will be a `Array<string>` representing the CSV row. If `options.rawInput` is `true`,
- * the input will be a JSON `string` representing the CSV row.
+ * If `options.rawInput` is `false` (default), the input will be a `Array<string>` representing a CSV row. If `options.rawInput` is `true`,
+ * the input will be a JSON `string` representing a CSV row.
  * 
  * If `options.rawOutput` is `false` (default), the expected output is a `Array<any>` which will be serialized with `JSON.stringify()` and enqueued,
  * or a `Array<Array<any>>` which will have each of its sub-arrays serialized and enqueued separately. If `options.rawOutput` is `true`, the raw
  * output will be sent the next stream unmodified.
+ * 
+ * If `options.maxBatchSize` is a number greater than `1`, the input will represent multiple CSV rows as an `Array<Array<string>>` (if
+ * `options.rawInput` is `false`) or a `string` (if `options.rawInput` is `true`). The input will still be a 2-D array even if there is only
+ * 1 row in the batch (except for the header row). The header row is always processed by itself and passed as a `Array<string>`, regardless of
+ * the `options.maxBatchSize` value.
  * 
  * Return `null` to consume an input row without emitting an output row.
  * @param {CreateCSVTransformStreamOptions} options Object containing flags to configure the stream logic.
@@ -181,6 +188,7 @@ export function createCSVTransformStream(fn, options = {}) {
   options.rawInput ??= false;
   options.rawOutput ??= false;
   options.onError ??= null;
+  options.maxBatchSize ??= 1;
 
   async function wrappedFn(row) {
     if (options.onError === null) { return await fn(row); }
@@ -188,6 +196,7 @@ export function createCSVTransformStream(fn, options = {}) {
     catch (e) { return await options.onError(row, e, fn); }
   }
 
+  const batch = [];
   let firstChunk = true;
   return new TransformStream({
     async transform(chunk, controller) {
@@ -196,6 +205,13 @@ export function createCSVTransformStream(fn, options = {}) {
       if (firstChunk) {
         firstChunk = false;
         out = options.includeHeaders ? await wrappedFn(row) : row;
+      }
+      else if (options.maxBatchSize > 1) {
+        batch.push(row);
+        if (batch.length === options.maxBatchSize) {
+          out = await wrappedFn(batch);
+          batch.length = 0;
+        }
       }
       else {
         out = await wrappedFn(row);
@@ -213,6 +229,23 @@ export function createCSVTransformStream(fn, options = {}) {
       }
       else {
         controller.enqueue(JSON.stringify(out));
+      }
+    },
+    async flush(controller) {
+      if (batch.length > 0) { // CSV ended before batch got filled
+        const out = await wrappedFn(batch);
+        if (out === null || out === undefined) { // Input row is consumed without emitting any output row
+          return;
+        }
+        if (options.rawOutput || typeof out === 'string') {
+          controller.enqueue(out);
+        }
+        else if (Array.isArray(out) && Array.isArray(out[0])) { // Multiple rows returned, enqueue each row separately
+          out.forEach(row => controller.enqueue(JSON.stringify(row)));
+        }
+        else {
+          controller.enqueue(JSON.stringify(out));
+        }
       }
     }
   });
