@@ -263,6 +263,7 @@ export class CSVNormalizer extends TransformStream {
       return;
     }
 
+    /** @type {Array<CSVNormalizerRow>} */
     const out = [];
     for (const { name, type, displayName, defaultValue, index } of this.#columns) {
       let value = row[index];
