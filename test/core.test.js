@@ -5,9 +5,9 @@ import { normalize, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { csvStreamEqualWritable, csvStreamNotEqualWritable, createCSVMockStream, createTempFile } from './utils.js';
-import { arrayToCSVString, parsePathLike, CSVReader, CSVTransformer, CSVWriter } from '../src/core.js';
+import { parsePathLike, CSVReader, CSVTransformer, CSVWriter } from '../src/core.js';
 
-suite('arrayToCSVString', { concurrency: true }, () => {
+suite('CSVWriter.arrayToCSVString', { concurrency: true }, () => {
   const vectors = [
     { name: 'converts simple row', input: ['abc', '123'], output: 'abc,123\r\n' },
     { name: 'converts row with commas', input: ['a,bc', '12,3'], output: '"a,bc","12,3"\r\n' },
@@ -20,7 +20,7 @@ suite('arrayToCSVString', { concurrency: true }, () => {
   ];
   for (const { name, input, output } of vectors) {
     test(name, { concurrency: true }, () => {
-      deepStrictEqual(arrayToCSVString(input), output);
+      deepStrictEqual(CSVWriter.arrayToCSVString(input), output);
     });
   }
 });

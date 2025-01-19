@@ -6,26 +6,6 @@ import { fileURLToPath } from 'node:url';
 /** @import { PathLike } from 'node:fs' */
 
 /**
- * Convert a JavaScript array into a CSV string.
- * 
- * @param {Array<string>} arr An array of strings representing one row of a CSV file.
- * @returns {string} A string representing one row of a CSV file, with character escaping and line endings compliant with
- * [RFC 4180](https://www.ietf.org/rfc/rfc4180.txt).
- */
-export function arrayToCSVString(arr) {
-  let out = '';
-  for (const field of arr) {
-    if (/[,"\r\n]/g.test(field)) {
-      out += `"${field.replaceAll('"', '""')}",`;
-    }
-    else {
-      out += `${field},`;
-    }
-  }
-  return `${out.slice(0, -1)}\r\n`;
-}
-
-/**
  * Parse and normalize a `PathLike` object into a string.
  * 
  * @param {PathLike} path A `string`, `Buffer`, or `URL` representing a path to a local file.
@@ -303,7 +283,7 @@ export class CSVWriter extends WritableStream {
       async write(chunk) {
         let data;
         try {
-          data = arrayToCSVString(JSON.parse(chunk));
+          data = CSVWriter.arrayToCSVString(JSON.parse(chunk));
         }
         catch {
           data = chunk;
@@ -314,5 +294,25 @@ export class CSVWriter extends WritableStream {
         await handle.close();
       }
     });
+  }
+
+  /**
+  * Convert a JavaScript array into a CSV string.
+  * 
+  * @param {Array<string>} arr An array of strings representing one row of a CSV file.
+  * @returns {string} A string representing one row of a CSV file, with character escaping and line endings compliant with
+  * [RFC 4180](https://www.ietf.org/rfc/rfc4180.txt).
+  */
+  static arrayToCSVString(arr) {
+    let out = '';
+    for (const field of arr) {
+      if (/[,"\r\n]/g.test(field)) {
+        out += `"${field.replaceAll('"', '""')}",`;
+      }
+      else {
+        out += `${field},`;
+      }
+    }
+    return `${out.slice(0, -1)}\r\n`;
   }
 }
