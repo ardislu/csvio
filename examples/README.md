@@ -16,7 +16,7 @@ node ./examples/ex1.js
 
 [Example 3: Chaining multiple transformations](./ex3.js)
 
-[Example 4: Using `createCSVNormalizationStream` and `createCSVDenormalizationStream`](./ex4.js)
+[Example 4: Using `CSVNormalizer` and `CSVDenormalizer`](./ex4.js)
 
 [Example 5: Handling an irregularly-shaped CSV file](./ex5.js)
 

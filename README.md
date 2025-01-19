@@ -107,7 +107,7 @@ const writableStream = new CSVWriter('./data/example-out.csv');
 
 In addition to the core API, optional utilities are provided to address common CSV transformation tasks.
 
-### `CSVNormalizer` and `createCSVDenormalizationStream`
+### `CSVNormalizer` and `CSVDenormalizer`
 
 `TransformStream`s to parse CSVs that have been mangled by spreadsheet programs such as Excel.
 

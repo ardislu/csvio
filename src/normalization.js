@@ -286,20 +286,21 @@ export class CSVNormalizer extends TransformStream {
 }
 
 /**
- * Create a `TransformStream` to transform a `CSVNormalizerRow` into an array that can be converted to CSV data.
- * 
- * @returns {TransformStream} A `TransformStream` where each chunk is one row of the CSV file.
+ * A `TransformStream` to transform a `CSVNormalizerRow` into an array that can be converted to CSV data.
+ * @extends TransformStream
  */
-export function createCSVDenormalizationStream() {
-  let firstRow = true;
-  return new TransformStream({
-    transform(chunk, controller) {
-      const row = JSON.parse(chunk);
-      if (firstRow) {
-        firstRow = false;
-        controller.enqueue(JSON.stringify(row.map(f => f.displayName)));
+export class CSVDenormalizer extends TransformStream {
+  constructor() {
+    let firstRow = true;
+    super({
+      transform(chunk, controller) {
+        const row = JSON.parse(chunk);
+        if (firstRow) {
+          firstRow = false;
+          controller.enqueue(JSON.stringify(row.map(f => f.displayName)));
+        }
+        controller.enqueue(JSON.stringify(row.map(f => f.value)));
       }
-      controller.enqueue(JSON.stringify(row.map(f => f.value)));
-    }
-  });
+    });
+  }
 }
