@@ -192,8 +192,8 @@ export class CSVTransformer extends TransformStream {
    */
   constructor(fn, options = {}) {
     super({
-      transform: (chunk, controller) => this.transform(chunk, controller),
-      flush: (controller) => this.flush(controller),
+      transform: (chunk, controller) => this.#transform(chunk, controller),
+      flush: (controller) => this.#flush(controller),
     });
 
     options.includeHeaders ??= false;
@@ -228,7 +228,7 @@ export class CSVTransformer extends TransformStream {
     }
   }
 
-  async transform(chunk, controller) {
+  async #transform(chunk, controller) {
     const { includeHeaders, rawInput, maxBatchSize } = this.#options;
     const row = rawInput ? chunk : JSON.parse(chunk);
     let out;
@@ -250,7 +250,7 @@ export class CSVTransformer extends TransformStream {
     this.#enqueueRow(out, controller);
   }
 
-  async flush(controller) {
+  async #flush(controller) {
     if (this.#batch.length > 0) {
       const out = await this.#wrappedFn(this.#batch);
       this.#enqueueRow(out, controller);
