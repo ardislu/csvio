@@ -8,7 +8,7 @@
 // - Each call to the transformation function passes 1 row of the input CSV.
 // - The expected output of the transformation function is another array representing 1 row of the output CSV.
 
-import { CSVReader, CSVTransformer, createCSVWritableStream } from '../src/index.js';
+import { CSVReader, CSVTransformer, CSVWriter } from '../src/index.js';
 
 function timesTwo(row) {
   return [Number(row[0]) * 2, Number(row[1]) * 2];
@@ -16,4 +16,4 @@ function timesTwo(row) {
 
 await new CSVReader(new URL('./data/ex1-in.csv', import.meta.url))
   .pipeThrough(new CSVTransformer(timesTwo))
-  .pipeTo(createCSVWritableStream(new URL('./data/ex1-out.csv', import.meta.url)));
+  .pipeTo(new CSVWriter(new URL('./data/ex1-out.csv', import.meta.url)));

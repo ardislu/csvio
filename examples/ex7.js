@@ -6,7 +6,7 @@
 // This functionality is useful if you need to collect data from multiple rows before processing (e.g., performing an
 // expensive network request where it is more efficient to batch multiple rows into one request).
 
-import { CSVReader, CSVTransformer, createCSVWritableStream } from '../src/index.js';
+import { CSVReader, CSVTransformer, CSVWriter } from '../src/index.js';
 
 let firstChunk = true;
 let batchNumber = 0;
@@ -30,4 +30,4 @@ function process(batch) {
 
 await new CSVReader(new URL('./data/ex7-in.csv', import.meta.url))
   .pipeThrough(new CSVTransformer(process, { includeHeaders: true, maxBatchSize: 5 }))
-  .pipeTo(createCSVWritableStream(new URL('./data/ex7-out.csv', import.meta.url)));
+  .pipeTo(new CSVWriter(new URL('./data/ex7-out.csv', import.meta.url)));

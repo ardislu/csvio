@@ -21,7 +21,7 @@ Run:
 import {
   CSVReader,
   CSVTransformer,
-  createCSVWritableStream
+  CSVWriter
 } from './src/index.js';
 
 function timesTwo(row) {
@@ -30,7 +30,7 @@ function timesTwo(row) {
 
 await new CSVReader('./data/example-in.csv')
   .pipeThrough(new CSVTransformer(timesTwo))
-  .pipeTo(createCSVWritableStream('./data/example-out.csv'));
+  .pipeTo(new CSVWriter('./data/example-out.csv'));
 ```
 
 A new `./data/example-out.csv` file will be created:
@@ -93,14 +93,14 @@ function timesTwo(row) {
 const transformStream = new CSVTransformer(timesTwo);
 ```
 
-### `createCSVWritableStream`
+### `CSVWriter`
 
-Create a `WritableStream` to save CSV row data to disk.
+A `WritableStream` to save CSV row data to disk.
 
 ```javascript
-import { createCSVWritableStream } from './src/index.js';
+import { CSVWriter } from './src/index.js';
 
-const writableStream = createCSVWritableStream('./data/example-out.csv');
+const writableStream = new CSVWriter('./data/example-out.csv');
 ```
 
 ## Extended API

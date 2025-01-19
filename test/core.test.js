@@ -5,7 +5,7 @@ import { normalize, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { csvStreamEqualWritable, csvStreamNotEqualWritable, createCSVMockStream, createTempFile } from './utils.js';
-import { arrayToCSVString, parsePathLike, CSVReader, CSVTransformer, createCSVWritableStream } from '../src/core.js';
+import { arrayToCSVString, parsePathLike, CSVReader, CSVTransformer, CSVWriter } from '../src/core.js';
 
 suite('arrayToCSVString', { concurrency: true }, () => {
   const vectors = [
@@ -319,7 +319,7 @@ suite('CSVTransformer', { concurrency: true }, () => {
   });
 });
 
-suite('createCSVWritableStream', { concurrency: true }, () => {
+suite('CSVWriter', { concurrency: true }, () => {
   const vectors = [
     {
       name: 'writes simple CSV',
@@ -421,7 +421,7 @@ suite('createCSVWritableStream', { concurrency: true }, () => {
     test(name, { concurrency: true }, async (t) => {
       const temp = await createTempFile();
       t.after(async () => await unlink(temp));
-      await createCSVMockStream(csv).pipeTo(createCSVWritableStream(temp));
+      await createCSVMockStream(csv).pipeTo(new CSVWriter(temp));
       await new CSVReader(temp).pipeTo(csvStreamEqualWritable(csv));
     });
   }

@@ -284,32 +284,35 @@ export class CSVTransformer extends TransformStream {
  * A simple wrapper around Node.js's [`fs.writeFile`](https://nodejs.org/api/fs.html#fspromiseswritefilefile-data-options) to write
  * streamed data to a file. If the input data is JSON, the data is converted to a string representing a RFC 4180 CSV record. If the
  * data is not JSON (e.g., if it is already converted to a CSV string), the data is written to the CSV file directly.
- * @param {PathLike} path A `string`, `Buffer`, or `URL` representing a path to a local CSV file destination. If the file already
- * exists, its **data will be overwritten**.
- * @returns {WritableStream} A `WritableStream` to write data to a file on disk.
+ * @extends WritableStream
  */
-export function createCSVWritableStream(path) {
-  const fullPath = parsePathLike(path);
-  const dir = dirname(fullPath);
-  let handle;
-
-  return new WritableStream({
-    async start() {
-      await mkdir(dir, { recursive: true });
-      handle = await open(fullPath, 'w');
-    },
-    async write(chunk) {
-      let data;
-      try {
-        data = arrayToCSVString(JSON.parse(chunk));
+export class CSVWriter extends WritableStream {
+  /**
+   * @param {PathLike} path A `string`, `Buffer`, or `URL` representing a path to a local CSV file destination. If the file already
+   * exists, its **data will be overwritten**.
+   */
+  constructor(path) {
+    const fullPath = parsePathLike(path);
+    const dir = dirname(fullPath);
+    let handle;
+    super({
+      async start() {
+        await mkdir(dir, { recursive: true });
+        handle = await open(fullPath, 'w');
+      },
+      async write(chunk) {
+        let data;
+        try {
+          data = arrayToCSVString(JSON.parse(chunk));
+        }
+        catch {
+          data = chunk;
+        }
+        await handle.write(data);
+      },
+      async close() {
+        await handle.close();
       }
-      catch {
-        data = chunk;
-      }
-      await handle.write(data);
-    },
-    async close() {
-      await handle.close();
-    }
-  });
+    });
+  }
 }
