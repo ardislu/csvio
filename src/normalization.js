@@ -164,7 +164,7 @@ export function fixExcelDate(str) {
 
 /**
  * Metadata about CSV columns used to normalize raw CSV data.
- * @typedef {Object} CreateCSVNormalizationStreamHeader
+ * @typedef {Object} CSVNormalizerHeader
  * @property {string} name The name of the CSV column, in camelCase. Values in the header row of the CSV will be
  * transformed to camelCase for comparison purposes and for downstream usage (e.g., a header with the value `Example Column`
  * in the input CSV will match with a `name` value of `exampleColumn`).
@@ -176,8 +176,8 @@ export function fixExcelDate(str) {
  */
 
 /**
- * Options to configure `createCSVNormalizationStream`.
- * @typedef {Object} CreateCSVNormalizationStreamOptions
+ * Options to configure `CSVNormalizer`.
+ * @typedef {Object} CSVNormalizerOptions
  * @property {boolean} [passthroughEmptyRows=false] Set to `true` to send empty rows (i.e., rows where all field values are
  * `''`) downstream. Otherwise, empty rows will be removed. The default value is `false`.
  * @property {boolean} [passthroughNumber=false] Set to `true` to NOT apply data casting to `type='number'` columns. Otherwise,
@@ -189,8 +189,8 @@ export function fixExcelDate(str) {
  */
 
 /**
- * The output of `createCSVNormalizationStream`.
- * @typedef {Object} CreateCSVNormalizationStreamRow
+ * The output of `CSVNormalizer`.
+ * @typedef {Object} CSVNormalizerRow
  * @property {string} name The column name after normalization to camelCase.
  * @property {string} displayName The desired column name in the output CSV.
  * @property {string|number} value The value of the field after attempted data casting. If the original field was empty, this value
@@ -199,85 +199,94 @@ export function fixExcelDate(str) {
  */
 
 /**
- * Create a `TransformStream` to transform raw CSV data into a JavaScript object using provided metadata.
+ * A `TransformStream` to transform raw CSV data into a JavaScript object using provided metadata.
  * 
- * Use this function to undo common CSV data mangling caused by spreadsheet programs such as Excel and perform other common 
+ * Use this class to undo common CSV data mangling caused by spreadsheet programs such as Excel and perform other common 
  * cleanup such as renaming headers and removing empty rows.
- * @param {Array<CreateCSVNormalizationStreamHeader>} headers An array of metadata objects to configure the data casting and
- * cleanup transformations.
- * @param {CreateCSVNormalizationStreamOptions} options Object containing flags to configure the stream logic. 
- * @returns {TransformStream} A `TransformStream` where each chunk is one row of the CSV file after normalization, represented
- * as a JSON string of a `createCSVNormalizationStreamRow` object.
+ * @extends TransformStream
  */
-export function createCSVNormalizationStream(headers, options = {}) {
-  options.passthroughEmptyRows ??= false;
-  options.passthroughNumber ??= false;
-  options.passthroughBigInt ??= false;
-  options.passthroughDate ??= false;
+export class CSVNormalizer extends TransformStream {
+  #columns = [];
+  #firstChunk = true;
+  #options;
 
-  const columns = [];
-  for (const { name, type, displayName = name, defaultValue = null } of headers) {
-    let normalizedType = type.toLowerCase();
-    if (!['string', 'number', 'bigint', 'date'].includes(normalizedType)) {
-      console.warn(`Type "${normalizedType}" is not supported, defaulting to string.`);
-      normalizedType = 'string';
-    }
-    columns.push({
-      name: toCamelCase(name),
-      type: normalizedType,
-      displayName,
-      defaultValue,
-      index: null
+  /**
+   * @param {Array<CSVNormalizerHeader>} headers An array of metadata objects to configure the data casting and
+   * cleanup transformations.
+   * @param {CSVNormalizerOptions} options Object containing flags to configure the stream logic. 
+   */
+  constructor(headers, options = {}) {
+    super({
+      transform: (chunk, controller) => this.#transform(chunk, controller)
     });
+
+    options.passthroughEmptyRows ??= false;
+    options.passthroughNumber ??= false;
+    options.passthroughBigInt ??= false;
+    options.passthroughDate ??= false;
+    this.#options = options;
+
+    for (const { name, type, displayName = name, defaultValue = null } of headers) {
+      let normalizedType = type.toLowerCase();
+      if (!['string', 'number', 'bigint', 'date'].includes(normalizedType)) {
+        console.warn(`Type "${normalizedType}" is not supported, defaulting to string.`);
+        normalizedType = 'string';
+      }
+      this.#columns.push({
+        name: toCamelCase(name),
+        type: normalizedType,
+        displayName,
+        defaultValue,
+        index: null
+      });
+    }
   }
 
-  let firstChunk = true;
-  return new TransformStream({
-    transform(chunk, controller) {
-      const row = JSON.parse(chunk);
+  #transform(chunk, controller) {
+    const { passthroughNumber, passthroughBigInt, passthroughDate, passthroughEmptyRows } = this.#options;
+    const row = JSON.parse(chunk);
 
-      // Assume first row is headers and use it to prepare the columns object
-      // Note: the headers row is NOT forwarded downstream
-      if (firstChunk) {
-        const normalizedRow = row.map(f => toCamelCase(f));
-        let i = 0;
-        for (const header of normalizedRow) {
-          const col = columns.find(c => c.name === header);
-          if (col !== undefined) { // Drop columns provided in the CSV but not the headers input
-            col.index = i;
-          }
-          i++;
+    // Assume first row is headers and use it to prepare the columns object
+    // Note: the headers row is NOT forwarded downstream
+    if (this.#firstChunk) {
+      const normalizedRow = row.map(f => toCamelCase(f));
+      let i = 0;
+      for (const header of normalizedRow) {
+        const col = this.#columns.find(c => c.name === header);
+        if (col !== undefined) { // Drop columns provided in the CSV but not the headers input
+          col.index = i;
         }
-        columns.filter(c => c.index !== null); // Drop columns provided in the headers input but not in the CSV
-        firstChunk = false;
-        return;
+        i++;
       }
-
-      const out = [];
-      for (const { name, type, displayName, defaultValue, index } of columns) {
-        let value = row[index];
-        const emptyField = value === '' ? true : false;
-        switch (type) {
-          case 'string': break;
-          case 'number': value = options.passthroughNumber ? value : fixExcelNumber(value); break;
-          case 'bigint': value = options.passthroughBigInt ? value : fixExcelBigInt(value); break;
-          case 'date': value = options.passthroughDate ? value : fixExcelDate(value); break;
-        }
-        if (emptyField && defaultValue !== null) {
-          value = defaultValue;
-        }
-        out.push({ name, displayName, value, emptyField });
-      }
-
-      if (!options.passthroughEmptyRows && out.every(f => f.emptyField)) { return; }
-
-      controller.enqueue(JSON.stringify(out));
+      this.#columns.filter(c => c.index !== null); // Drop columns provided in the headers input but not in the CSV
+      this.#firstChunk = false;
+      return;
     }
-  });
+
+    const out = [];
+    for (const { name, type, displayName, defaultValue, index } of this.#columns) {
+      let value = row[index];
+      const emptyField = value === '' ? true : false;
+      switch (type) {
+        case 'string': break;
+        case 'number': value = passthroughNumber ? value : fixExcelNumber(value); break;
+        case 'bigint': value = passthroughBigInt ? value : fixExcelBigInt(value); break;
+        case 'date': value = passthroughDate ? value : fixExcelDate(value); break;
+      }
+      if (emptyField && defaultValue !== null) {
+        value = defaultValue;
+      }
+      out.push({ name, displayName, value, emptyField });
+    }
+
+    if (!passthroughEmptyRows && out.every(f => f.emptyField)) { return; }
+
+    controller.enqueue(JSON.stringify(out));
+  }
 }
 
 /**
- * Create a `TransformStream` to transform a `createCSVNormalizationStreamRow` into an array that can be converted to CSV data.
+ * Create a `TransformStream` to transform a `CSVNormalizerRow` into an array that can be converted to CSV data.
  * 
  * @returns {TransformStream} A `TransformStream` where each chunk is one row of the CSV file.
  */

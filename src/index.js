@@ -1,2 +1,2 @@
 export { CSVReader, CSVTransformer, CSVWriter } from './core.js';
-export { createCSVNormalizationStream, createCSVDenormalizationStream } from './normalization.js';
+export { CSVNormalizer, createCSVDenormalizationStream } from './normalization.js';

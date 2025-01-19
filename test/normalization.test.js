@@ -3,7 +3,7 @@ import { deepStrictEqual } from 'node:assert/strict';
 
 import { csvStreamEqual, csvStreamEqualWritable, createCSVMockStream } from './utils.js';
 import { CSVReader } from '../src/core.js';
-import { toCamelCase, expandScientificNotation, fixExcelNumber, fixExcelBigInt, fixExcelDate, createCSVNormalizationStream, createCSVDenormalizationStream } from '../src/normalization.js';
+import { toCamelCase, expandScientificNotation, fixExcelNumber, fixExcelBigInt, fixExcelDate, CSVNormalizer, createCSVDenormalizationStream } from '../src/normalization.js';
 
 suite('toCamelCase', { concurrency: true }, () => {
   test('does not modify strings already in camelCase', { concurrency: true }, () => {
@@ -169,13 +169,13 @@ suite('fixExcelDate', { concurrency: true }, () => {
   });
 });
 
-suite('createCSVNormalizationStream', { concurrency: true }, () => {
+suite('CSVNormalizer', { concurrency: true }, () => {
   test('can remove extra columns', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['extra1', 'columnA', 'extra2', 'extra3', 'columnB'],
       ['123', 'a', '123', '123', 'b']
     ])
-      .pipeThrough(createCSVNormalizationStream([
+      .pipeThrough(new CSVNormalizer([
         { name: 'columnA', type: 'string' },
         { name: 'columnB', type: 'string' }
       ]))
@@ -190,7 +190,7 @@ suite('createCSVNormalizationStream', { concurrency: true }, () => {
       ['columnC', 'columnA', 'columnB'],
       ['c', 'a', 'b']
     ])
-      .pipeThrough(createCSVNormalizationStream([
+      .pipeThrough(new CSVNormalizer([
         { name: 'columnA', type: 'string' },
         { name: 'columnB', type: 'string' },
         { name: 'columnC', type: 'string' }
@@ -206,7 +206,7 @@ suite('createCSVNormalizationStream', { concurrency: true }, () => {
       ['columnA', 'columnB'],
       ['a', 'b']
     ])
-      .pipeThrough(createCSVNormalizationStream([
+      .pipeThrough(new CSVNormalizer([
         { name: 'columnA', type: 'string', displayName: 'Column A' },
         { name: 'columnB', type: 'string', displayName: 'Column B' }
       ]))
@@ -225,7 +225,7 @@ suite('createCSVNormalizationStream', { concurrency: true }, () => {
       ['',''],
       ['','']
     ])
-      .pipeThrough(createCSVNormalizationStream([
+      .pipeThrough(new CSVNormalizer([
         { name: 'columnA', type: 'string' },
         { name: 'columnB', type: 'string' }
       ]))
@@ -240,7 +240,7 @@ suite('createCSVNormalizationStream', { concurrency: true }, () => {
       ['columnA', 'columnB'],
       ['a', 'b']
     ])
-      .pipeThrough(createCSVNormalizationStream([
+      .pipeThrough(new CSVNormalizer([
         { name: 'columnA', type: 'abc' },
         { name: 'columnB', type: 'def' }
       ]))
@@ -252,7 +252,7 @@ suite('createCSVNormalizationStream', { concurrency: true }, () => {
   });
 });
 
-suite('createCSVNormalizationStream and createCSVDenormalizationStream end-to-end', { concurrency: true }, () => {
+suite('CSVNormalizer and createCSVDenormalizationStream end-to-end', { concurrency: true }, () => {
   test('can normalize', { concurrency: true }, async () => {
     const headers = [
       { name: 'stringCol', displayName: 'String Column', type: 'string', defaultValue: 'N/A' },
@@ -261,7 +261,7 @@ suite('createCSVNormalizationStream and createCSVDenormalizationStream end-to-en
       { name: 'dateCol', displayName: 'Date Column', type: 'date' }
     ]
     const stream = new CSVReader('./test/data/normalization.csv')
-      .pipeThrough(createCSVNormalizationStream(headers))
+      .pipeThrough(new CSVNormalizer(headers))
       .pipeThrough(createCSVDenormalizationStream());
     await csvStreamEqual(stream, [
       ['String Column', 'Number Column', 'BigInt Column', 'Date Column'],
