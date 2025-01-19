@@ -2,7 +2,7 @@ import { suite, test } from 'node:test';
 import { deepStrictEqual } from 'node:assert/strict';
 
 import { csvStreamEqual, csvStreamEqualWritable, createCSVMockStream } from './utils.js';
-import { createCSVReadableStream } from '../src/core.js';
+import { CSVReader } from '../src/core.js';
 import { toCamelCase, expandScientificNotation, fixExcelNumber, fixExcelBigInt, fixExcelDate, createCSVNormalizationStream, createCSVDenormalizationStream } from '../src/normalization.js';
 
 suite('toCamelCase', { concurrency: true }, () => {
@@ -260,7 +260,7 @@ suite('createCSVNormalizationStream and createCSVDenormalizationStream end-to-en
       { name: 'bigintCol', displayName: 'BigInt Column', type: 'bigint' },
       { name: 'dateCol', displayName: 'Date Column', type: 'date' }
     ]
-    const stream = createCSVReadableStream('./test/data/normalization.csv')
+    const stream = new CSVReader('./test/data/normalization.csv')
       .pipeThrough(createCSVNormalizationStream(headers))
       .pipeThrough(createCSVDenormalizationStream());
     await csvStreamEqual(stream, [

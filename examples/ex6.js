@@ -6,7 +6,7 @@
 // The `onError` function may be used to implement graceful failure strategies (e.g., set the output row to a
 // placeholder), retry strategies (e.g., a truncated exponential backoff for flaky network requests), logging, etc.
 
-import { createCSVReadableStream, CSVTransformer, createCSVWritableStream } from '../src/index.js';
+import { CSVReader, CSVTransformer, createCSVWritableStream } from '../src/index.js';
 
 // Will immediately retry calling `fn` a maximum of `iterations` times
 function retry(row, fn, iterations) {
@@ -25,6 +25,6 @@ function flaky(row) {
   return [`${v}: pass`];
 }
 
-await createCSVReadableStream(new URL('./data/ex6-in.csv', import.meta.url))
+await new CSVReader(new URL('./data/ex6-in.csv', import.meta.url))
   .pipeThrough(new CSVTransformer(flaky, { onError: (row, e, fn) => retry(row, fn, 1000) }))
   .pipeTo(createCSVWritableStream(new URL('./data/ex6-out.csv', import.meta.url)));

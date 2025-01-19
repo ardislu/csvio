@@ -55,76 +55,96 @@ export function parsePathLike(path) {
  * Uses Node.js's [`fs.createReadStream()`](https://nodejs.org/api/fs.html#fscreatereadstreampath-options) to read a local
  * CSV file then parses the file contents and returns the data through a [Streams API](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API)
  * `ReadableStream`.
- * @param {PathLike} path A `string`, `Buffer`, or `URL` representing a path to a local CSV file.
- * @returns {ReadableStream<string>} A `ReadableStream` where each chunk is one row of the CSV file, in the form of a string
- * that may be deserialized using `JSON.parse()`.
+ * 
+ * Each chunk is one row of the CSV file, in the form of a string that may be deserialized using `JSON.parse()`.
+ * @extends ReadableStream
  */
-export function createCSVReadableStream(path) {
-  const reader = createReadStream(path, { encoding: 'utf-8' });
-  const stream = Readable.toWeb(reader);
+export class CSVReader extends ReadableStream {
+  #row = [];
+  #field = '';
+  #lastChar = null;
+  #escapeMode = false;
+  #justExitedEscapeMode = false;
 
-  const row = [];
-  let field = '';
-  let lastChar = null;
-  let escapeMode = false;
-  let justExitedEscapeMode = false;
-  return stream.pipeThrough(new TransformStream({
-    transform(chunk, controller) {
-      for (const char of chunk) {
-        /* Escape mode logic */
-        if (escapeMode) {
-          if (char === '"') { // Exit escape mode and do not add char to field
-            escapeMode = false;
-            justExitedEscapeMode = true;
-          }
-          else { // Add the literal char because in escape mode
-            justExitedEscapeMode = false;
-            field += char;
-          }
+  /**
+   * @param {PathLike} path A `string`, `Buffer`, or `URL` representing a path to a local CSV file.
+   */
+  constructor(path) {
+    const readStream = createReadStream(path, { encoding: 'utf-8' });
+    const readableStream = Readable.toWeb(readStream).pipeThrough(new TransformStream({
+      transform: (chunk, controller) => this.#transform(chunk, controller),
+      flush: (controller) => this.#flush(controller)
+    }));
+    const reader = readableStream.getReader();
+    super({
+      async pull(controller) {
+        const { done, value } = await reader.read();
+        if (done) {
+          controller.close();
         }
-        /* Normal mode logic */
         else {
-          if (char === '"') {
-            if (justExitedEscapeMode) { // Re-enter escape mode because the exit char was escaped, and add char to field
-              escapeMode = true;
-              field += char;
-            }
-            else if (lastChar === ',' || lastChar === '\n' || lastChar === null) { // Enter escape mode and do not add char to field
-              escapeMode = true;
-            }
-            else { // No special cases match, add the literal char
-              field += char;
-            }
+          controller.enqueue(value);
+        }
+      }
+    });
+  }
+
+  #transform(chunk, controller) {
+    for (const char of chunk) {
+      /* Escape mode logic */
+      if (this.#escapeMode) {
+        if (char === '"') { // Exit escape mode and do not add char to field
+          this.#escapeMode = false;
+          this.#justExitedEscapeMode = true;
+        }
+        else { // Add the literal char because in escape mode
+          this.#justExitedEscapeMode = false;
+          this.#field += char;
+        }
+      }
+      /* Normal mode logic */
+      else {
+        if (char === '"') {
+          if (this.#justExitedEscapeMode) { // Re-enter escape mode because the exit char was escaped, and add char to field
+            this.#escapeMode = true;
+            this.#field += char;
           }
-          else if (char === '\r' || char === '\uFEFF') { } // Ignore CR (newline logic is handled by LF) and byte order mark
-          else if (char === ',') { // Terminate the field and do not add char to field
-            row.push(field);
-            field = '';
-          }
-          else if (char === '\n') { // Terminate the field and row and do not add char to field
-            row.push(field);
-            field = '';
-            controller.enqueue(JSON.stringify(row));
-            row.length = 0;
+          else if (this.#lastChar === ',' || this.#lastChar === '\n' || this.#lastChar === null) { // Enter escape mode and do not add char to field
+            this.#escapeMode = true;
           }
           else { // No special cases match, add the literal char
-            field += char;
+            this.#field += char;
           }
-          justExitedEscapeMode = false;
         }
-        lastChar = char;
+        else if (char === '\r' || char === '\uFEFF') { } // Ignore CR (newline logic is handled by LF) and byte order mark
+        else if (char === ',') { // Terminate the field and do not add char to field
+          this.#row.push(this.#field);
+          this.#field = '';
+        }
+        else if (char === '\n') { // Terminate the field and row and do not add char to field
+          this.#row.push(this.#field);
+          this.#field = '';
+          controller.enqueue(JSON.stringify(this.#row));
+          this.#row.length = 0;
+        }
+        else { // No special cases match, add the literal char
+          this.#field += char;
+        }
+        this.#justExitedEscapeMode = false;
       }
-    },
-    flush(controller) {
-      if (field !== '' || row.length !== 0) { // CSV terminated without a trailing CRLF, leaving a row in the queue
-        row.push(field); // Last field is always un-pushed if CSV terminated with nothing
-        controller.enqueue(JSON.stringify(row));
-      }
-      else if (lastChar === null) { // CSV is blank
-        controller.enqueue(JSON.stringify(['']));
-      }
+      this.#lastChar = char;
     }
-  }));
+  }
+
+  #flush(controller) {
+    if (this.#field !== '' || this.#row.length !== 0) { // CSV terminated without a trailing CRLF, leaving a row in the queue
+      this.#row.push(this.#field); // Last field is always un-pushed if CSV terminated with nothing
+      controller.enqueue(JSON.stringify(this.#row));
+    }
+    else if (this.#lastChar === null) { // CSV is blank
+      controller.enqueue(JSON.stringify(['']));
+    }
+  }
 }
 
 /**
@@ -138,7 +158,7 @@ export function createCSVReadableStream(path) {
  */
 
 /**
- * A function to process a row or rows of CSV data from `createCSVReadableStream`.
+ * A function to process a row or rows of CSV data from `CSVReader`.
  * @callback TransformationFunction
  * @param {TransformationInput} row A row or rows of input CSV data before transformation.
  * @returns {TransformationOutput} A row or rows of output CSV data after transformation, or null to skip a row.

@@ -19,7 +19,7 @@ Run:
 
 ```javascript
 import {
-  createCSVReadableStream,
+  CSVReader,
   CSVTransformer,
   createCSVWritableStream
 } from './src/index.js';
@@ -28,7 +28,7 @@ function timesTwo(row) {
   return [Number(row[0]) * 2, Number(row[1]) * 2];
 }
 
-await createCSVReadableStream('./data/example-in.csv')
+await new CSVReader('./data/example-in.csv')
   .pipeThrough(new CSVTransformer(timesTwo))
   .pipeTo(createCSVWritableStream('./data/example-out.csv'));
 ```
@@ -69,14 +69,14 @@ Streamed CSV provides the bare minimum functions to accomplish **this specific w
 
 The core API is contained in `src/core.js` and exposes three functions to read, transform, and write CSV files.
 
-### `createCSVReadableStream`
+### `CSVReader`
 
-Create a `ReadableStream` from a local CSV file where each CSV row is one chunk.
+A `ReadableStream` where each chunk is one row from a local CSV file.
 
 ```javascript
-import { createCSVReadableStream } from './src/index.js';
+import { CSVReader } from './src/index.js';
 
-const readableStream = createCSVReadableStream('./data/example-in.csv');
+const readableStream = new CSVReader('./data/example-in.csv');
 ```
 
 ### `CSVTransformer`

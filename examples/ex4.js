@@ -8,7 +8,7 @@
 // `createCSVNormalizationStream` performs transformations to un-mangle the above using only a declaration of the header names and data types.
 // `createCSVDenormalizationStream` converts the data stream back into a CSV row.
 
-import { createCSVReadableStream, createCSVWritableStream, createCSVNormalizationStream, createCSVDenormalizationStream } from '../src/index.js';
+import { CSVReader, createCSVWritableStream, createCSVNormalizationStream, createCSVDenormalizationStream } from '../src/index.js';
 
 // The order of items in `headers` is significant, it determines the order of the output CSV columns.
 // If an input column is not provided in `headers`, the column is removed from the output CSV.
@@ -30,7 +30,7 @@ const headers = [
   }
 ];
 
-await createCSVReadableStream(new URL('./data/ex4-in.csv', import.meta.url))
+await new CSVReader(new URL('./data/ex4-in.csv', import.meta.url))
   .pipeThrough(createCSVNormalizationStream(headers))
   .pipeThrough(createCSVDenormalizationStream())
   .pipeTo(createCSVWritableStream(new URL('./data/ex4-out.csv', import.meta.url)));

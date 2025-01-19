@@ -5,7 +5,7 @@ import { normalize, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { csvStreamEqualWritable, csvStreamNotEqualWritable, createCSVMockStream, createTempFile } from './utils.js';
-import { arrayToCSVString, parsePathLike, createCSVReadableStream, CSVTransformer, createCSVWritableStream } from '../src/core.js';
+import { arrayToCSVString, parsePathLike, CSVReader, CSVTransformer, createCSVWritableStream } from '../src/core.js';
 
 suite('arrayToCSVString', { concurrency: true }, () => {
   const vectors = [
@@ -52,7 +52,7 @@ suite('parsePathLike', { concurrency: true }, () => {
   }
 });
 
-suite('createCSVReadableStream', { concurrency: true }, () => {
+suite('CSVReader', { concurrency: true }, () => {
   const vectors = [
     {
       name: 'parses simple CSV',
@@ -183,9 +183,9 @@ suite('createCSVReadableStream', { concurrency: true }, () => {
   ];
   for (const { name, input, output, negativeOutput } of vectors) {
     test(name, { concurrency: true }, async () => {
-      await createCSVReadableStream(input).pipeTo(csvStreamEqualWritable(output));
+      await new CSVReader(input).pipeTo(csvStreamEqualWritable(output));
       if (negativeOutput !== undefined) {
-        await createCSVReadableStream(input).pipeTo(csvStreamNotEqualWritable(negativeOutput));
+        await new CSVReader(input).pipeTo(csvStreamNotEqualWritable(negativeOutput));
       }
     });
   }
@@ -422,7 +422,7 @@ suite('createCSVWritableStream', { concurrency: true }, () => {
       const temp = await createTempFile();
       t.after(async () => await unlink(temp));
       await createCSVMockStream(csv).pipeTo(createCSVWritableStream(temp));
-      await createCSVReadableStream(temp).pipeTo(csvStreamEqualWritable(csv));
+      await new CSVReader(temp).pipeTo(csvStreamEqualWritable(csv));
     });
   }
 });
