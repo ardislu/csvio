@@ -18,11 +18,7 @@ columnA,columnB
 Run:
 
 ```javascript
-import {
-  CSVReader,
-  CSVTransformer,
-  CSVWriter
-} from './src/index.js';
+import { CSVReader, CSVTransformer, CSVWriter } from './src/index.js';
 
 function timesTwo(row) {
   return [Number(row[0]) * 2, Number(row[1]) * 2];
@@ -56,14 +52,14 @@ A common workflow is:
 
 Most people are interested in coding the transformation logic for step (2), and much less interested in coding the error-prone boilerplate code for steps (1) and (3).
 
-Streamed CSV provides the bare minimum functions to accomplish **this specific workflow**. This library is *not* intended for any other workflow (e.g., parsing CSV files with custom delimiters, converting between CSV and other formats, performing data analytics on CSV data). For those workflows, see ["Other CSV libraries"](#other-csv-libraries).
+Streamed CSV provides the bare minimum code to accomplish **this specific workflow**. This library is *not* intended for any other workflow (e.g., parsing CSV files with custom delimiters, converting between CSV and other formats, performing data analytics on CSV data). For those workflows, see ["Other CSV libraries"](#other-csv-libraries).
 
 ## Features
 
-- No dependencies other than the Node.js standard library
-- Reads and writes [RFC 4180](https://www.ietf.org/rfc/rfc4180.txt) compliant CSV files
-- Single `core.js` file contains *all* core API code
-- Prioritizes Web Platform APIs (e.g., the [Web Streams API](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API) over [Node.js Streams](https://nodejs.org/api/stream.html))
+- No dependencies other than the Node.js standard library.
+- Reads and writes [RFC 4180](https://www.ietf.org/rfc/rfc4180.txt) compliant CSV files.
+- Single `core.js` file contains *all* core API code.
+- Prioritizes Web Platform APIs (e.g., the [Web Streams API](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API) over [Node.js Streams](https://nodejs.org/api/stream.html)).
 
 ## Core API
 
