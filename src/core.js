@@ -145,8 +145,8 @@ export function createCSVReadableStream(path) {
  */
 
 /**
- * Options to configure `createCSVTransformStream`.
- * @typedef {Object} CreateCSVTransformStreamOptions
+ * Options to configure `CSVTransformer`.
+ * @typedef {Object} CSVTransformerOptions
  * @property {boolean} [includeHeaders=false] Set to `true` to pass the header row (assumed to be the first row of the CSV) to `fn()`. Otherwise,
  * the header row will flow through to the next stream without going through `fn()`. The default value is `false`.
  * 
@@ -163,92 +163,99 @@ export function createCSVReadableStream(path) {
  */
 
 /**
- * Create a new [TransformStream](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream) to process CSV data.
- * 
- * @param {TransformationFunction} fn A function to process a row or rows of CSV data from `createCSVReadableStream`.
- * 
- * If `options.rawInput` is `false` (default), the input will be a `Array<string>` representing a CSV row. If `options.rawInput` is `true`,
- * the input will be a JSON `string` representing a CSV row.
- * 
- * If `options.rawOutput` is `false` (default), the expected output is a `Array<any>` which will be serialized with `JSON.stringify()` and enqueued,
- * or a `Array<Array<any>>` which will have each of its sub-arrays serialized and enqueued separately. If `options.rawOutput` is `true`, the raw
- * output will be sent the next stream unmodified.
- * 
- * If `options.maxBatchSize` is a number greater than `1`, the input will represent multiple CSV rows as an `Array<Array<string>>` (if
- * `options.rawInput` is `false`) or a `string` (if `options.rawInput` is `true`). The input will still be a 2-D array even if there is only
- * 1 row in the batch (except for the header row). The header row is always processed by itself and passed as a `Array<string>`, regardless of
- * the `options.maxBatchSize` value.
- * 
- * Return `null` to consume an input row without emitting an output row.
- * @param {CreateCSVTransformStreamOptions} options Object containing flags to configure the stream logic.
- * @returns {TransformStream} A `TransformStream` where each chunk is one row of the CSV file, after transformations applied by `fn()`.
+ * A `TransformStream` to process CSV data.
+ * @extends TransformStream
  */
-export function createCSVTransformStream(fn, options = {}) {
-  options.includeHeaders ??= false;
-  options.rawInput ??= false;
-  options.rawOutput ??= false;
-  options.onError ??= null;
-  options.maxBatchSize ??= 1;
+export class CSVTransformer extends TransformStream {
+  #fn;
+  #options;
+  #batch = [];
+  #firstChunk = true;
 
-  async function wrappedFn(row) {
-    if (options.onError === null) { return await fn(row); }
-    try { return await fn(row); }
-    catch (e) { return await options.onError(row, e, fn); }
+  /**
+   * @param {TransformationFunction} fn A function to process a row or rows of CSV data.
+   * 
+   * If `options.rawInput` is `false` (default), the input will be a `Array<string>` representing a CSV row. If `options.rawInput`
+   * is `true`, the input will be a JSON `string` representing a CSV row.
+   * 
+   * If `options.rawOutput` is `false` (default), the expected output is a `Array<any>` which will be serialized with `JSON.stringify()`
+   * and enqueued, or a `Array<Array<any>>` which will have each of its sub-arrays serialized and enqueued separately. If
+   * `options.rawOutput` is `true`, the raw output will be sent to the next stream unmodified.
+   * 
+   * If `options.maxBatchSize` is a number greater than `1`, the input will represent multiple CSV rows as an `Array<Array<string>>`
+   * (if `options.rawInput` is `false`) or a `string` (if `options.rawInput` is `true`). The input will still be a 2-D array even
+   * if there is only 1 row in the batch (except for the header row). The header row is always processed by itself and passed as a
+   * `Array<string>`, regardless of the `options.maxBatchSize` value.
+   * 
+   * Return `null` to consume an input row without emitting an output row.
+   * @param {CSVTransformerOptions} options Object containing flags to configure the stream logic.
+   */
+  constructor(fn, options = {}) {
+    super({
+      transform: (chunk, controller) => this.transform(chunk, controller),
+      flush: (controller) => this.flush(controller),
+    });
+
+    options.includeHeaders ??= false;
+    options.rawInput ??= false;
+    options.rawOutput ??= false;
+    options.onError ??= null;
+    options.maxBatchSize ??= 1;
+
+    this.#fn = fn;
+    this.#options = options;
   }
 
-  const batch = [];
-  let firstChunk = true;
-  return new TransformStream({
-    async transform(chunk, controller) {
-      const row = options.rawInput ? chunk : JSON.parse(chunk);
-      let out;
-      if (firstChunk) {
-        firstChunk = false;
-        out = options.includeHeaders ? await wrappedFn(row) : row;
-      }
-      else if (options.maxBatchSize > 1) {
-        batch.push(row);
-        if (batch.length === options.maxBatchSize) {
-          out = await wrappedFn(batch);
-          batch.length = 0;
-        }
-      }
-      else {
-        out = await wrappedFn(row);
-      }
+  async #wrappedFn(row) {
+    const { onError } = this.#options;
+    if (onError === null) { return await this.#fn(row); }
+    try { return await this.#fn(row); }
+    catch (e) { return await onError(row, e, this.#fn); }
+  }
 
-      if (out === null || out === undefined) { // Input row is consumed without emitting any output row
-        return;
-      }
+  #enqueueRow(row, controller) {
+    if (row === null || row === undefined) { // Input row is consumed without emitting any output row
+      return;
+    }
+    else if (this.#options.rawOutput || typeof row === 'string') {
+      controller.enqueue(row);
+    }
+    else if (Array.isArray(row) && Array.isArray(row[0])) { // Multiple rows returned, enqueue each row separately
+      row.forEach(r => controller.enqueue(JSON.stringify(r)));
+    }
+    else {
+      controller.enqueue(JSON.stringify(row));
+    }
+  }
 
-      if (options.rawOutput || typeof out === 'string') {
-        controller.enqueue(out);
-      }
-      else if (Array.isArray(out) && Array.isArray(out[0])) { // Multiple rows returned, enqueue each row separately
-        out.forEach(row => controller.enqueue(JSON.stringify(row)));
-      }
-      else {
-        controller.enqueue(JSON.stringify(out));
-      }
-    },
-    async flush(controller) {
-      if (batch.length > 0) { // CSV ended before batch got filled
-        const out = await wrappedFn(batch);
-        if (out === null || out === undefined) { // Input row is consumed without emitting any output row
-          return;
-        }
-        if (options.rawOutput || typeof out === 'string') {
-          controller.enqueue(out);
-        }
-        else if (Array.isArray(out) && Array.isArray(out[0])) { // Multiple rows returned, enqueue each row separately
-          out.forEach(row => controller.enqueue(JSON.stringify(row)));
-        }
-        else {
-          controller.enqueue(JSON.stringify(out));
-        }
+  async transform(chunk, controller) {
+    const { includeHeaders, rawInput, maxBatchSize } = this.#options;
+    const row = rawInput ? chunk : JSON.parse(chunk);
+    let out;
+    if (this.#firstChunk) {
+      this.#firstChunk = false;
+      out = includeHeaders ? await this.#wrappedFn(row) : row;
+    }
+    else if (maxBatchSize > 1) {
+      this.#batch.push(row);
+      if (this.#batch.length === maxBatchSize) {
+        out = await this.#wrappedFn(this.#batch);
+        this.#batch.length = 0;
       }
     }
-  });
+    else {
+      out = await this.#wrappedFn(row);
+    }
+
+    this.#enqueueRow(out, controller);
+  }
+
+  async flush(controller) {
+    if (this.#batch.length > 0) {
+      const out = await this.#wrappedFn(this.#batch);
+      this.#enqueueRow(out, controller);
+    }
+  }
 }
 
 /**

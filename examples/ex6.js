@@ -1,12 +1,12 @@
 // ## Example 6: Handling a flaky transformation (basic retry strategy)
 // 
-// Pass a function to the `onError` option of `createCSVTransformStream` to catch errors thrown by the transformation
+// Pass a function to the `onError` option of `CSVTransformer` to catch errors thrown by the transformation
 // function.
 // 
 // The `onError` function may be used to implement graceful failure strategies (e.g., set the output row to a
 // placeholder), retry strategies (e.g., a truncated exponential backoff for flaky network requests), logging, etc.
 
-import { createCSVReadableStream, createCSVTransformStream, createCSVWritableStream } from '../src/index.js';
+import { createCSVReadableStream, CSVTransformer, createCSVWritableStream } from '../src/index.js';
 
 // Will immediately retry calling `fn` a maximum of `iterations` times
 function retry(row, fn, iterations) {
@@ -26,5 +26,5 @@ function flaky(row) {
 }
 
 await createCSVReadableStream(new URL('./data/ex6-in.csv', import.meta.url))
-  .pipeThrough(createCSVTransformStream(flaky, { onError: (row, e, fn) => retry(row, fn, 1000) }))
+  .pipeThrough(new CSVTransformer(flaky, { onError: (row, e, fn) => retry(row, fn, 1000) }))
   .pipeTo(createCSVWritableStream(new URL('./data/ex6-out.csv', import.meta.url)));

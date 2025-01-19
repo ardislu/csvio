@@ -5,7 +5,7 @@ import { normalize, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { csvStreamEqualWritable, csvStreamNotEqualWritable, createCSVMockStream, createTempFile } from './utils.js';
-import { arrayToCSVString, parsePathLike, createCSVReadableStream, createCSVTransformStream, createCSVWritableStream } from '../src/core.js';
+import { arrayToCSVString, parsePathLike, createCSVReadableStream, CSVTransformer, createCSVWritableStream } from '../src/core.js';
 
 suite('arrayToCSVString', { concurrency: true }, () => {
   const vectors = [
@@ -191,14 +191,14 @@ suite('createCSVReadableStream', { concurrency: true }, () => {
   }
 });
 
-suite('createCSVTransformStream', { concurrency: true }, () => {
+suite('CSVTransformer', { concurrency: true }, () => {
   test('passes through CSV', { concurrency: true }, async () => {
     const csv = [
       ['columnA', 'columnB'],
       ['a', 'b']
     ];
     await createCSVMockStream(csv)
-      .pipeThrough(createCSVTransformStream(r => r))
+      .pipeThrough(new CSVTransformer(r => r))
       .pipeTo(csvStreamEqualWritable(csv));
   });
   test('passes through raw output', { concurrency: true }, async () => {
@@ -206,7 +206,7 @@ suite('createCSVTransformStream', { concurrency: true }, () => {
       ['columnA', 'columnB'],
       ['a', 'b']
     ])
-      .pipeThrough(createCSVTransformStream(() => '["abc", "def"]', { includeHeaders: true, rawOutput: true }))
+      .pipeThrough(new CSVTransformer(() => '["abc", "def"]', { includeHeaders: true, rawOutput: true }))
       .pipeTo(csvStreamEqualWritable([
         ['abc', 'def'],
         ['abc', 'def']
@@ -223,7 +223,7 @@ suite('createCSVTransformStream', { concurrency: true }, () => {
       ['a', 'b'],
       ['should be deleted', 'should be deleted']
     ])
-      .pipeThrough(createCSVTransformStream(r => r.length % 2 ? r : null))
+      .pipeThrough(new CSVTransformer(r => r.length % 2 ? r : null))
       .pipeTo(csvStreamEqualWritable([
         ['columnA', 'columnB'],
         ['a', 'b'],
@@ -236,7 +236,7 @@ suite('createCSVTransformStream', { concurrency: true }, () => {
       ['columnA', 'columnB'],
       ['a', 'b']
     ])
-      .pipeThrough(createCSVTransformStream(r => ([r, r, r, r])))
+      .pipeThrough(new CSVTransformer(r => ([r, r, r, r])))
       .pipeTo(csvStreamEqualWritable([
         ['columnA', 'columnB'],
         ['a', 'b'],
@@ -251,7 +251,7 @@ suite('createCSVTransformStream', { concurrency: true }, () => {
       ['1'],
       ['2']
     ])
-      .pipeThrough(createCSVTransformStream(() => { throw new Error(); }, { onError: r => [`${r[0]}: caught`] }))
+      .pipeThrough(new CSVTransformer(() => { throw new Error(); }, { onError: r => [`${r[0]}: caught`] }))
       .pipeTo(csvStreamEqualWritable([
         ['columnA'],
         ['1: caught'],
@@ -264,7 +264,7 @@ suite('createCSVTransformStream', { concurrency: true }, () => {
         ['columnA'],
         ['1']
       ])
-        .pipeThrough(createCSVTransformStream(() => { throw new Error('outer'); }, { onError: () => { throw new Error('inner') } }))
+        .pipeThrough(new CSVTransformer(() => { throw new Error('outer'); }, { onError: () => { throw new Error('inner') } }))
         .pipeTo(csvStreamEqualWritable([
           ['columnA'],
           ['1']
@@ -279,7 +279,7 @@ suite('createCSVTransformStream', { concurrency: true }, () => {
       ['3', '4'],
       ['5', '6']
     ])
-      .pipeThrough(createCSVTransformStream(b => b.map(r => r.map(f => Number(f) * 2)), { maxBatchSize: 100 }))
+      .pipeThrough(new CSVTransformer(b => b.map(r => r.map(f => Number(f) * 2)), { maxBatchSize: 100 }))
       .pipeTo(csvStreamEqualWritable([
         ['columnA', 'columnB'],
         [2, 4],
@@ -294,7 +294,7 @@ suite('createCSVTransformStream', { concurrency: true }, () => {
       ['3', '4'],
       ['5', '6']
     ])
-      .pipeThrough(createCSVTransformStream(b => b.map(r => r.map(f => Number(f) * 2)), { maxBatchSize: 3 }))
+      .pipeThrough(new CSVTransformer(b => b.map(r => r.map(f => Number(f) * 2)), { maxBatchSize: 3 }))
       .pipeTo(csvStreamEqualWritable([
         ['columnA', 'columnB'],
         [2, 4],
@@ -309,7 +309,7 @@ suite('createCSVTransformStream', { concurrency: true }, () => {
       ['3', '4'],
       ['5', '6']
     ])
-      .pipeThrough(createCSVTransformStream(b => b.map(r => r.map(f => Number(f) * 2)), { maxBatchSize: 2 }))
+      .pipeThrough(new CSVTransformer(b => b.map(r => r.map(f => Number(f) * 2)), { maxBatchSize: 2 }))
       .pipeTo(csvStreamEqualWritable([
         ['columnA', 'columnB'],
         [2, 4],

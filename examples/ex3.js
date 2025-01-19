@@ -5,7 +5,7 @@
 // transformations (e.g., transformations spread across multiple functions or lower-level transformations directly
 // on byte arrays).
 
-import { createCSVReadableStream, createCSVTransformStream, createCSVWritableStream } from '../src/index.js';
+import { createCSVReadableStream, CSVTransformer, createCSVWritableStream } from '../src/index.js';
 
 // Parse the raw CSV data and transform the data into an object for convenience
 function parse(row) {
@@ -23,6 +23,6 @@ function calculate(obj) {
 }
 
 await createCSVReadableStream(new URL('./data/ex3-in.csv', import.meta.url))
-  .pipeThrough(createCSVTransformStream(parse, { includeHeaders: true, rawOutput: true }))
-  .pipeThrough(createCSVTransformStream(calculate, { includeHeaders: true, rawInput: true }))
+  .pipeThrough(new CSVTransformer(parse, { includeHeaders: true, rawOutput: true }))
+  .pipeThrough(new CSVTransformer(calculate, { includeHeaders: true, rawInput: true }))
   .pipeTo(createCSVWritableStream(new URL('./data/ex3-out.csv', import.meta.url)));

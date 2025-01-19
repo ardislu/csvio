@@ -4,9 +4,9 @@
 // batch to the transformation function.
 // 
 // This functionality is useful if you need to collect data from multiple rows before processing (e.g., performing an
-// expensive network request where is more efficient to batch multiple rows into one request).
+// expensive network request where it is more efficient to batch multiple rows into one request).
 
-import { createCSVReadableStream, createCSVTransformStream, createCSVWritableStream } from '../src/index.js';
+import { createCSVReadableStream, CSVTransformer, createCSVWritableStream } from '../src/index.js';
 
 let firstChunk = true;
 let batchNumber = 0;
@@ -29,5 +29,5 @@ function process(batch) {
 }
 
 await createCSVReadableStream(new URL('./data/ex7-in.csv', import.meta.url))
-  .pipeThrough(createCSVTransformStream(process, { includeHeaders: true, maxBatchSize: 5 }))
+  .pipeThrough(new CSVTransformer(process, { includeHeaders: true, maxBatchSize: 5 }))
   .pipeTo(createCSVWritableStream(new URL('./data/ex7-out.csv', import.meta.url)));

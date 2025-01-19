@@ -20,7 +20,7 @@ Run:
 ```javascript
 import {
   createCSVReadableStream,
-  createCSVTransformStream,
+  CSVTransformer,
   createCSVWritableStream
 } from './src/index.js';
 
@@ -29,7 +29,7 @@ function timesTwo(row) {
 }
 
 await createCSVReadableStream('./data/example-in.csv')
-  .pipeThrough(createCSVTransformStream(timesTwo))
+  .pipeThrough(new CSVTransformer(timesTwo))
   .pipeTo(createCSVWritableStream('./data/example-out.csv'));
 ```
 
@@ -79,18 +79,18 @@ import { createCSVReadableStream } from './src/index.js';
 const readableStream = createCSVReadableStream('./data/example-in.csv');
 ```
 
-### `createCSVTransformStream`
+### `CSVTransformer`
 
-Create a `TransformStream` to apply a given function to each row in a streamed CSV.
+A `TransformStream` that will apply a given function to each row in a streamed CSV.
 
 ```javascript
-import { createCSVTransformStream } from './src/index.js';
+import { CSVTransformer } from './src/index.js';
 
 function timesTwo(row) {
   return [Number(row[0]) * 2, Number(row[1]) * 2];
 }
 
-const transformStream = createCSVTransformStream(timesTwo);
+const transformStream = new CSVTransformer(timesTwo);
 ```
 
 ### `createCSVWritableStream`

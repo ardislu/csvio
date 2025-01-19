@@ -5,7 +5,7 @@
 //
 // Return `null` in the transformation function to consume an input row without emitting an output row.
 
-import { createCSVReadableStream, createCSVTransformStream, createCSVWritableStream } from '../src/index.js';
+import { createCSVReadableStream, CSVTransformer, createCSVWritableStream } from '../src/index.js';
 
 let i = 0;
 let report, id, date;
@@ -25,5 +25,5 @@ function parse(row) {
 }
 
 await createCSVReadableStream(new URL('./data/ex5-in.csv', import.meta.url))
-  .pipeThrough(createCSVTransformStream(parse, { includeHeaders: true }))
+  .pipeThrough(new CSVTransformer(parse, { includeHeaders: true }))
   .pipeTo(createCSVWritableStream(new URL('./data/ex5-out.csv', import.meta.url)));
