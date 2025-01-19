@@ -140,8 +140,8 @@ export function createCSVReadableStream(path) {
 /**
  * A function to process a row or rows of CSV data from `createCSVReadableStream`.
  * @callback TransformationFunction
- * @param {TransformationInput} row
- * @returns {TransformationOutput}
+ * @param {TransformationInput} row A row or rows of input CSV data before transformation.
+ * @returns {TransformationOutput} A row or rows of output CSV data after transformation, or null to skip a row.
  */
 
 /**
