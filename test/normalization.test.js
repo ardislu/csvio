@@ -3,7 +3,7 @@ import { deepStrictEqual } from 'node:assert/strict';
 
 import { csvStreamEqual, csvStreamEqualWritable, createCSVMockStream } from './utils.js';
 import { CSVReader } from '../src/core.js';
-import { toCamelCase, expandScientificNotation, fixExcelNumber, fixExcelBigInt, fixExcelDate, CSVNormalizer, CSVDenormalizer } from '../src/normalization.js';
+import { toCamelCase, expandScientificNotation, CSVNormalizer, CSVDenormalizer } from '../src/normalization.js';
 
 suite('toCamelCase', { concurrency: true }, () => {
   test('does not modify strings already in camelCase', { concurrency: true }, () => {
@@ -86,86 +86,86 @@ suite('expandScientificNotation', { concurrency: true }, () => {
   });
 });
 
-suite('fixExcelNumber', { concurrency: true }, () => {
+suite('CSVNormalizer.fixExcelNumber', { concurrency: true }, () => {
   test('parses numbers', { concurrency: true }, () => {
-    deepStrictEqual(fixExcelNumber('123'), 123);
-    deepStrictEqual(fixExcelNumber('123.456'), 123.456);
+    deepStrictEqual(CSVNormalizer.fixExcelNumber('123'), 123);
+    deepStrictEqual(CSVNormalizer.fixExcelNumber('123.456'), 123.456);
   });
   test('fixes numbers mangled to dates', { concurrency: true }, () => {
-    deepStrictEqual(fixExcelNumber('1/1/1900'), 1);
-    deepStrictEqual(fixExcelNumber('1/2/1900'), 2);
-    deepStrictEqual(fixExcelNumber('2/28/1900'), 59);
-    deepStrictEqual(fixExcelNumber('2/29/1900'), 60);
-    deepStrictEqual(fixExcelNumber('3/1/1900'), 61);
-    deepStrictEqual(fixExcelNumber('12/31/1969'), 25568);
-    deepStrictEqual(fixExcelNumber('1/1/1970'), 25569);
-    deepStrictEqual(fixExcelNumber('1/2/1970'), 25570);
-    deepStrictEqual(fixExcelNumber('12/31/2023'), 45291);
-    deepStrictEqual(fixExcelNumber('1/1/2024'), 45292);
+    deepStrictEqual(CSVNormalizer.fixExcelNumber('1/1/1900'), 1);
+    deepStrictEqual(CSVNormalizer.fixExcelNumber('1/2/1900'), 2);
+    deepStrictEqual(CSVNormalizer.fixExcelNumber('2/28/1900'), 59);
+    deepStrictEqual(CSVNormalizer.fixExcelNumber('2/29/1900'), 60);
+    deepStrictEqual(CSVNormalizer.fixExcelNumber('3/1/1900'), 61);
+    deepStrictEqual(CSVNormalizer.fixExcelNumber('12/31/1969'), 25568);
+    deepStrictEqual(CSVNormalizer.fixExcelNumber('1/1/1970'), 25569);
+    deepStrictEqual(CSVNormalizer.fixExcelNumber('1/2/1970'), 25570);
+    deepStrictEqual(CSVNormalizer.fixExcelNumber('12/31/2023'), 45291);
+    deepStrictEqual(CSVNormalizer.fixExcelNumber('1/1/2024'), 45292);
   });
   test('fixes numbers mangled to accounting format', { concurrency: true }, () => {
-    deepStrictEqual(fixExcelNumber(' $123.00 '), 123);
-    deepStrictEqual(fixExcelNumber(' $123.45 '), 123.45);
-    deepStrictEqual(fixExcelNumber(' $10,000,000.00 '), 10000000);
+    deepStrictEqual(CSVNormalizer.fixExcelNumber(' $123.00 '), 123);
+    deepStrictEqual(CSVNormalizer.fixExcelNumber(' $123.45 '), 123.45);
+    deepStrictEqual(CSVNormalizer.fixExcelNumber(' $10,000,000.00 '), 10000000);
   });
   test('passes through non-number values', { concurrency: true }, () => {
-    deepStrictEqual(fixExcelNumber('abc'), 'abc');
+    deepStrictEqual(CSVNormalizer.fixExcelNumber('abc'), 'abc');
   });
   test('passes through blank value', { concurrency: true }, () => {
-    deepStrictEqual(fixExcelNumber(''), '');
+    deepStrictEqual(CSVNormalizer.fixExcelNumber(''), '');
   });
 });
 
-suite('fixExcelBigInt', { concurrency: true }, () => {
+suite('CSVNormalizer.fixExcelBigInt', { concurrency: true }, () => {
   test('parses BigInt', { concurrency: true }, () => {
-    deepStrictEqual(fixExcelBigInt('123'), '123');
-    deepStrictEqual(fixExcelBigInt('123456'), '123456');
-    deepStrictEqual(fixExcelBigInt('123456789123456789123456789'), '123456789123456789123456789');
+    deepStrictEqual(CSVNormalizer.fixExcelBigInt('123'), '123');
+    deepStrictEqual(CSVNormalizer.fixExcelBigInt('123456'), '123456');
+    deepStrictEqual(CSVNormalizer.fixExcelBigInt('123456789123456789123456789'), '123456789123456789123456789');
   });
   test('fixes BigInt mangled to scientific notation', { concurrency: true }, () => {
-    deepStrictEqual(fixExcelBigInt('1E+18'), '1000000000000000000');
-    deepStrictEqual(fixExcelBigInt('1.123456789123456789E18'), '1123456789123456789');
-    deepStrictEqual(fixExcelBigInt('1.1234567891234567891234E18'), '1123456789123456789');
+    deepStrictEqual(CSVNormalizer.fixExcelBigInt('1E+18'), '1000000000000000000');
+    deepStrictEqual(CSVNormalizer.fixExcelBigInt('1.123456789123456789E18'), '1123456789123456789');
+    deepStrictEqual(CSVNormalizer.fixExcelBigInt('1.1234567891234567891234E18'), '1123456789123456789');
   });
   test('fixes BigInt mangled to accounting format', { concurrency: true }, () => {
-    deepStrictEqual(fixExcelBigInt(' $123.00 '), '123');
-    deepStrictEqual(fixExcelBigInt(' $123.45 '), '123');
-    deepStrictEqual(fixExcelBigInt('  $1,123,123,123,123,123,123.12  '), '1123123123123123123');
+    deepStrictEqual(CSVNormalizer.fixExcelBigInt(' $123.00 '), '123');
+    deepStrictEqual(CSVNormalizer.fixExcelBigInt(' $123.45 '), '123');
+    deepStrictEqual(CSVNormalizer.fixExcelBigInt('  $1,123,123,123,123,123,123.12  '), '1123123123123123123');
   });
   test('passes through non-BigInt values', { concurrency: true }, () => {
-    deepStrictEqual(fixExcelBigInt('abc'), 'abc');
+    deepStrictEqual(CSVNormalizer.fixExcelBigInt('abc'), 'abc');
   });
   test('passes through blank value', { concurrency: true }, () => {
-    deepStrictEqual(fixExcelBigInt(''), '');
+    deepStrictEqual(CSVNormalizer.fixExcelBigInt(''), '');
   });
 });
 
-suite('fixExcelDate', { concurrency: true }, () => {
+suite('CSVNormalizer.fixExcelDate', { concurrency: true }, () => {
   test('parses dates', { concurrency: true }, () => {
-    deepStrictEqual(fixExcelDate('12/31/24').valueOf(), new Date('12/31/24').valueOf());
+    deepStrictEqual(CSVNormalizer.fixExcelDate('12/31/24').valueOf(), new Date('12/31/24').valueOf());
   });
   test('fixes dates mangled to numbers', { concurrency: true }, () => {
-    deepStrictEqual(fixExcelDate('1').valueOf(), new Date('1900-01-01T00:00:00.000Z').valueOf());
-    deepStrictEqual(fixExcelDate('2').valueOf(), new Date('1900-01-02T00:00:00.000Z').valueOf());
-    deepStrictEqual(fixExcelDate('59').valueOf(), new Date('1900-02-28T00:00:00.000Z').valueOf());
-    deepStrictEqual(fixExcelDate('60').valueOf(), new Date('1900-02-29T00:00:00.000Z').valueOf());
-    deepStrictEqual(fixExcelDate('61').valueOf(), new Date('1900-03-01T00:00:00.000Z').valueOf());
-    deepStrictEqual(fixExcelDate('25568').valueOf(), new Date('1969-12-31T00:00:00.000Z').valueOf());
-    deepStrictEqual(fixExcelDate('25569').valueOf(), new Date('1970-01-01T00:00:00.000Z').valueOf());
-    deepStrictEqual(fixExcelDate('25570').valueOf(), new Date('1970-01-02T00:00:00.000Z').valueOf());
-    deepStrictEqual(fixExcelDate('45291').valueOf(), new Date('2023-12-31T00:00:00.000Z').valueOf());
-    deepStrictEqual(fixExcelDate('45292').valueOf(), new Date('2024-01-01T00:00:00.000Z').valueOf());
+    deepStrictEqual(CSVNormalizer.fixExcelDate('1').valueOf(), new Date('1900-01-01T00:00:00.000Z').valueOf());
+    deepStrictEqual(CSVNormalizer.fixExcelDate('2').valueOf(), new Date('1900-01-02T00:00:00.000Z').valueOf());
+    deepStrictEqual(CSVNormalizer.fixExcelDate('59').valueOf(), new Date('1900-02-28T00:00:00.000Z').valueOf());
+    deepStrictEqual(CSVNormalizer.fixExcelDate('60').valueOf(), new Date('1900-02-29T00:00:00.000Z').valueOf());
+    deepStrictEqual(CSVNormalizer.fixExcelDate('61').valueOf(), new Date('1900-03-01T00:00:00.000Z').valueOf());
+    deepStrictEqual(CSVNormalizer.fixExcelDate('25568').valueOf(), new Date('1969-12-31T00:00:00.000Z').valueOf());
+    deepStrictEqual(CSVNormalizer.fixExcelDate('25569').valueOf(), new Date('1970-01-01T00:00:00.000Z').valueOf());
+    deepStrictEqual(CSVNormalizer.fixExcelDate('25570').valueOf(), new Date('1970-01-02T00:00:00.000Z').valueOf());
+    deepStrictEqual(CSVNormalizer.fixExcelDate('45291').valueOf(), new Date('2023-12-31T00:00:00.000Z').valueOf());
+    deepStrictEqual(CSVNormalizer.fixExcelDate('45292').valueOf(), new Date('2024-01-01T00:00:00.000Z').valueOf());
   });
   test('fixes date times mangled to numbers', { concurrency: true }, () => {
-    deepStrictEqual(fixExcelDate('43915.31372').valueOf(), new Date('2020-03-25T07:31:45.407Z').valueOf());
-    deepStrictEqual(fixExcelDate('44067.63').valueOf(), new Date('2020-08-24T15:07:11.999Z').valueOf());
-    deepStrictEqual(fixExcelDate('44309.63502').valueOf(), new Date('2021-04-23T15:14:25.728Z').valueOf());
+    deepStrictEqual(CSVNormalizer.fixExcelDate('43915.31372').valueOf(), new Date('2020-03-25T07:31:45.407Z').valueOf());
+    deepStrictEqual(CSVNormalizer.fixExcelDate('44067.63').valueOf(), new Date('2020-08-24T15:07:11.999Z').valueOf());
+    deepStrictEqual(CSVNormalizer.fixExcelDate('44309.63502').valueOf(), new Date('2021-04-23T15:14:25.728Z').valueOf());
   });
   test('passes through non-date values', { concurrency: true }, () => {
-    deepStrictEqual(fixExcelDate('abc'), 'abc');
+    deepStrictEqual(CSVNormalizer.fixExcelDate('abc'), 'abc');
   });
   test('passes through blank value', { concurrency: true }, () => {
-    deepStrictEqual(fixExcelDate(''), '');
+    deepStrictEqual(CSVNormalizer.fixExcelDate(''), '');
   });
 });
 

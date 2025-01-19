@@ -50,119 +50,6 @@ export function expandScientificNotation(str, truncate = false) {
 }
 
 /**
- * Fix number mangling by Excel.
- * 
- * For example, converting numbers to dates or adding extra characters (e.g., whitespace, thousands separators, or currency symbols).
- * @param {string} str A string that might be a number.
- * @returns {number|string} If a fix was possible, a number. Otherwise, the original string is returned.
- */
-export function fixExcelNumber(str) {
-  if (str === '') { return str; }
-  const original = str;
-
-  // Can parse normally without any fixes
-  const num1 = Number(original);
-  if (!Number.isNaN(num1)) {
-    return num1;
-  }
-
-  // Excel converted the number to a date
-  const date = new Date(original);
-  if (date.toString() !== 'Invalid Date') {
-    // Excel incorrectly thinks 1900 was a leap year, need to offset 1 day before 3/1/1900
-    const leapYearOffset = (original === '2/29/1900' || date.valueOf() < -2203862400000) ? -1 : 0;
-    // Convert JavaScript date to Excel serialized date:
-    // Days since Unix epoch - Timezone offset in days + Days between Jan 1, 1900 and Unix epoch start
-    return (date.valueOf() / 1000 / 60 / 60 / 24) - (date.getTimezoneOffset() / 60 / 24) + 25569 + leapYearOffset;
-  }
-
-  // Excel added extra characters from setting the format to "Accounting" or other custom formats
-  // Delete everything that's not a number or the decimal separator
-  const replaced = original.replaceAll(new RegExp(`[^0-9${DECIMAL_SEPARATOR}]`, 'g'), '');
-  const num2 = Number(replaced);
-  if (!Number.isNaN(num2) && replaced !== '') {
-    return num2;
-  }
-
-  // Otherwise, pass through as string
-  console.warn(`Could not fix number: "${original}". Passing through as a string.`);
-  return original;
-}
-
-/**
- * Fix BigInt mangling by Excel.
- * 
- * For example, converting BigInt to scientific notation.
- * @param {string} str A string that might be a BigInt.
- * @returns {string} If a fix was possible, a string that may be passed to the `BigInt()` constructor without error.
- * Otherwise, the original string is returned.
- * 
- * Note that **a string is always returned** to simplify downstream use because BigInt serialization is not possible with `JSON.stringify()`.
- */
-export function fixExcelBigInt(str) {
-  if (str === '') { return str; }
-  const original = str;
-
-  // Can parse normally without any fixes
-  try {
-    return BigInt(original).toString();
-  } catch { }
-
-  // Excel converted to scientific notation
-  try {
-    const expanded = expandScientificNotation(original, true);
-    if (expanded === null) { throw new Error(); }
-    return BigInt(expanded).toString();
-  } catch { }
-
-  // Excel added extra characters from setting the format to "Accounting" or other custom formats
-  // Delete everything that's not a number or the decimal separator
-  try {
-    const str = original.replaceAll(new RegExp(`[^0-9${DECIMAL_SEPARATOR}]`, 'g'), '');
-    if (str === '') { throw new Error(); }
-    return BigInt(str.split(DECIMAL_SEPARATOR)[0]).toString();
-  } catch { }
-
-  // Otherwise, pass through as string
-  console.warn(`Could not fix bigint: "${original}". Passing through as a string.`);
-  return original;
-}
-
-/**
- * Fix date mangling by Excel.
- * 
- * For example, converting date to number.
- * @param {string} str A string that might be a date.
- * @returns {Date|string} If a fix was possible, a date. Otherwise, the original string is returned.
- */
-export function fixExcelDate(str) {
-  if (str === '') { return str; }
-  const original = str;
-
-  // Excel converted date to a number
-  // This check MUST come before the new Date() check because numbers can be parsed as dates.
-  const num = Number(original);
-  if (!Number.isNaN(num)) {
-    const day = Math.trunc(num); // Days elapsed since January 1, 1900, including non-existent February 29, 1900
-    const time = (num % 1) * 86400000; // Time of day as decimal, so 0 = 12 AM and 0.999... = 11:59:59.999... PM
-    if (num < 61) {
-      return new Date(Date.UTC(0, 0, day, 0, 0, 0, time));
-    }
-    return new Date(Date.UTC(0, 0, day - 1, 0, 0, 0, time)); // Offset for non-existent February 29, 1900
-  }
-
-  // Can parse normally without any fixes
-  const date = new Date(original);
-  if (date.toString() !== 'Invalid Date') {
-    return date;
-  }
-
-  // Otherwise, pass through as string
-  console.warn(`Could not fix date: "${original}". Passing through as a string.`);
-  return original;
-}
-
-/**
  * Metadata about CSV columns used to normalize raw CSV data.
  * @typedef {Object} CSVNormalizerHeader
  * @property {string} name The name of the CSV column, in camelCase. Values in the header row of the CSV will be
@@ -270,9 +157,9 @@ export class CSVNormalizer extends TransformStream {
       const emptyField = value === '' ? true : false;
       switch (type) {
         case 'string': break;
-        case 'number': value = passthroughNumber ? value : fixExcelNumber(value); break;
-        case 'bigint': value = passthroughBigInt ? value : fixExcelBigInt(value); break;
-        case 'date': value = passthroughDate ? value : fixExcelDate(value); break;
+        case 'number': value = passthroughNumber ? value : CSVNormalizer.fixExcelNumber(value); break;
+        case 'bigint': value = passthroughBigInt ? value : CSVNormalizer.fixExcelBigInt(value); break;
+        case 'date': value = passthroughDate ? value : CSVNormalizer.fixExcelDate(value); break;
       }
       if (emptyField && defaultValue !== null) {
         value = defaultValue;
@@ -283,6 +170,119 @@ export class CSVNormalizer extends TransformStream {
     if (!passthroughEmptyRows && out.every(f => f.emptyField)) { return; }
 
     controller.enqueue(JSON.stringify(out));
+  }
+
+  /**
+   * Fix number mangling by Excel.
+   * 
+   * For example, converting numbers to dates or adding extra characters (e.g., whitespace, thousands separators, or currency symbols).
+   * @param {string} str A string that might be a number.
+   * @returns {number|string} If a fix was possible, a number. Otherwise, the original string is returned.
+   */
+  static fixExcelNumber(str) {
+    if (str === '') { return str; }
+    const original = str;
+
+    // Can parse normally without any fixes
+    const num1 = Number(original);
+    if (!Number.isNaN(num1)) {
+      return num1;
+    }
+
+    // Excel converted the number to a date
+    const date = new Date(original);
+    if (date.toString() !== 'Invalid Date') {
+      // Excel incorrectly thinks 1900 was a leap year, need to offset 1 day before 3/1/1900
+      const leapYearOffset = (original === '2/29/1900' || date.valueOf() < -2203862400000) ? -1 : 0;
+      // Convert JavaScript date to Excel serialized date:
+      // Days since Unix epoch - Timezone offset in days + Days between Jan 1, 1900 and Unix epoch start
+      return (date.valueOf() / 1000 / 60 / 60 / 24) - (date.getTimezoneOffset() / 60 / 24) + 25569 + leapYearOffset;
+    }
+
+    // Excel added extra characters from setting the format to "Accounting" or other custom formats
+    // Delete everything that's not a number or the decimal separator
+    const replaced = original.replaceAll(new RegExp(`[^0-9${DECIMAL_SEPARATOR}]`, 'g'), '');
+    const num2 = Number(replaced);
+    if (!Number.isNaN(num2) && replaced !== '') {
+      return num2;
+    }
+
+    // Otherwise, pass through as string
+    console.warn(`Could not fix number: "${original}". Passing through as a string.`);
+    return original;
+  }
+
+  /**
+   * Fix BigInt mangling by Excel.
+   * 
+   * For example, converting BigInt to scientific notation.
+   * @param {string} str A string that might be a BigInt.
+   * @returns {string} If a fix was possible, a string that may be passed to the `BigInt()` constructor without error.
+   * Otherwise, the original string is returned.
+   * 
+   * Note that **a string is always returned** to simplify downstream use because BigInt serialization is not possible with `JSON.stringify()`.
+   */
+  static fixExcelBigInt(str) {
+    if (str === '') { return str; }
+    const original = str;
+
+    // Can parse normally without any fixes
+    try {
+      return BigInt(original).toString();
+    } catch { }
+
+    // Excel converted to scientific notation
+    try {
+      const expanded = expandScientificNotation(original, true);
+      if (expanded === null) { throw new Error(); }
+      return BigInt(expanded).toString();
+    } catch { }
+
+    // Excel added extra characters from setting the format to "Accounting" or other custom formats
+    // Delete everything that's not a number or the decimal separator
+    try {
+      const str = original.replaceAll(new RegExp(`[^0-9${DECIMAL_SEPARATOR}]`, 'g'), '');
+      if (str === '') { throw new Error(); }
+      return BigInt(str.split(DECIMAL_SEPARATOR)[0]).toString();
+    } catch { }
+
+    // Otherwise, pass through as string
+    console.warn(`Could not fix bigint: "${original}". Passing through as a string.`);
+    return original;
+  }
+
+  /**
+   * Fix date mangling by Excel.
+   * 
+   * For example, converting date to number.
+   * @param {string} str A string that might be a date.
+   * @returns {Date|string} If a fix was possible, a date. Otherwise, the original string is returned.
+   */
+  static fixExcelDate(str) {
+    if (str === '') { return str; }
+    const original = str;
+
+    // Excel converted date to a number
+    // This check MUST come before the new Date() check because numbers can be parsed as dates.
+    const num = Number(original);
+    if (!Number.isNaN(num)) {
+      const day = Math.trunc(num); // Days elapsed since January 1, 1900, including non-existent February 29, 1900
+      const time = (num % 1) * 86400000; // Time of day as decimal, so 0 = 12 AM and 0.999... = 11:59:59.999... PM
+      if (num < 61) {
+        return new Date(Date.UTC(0, 0, day, 0, 0, 0, time));
+      }
+      return new Date(Date.UTC(0, 0, day - 1, 0, 0, 0, time)); // Offset for non-existent February 29, 1900
+    }
+
+    // Can parse normally without any fixes
+    const date = new Date(original);
+    if (date.toString() !== 'Invalid Date') {
+      return date;
+    }
+
+    // Otherwise, pass through as string
+    console.warn(`Could not fix date: "${original}". Passing through as a string.`);
+    return original;
   }
 }
 
