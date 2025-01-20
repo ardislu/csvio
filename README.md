@@ -1,10 +1,10 @@
-# Streamed CSV
+# CSV I/O
 
-Streamed CSV is a Node.js library to read, transform, and write CSV files using the [Web Streams API](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API).
+CSV I/O (`csvio`) is a Node.js library for processing CSV files.
 
 ## Example
 
-Assume `./data/example-in.csv` looks like:
+Assume `./examples/data/ex1-in.csv` looks like:
 
 ```plaintext
 columnA,columnB
@@ -24,12 +24,12 @@ function timesTwo(row) {
   return [Number(row[0]) * 2, Number(row[1]) * 2];
 }
 
-await new CSVReader('./data/example-in.csv')
+await new CSVReader('./examples/data/ex1-in.csv')
   .pipeThrough(new CSVTransformer(timesTwo))
-  .pipeTo(new CSVWriter('./data/example-out.csv'));
+  .pipeTo(new CSVWriter('./examples/data/ex1-out.csv'));
 ```
 
-A new `./data/example-out.csv` file will be created:
+A new `./examples/data/ex1-out.csv` file will be created:
 
 ```plaintext
 columnA,columnB
@@ -46,24 +46,28 @@ See the [`examples`](./examples) folder for more end-to-end examples.
 
 A common workflow is:
 
-1. Read an existing CSV file row by row.
-2. Perform some transformation using the data in each row.
-3. Write the transformed data to another CSV file.
+1. Read an existing input CSV file.
+2. Perform some processing using the data in the input CSV file.
+3. Write data to an output CSV file.
 
-Most people are interested in coding the transformation logic for step (2), and much less interested in coding the error-prone boilerplate code for steps (1) and (3).
+Most people are interested in coding the processing logic for step (2) and less interested in coding the boilerplate for steps (1) and (3).
 
-Streamed CSV provides the bare minimum code to accomplish **this specific workflow**. This library is *not* intended for any other workflow (e.g., parsing CSV files with custom delimiters, converting between CSV and other formats, performing data analytics on CSV data). For those workflows, see ["Other CSV libraries"](#other-csv-libraries).
+CSV I/O provides the minimum code to accomplish **this specific workflow**. This library is *not* intended for any other workflow (e.g., parsing CSV files with custom delimiters, converting between CSV and other formats, generating CSV data). For those workflows, see ["Other CSV libraries"](#other-csv-libraries).
 
 ## Features
 
 - No dependencies other than the Node.js standard library.
 - Reads and writes [RFC 4180](https://www.ietf.org/rfc/rfc4180.txt) compliant CSV files.
+- Optimized for common CSV processing requirements (e.g., concurrent processing, batching, error handling).
 - Single `core.js` file contains *all* core API code.
-- Prioritizes Web Platform APIs (e.g., the [Web Streams API](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API) over [Node.js Streams](https://nodejs.org/api/stream.html)).
+- Prioritizes [WinterTC (TC55)](https://wintercg.org/) [Minimum Common Web Platform APIs](https://min-common-api.proposal.wintercg.org/) (e.g., the [Web Streams API](https://streams.spec.whatwg.org/) over [Node.js Streams](https://nodejs.org/api/stream.html)).
 
 ## Core API
 
-The core API is contained in `src/core.js` and exposes three functions to read, transform, and write CSV files.
+The core API is contained in `src/core.js` and exposes three classes to read, transform, and write CSV files.
+
+> [!TIP]
+> Although these classes *may* be used by themselves (as demonstrated below), they are **intended to be used together**. See [`examples`](./examples) for more practical usage demonstrations.
 
 ### `CSVReader`
 
@@ -72,7 +76,17 @@ A `ReadableStream` where each chunk is one row from a local CSV file.
 ```javascript
 import { CSVReader } from './src/index.js';
 
-const readableStream = new CSVReader('./data/example-in.csv');
+const readableStream = new CSVReader('./examples/data/ex1-in.csv');
+
+for await (const row of readableStream) {
+  console.log(row);
+}
+// ["columnA","columnB"]
+// ["1","1"]
+// ["100","100"]
+// ["223423","455947"]
+// ["348553","692708"]
+// ["536368","676147"]
 ```
 
 ### `CSVTransformer`
@@ -82,11 +96,26 @@ A `TransformStream` that will apply a given function to each row in a streamed C
 ```javascript
 import { CSVTransformer } from './src/index.js';
 
-function timesTwo(row) {
-  return [Number(row[0]) * 2, Number(row[1]) * 2];
+function edit(row) {
+  return [`${row[0]}: transformed!`];
 }
 
-const transformStream = new CSVTransformer(timesTwo);
+const transformStream = new CSVTransformer(edit);
+
+const rows = ReadableStream.from((function* () {
+  yield '["header"]';
+  yield '["1"]';
+  yield '["2"]';
+  yield '["3"]';
+})()).pipeThrough(transformStream);
+
+for await (const row of rows) {
+  console.log(row);
+}
+// ["header"]
+// ["1: transformed!"]
+// ["2: transformed!"]
+// ["3: transformed!"]
 ```
 
 ### `CSVWriter`
@@ -96,7 +125,15 @@ A `WritableStream` to save CSV row data to disk.
 ```javascript
 import { CSVWriter } from './src/index.js';
 
-const writableStream = new CSVWriter('./data/example-out.csv');
+const writableStream = new CSVWriter('./example.csv');
+
+await ReadableStream.from((function* () {
+  yield '["header1","header2"]';
+  yield '["1","1"]';
+  yield '["2","2"]';
+  yield '["3","3"]';
+})()).pipeTo(writableStream);
+// A new ./example.csv file is created with the CSV data
 ```
 
 ## Extended API
