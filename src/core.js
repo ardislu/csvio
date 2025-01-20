@@ -190,6 +190,9 @@ export class CSVTransformer extends TransformStream {
    * if there is only 1 row in the batch (except for the header row). The header row is always processed by itself and passed as a
    * `Array<string>`, regardless of the `options.maxBatchSize` value.
    * 
+   * If `options.maxConcurrent` is a number greater than `1`, multiple instances of the transformation function will be executed
+   * concurrently in groups up to the size of `options.maxConcurrent`.
+   * 
    * Return `null` to consume an input row without emitting an output row.
    * @param {CSVTransformerOptions} options Object containing flags to configure the stream logic.
    */
