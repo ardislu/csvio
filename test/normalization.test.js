@@ -6,38 +6,28 @@ import { CSVReader } from '../src/core.js';
 import { toCamelCase, expandScientificNotation, CSVNormalizer, CSVDenormalizer } from '../src/normalization.js';
 
 suite('toCamelCase', { concurrency: true }, () => {
-  test('does not modify strings already in camelCase', { concurrency: true }, () => {
-    const test1 = 'example';
-    const test2 = 'alreadyInCamelCase';
-    const test3 = 'withAcronymsABCNotDEFCapitalizedGHI';
-    deepStrictEqual(toCamelCase(test1), test1);
-    deepStrictEqual(toCamelCase(test2), test2);
-    deepStrictEqual(toCamelCase(test3), test3);
-  });
-  test('converts single word with capital first letter', { concurrency: true }, () => {
-    deepStrictEqual(toCamelCase('Example'), 'example');
-    deepStrictEqual(toCamelCase('ExampleOne'), 'exampleOne');
-  });
-  test('converts strings with spaces', { concurrency: true }, () => {
-    deepStrictEqual(toCamelCase('example one'), 'exampleOne');
-    deepStrictEqual(toCamelCase('example two with more words'), 'exampleTwoWithMoreWords');
-  });
-  test('converts strings with hyphens', { concurrency: true }, () => {
-    deepStrictEqual(toCamelCase('example-one'), 'exampleOne');
-    deepStrictEqual(toCamelCase('example-two-with-more-words'), 'exampleTwoWithMoreWords');
-  });
-  test('converts strings with underscores', { concurrency: true }, () => {
-    deepStrictEqual(toCamelCase('example_one'), 'exampleOne');
-    deepStrictEqual(toCamelCase('example_two_with_more_words'), 'exampleTwoWithMoreWords');
-  });
-  test('converts strings with mixed casing', { concurrency: true }, () => {
-    deepStrictEqual(toCamelCase('ExAmPlE oNe'), 'exampleOne');
-    deepStrictEqual(toCamelCase('eXaMpLe TwO-wItH_mOrE wOrDs'), 'exampleTwoWithMoreWords');
-  });
-  test('converts strings with excess whitespace', { concurrency: true }, () => {
-    deepStrictEqual(toCamelCase('   exampleOne  \r\n'), 'exampleOne');
-    deepStrictEqual(toCamelCase(' \r\n\r\n    example    Two\rWith More   \r\nWords  \r\n'), 'exampleTwoWithMoreWords');
-  });
+  const vectors = [
+    { name: 'does not modify lowercase word', input: 'example', output: 'example' },
+    { name: 'does not modify camelCase', input: 'alreadyInCamelCase', output: 'alreadyInCamelCase' },
+    { name: 'does not modify camelCase (with acronyms)', input: 'withAcronymsABCNotDEFCapitalizedGHI', output: 'withAcronymsABCNotDEFCapitalizedGHI' },
+    { name: 'converts single word with capital first letter', input: 'Example', output: 'example' },
+    { name: 'converts TitleCase', input: 'ExampleOne', output: 'exampleOne' },
+    { name: 'converts space', input: 'example one', output: 'exampleOne' },
+    { name: 'converts multiple spaces', input: 'example two with more words', output: 'exampleTwoWithMoreWords' },
+    { name: 'converts hyphen', input: 'example-one', output: 'exampleOne' },
+    { name: 'converts multiple hyphens', input: 'example-two-with-more-words', output: 'exampleTwoWithMoreWords' },
+    { name: 'converts underscore', input: 'example_one', output: 'exampleOne' },
+    { name: 'converts multiple underscores', input: 'example_two_with_more_words', output: 'exampleTwoWithMoreWords' },
+    { name: 'converts mixed casing', input: 'ExAmPlE oNe', output: 'exampleOne' },
+    { name: 'converts mixed casing (multiple words)', input: 'eXaMpLe TwO-wItH_mOrE wOrDs', output: 'exampleTwoWithMoreWords' },
+    { name: 'converts excess whitespace', input: '   exampleOne  \r\n', output: 'exampleOne' },
+    { name: 'converts excess whitespace (multiple words)', input: ' \r\n\r\n    example    Two\rWith More   \r\nWords  \r\n', output: 'exampleTwoWithMoreWords' }
+  ];
+  for (const { name, input, output } of vectors) {
+    test(name, { concurrency: true }, () => {
+      deepStrictEqual(toCamelCase(input), output);
+    });
+  }
 });
 
 suite('expandScientificNotation', { concurrency: true }, () => {
