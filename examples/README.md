@@ -23,3 +23,5 @@ node ./examples/ex1.js
 [Example 6: Handling a flaky transformation (basic retry strategy)](./ex6.js)
 
 [Example 7: Processing rows in batches (multi-row input)](./ex7.js)
+
+[Example 8: Processing rows concurrently (async)](./ex8.js)

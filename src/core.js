@@ -160,6 +160,10 @@ export class CSVReader extends ReadableStream {
  * to the `onError` function. The default value is `null` (errors will not be caught).
  * @property {Number} [maxBatchSize=1] The maximum number of rows that will be passed to the transformation function per function call (greedy).
  * The default value is `1`.
+ * @property {Number} [maxConcurrent=1] The maximum concurrent executions of the transformation function (greedy). The transformation function
+ * will be automatically turned into a promise if it isn't already async. Execution is blocked until all promises in a concurrent group settle
+ * (i.e., if one transformation in a group is hanging, further rows will NOT be processed even if all other transformations in the group are
+ * resolved). The default value is `1`.
  */
 
 /**
@@ -169,6 +173,7 @@ export class CSVReader extends ReadableStream {
 export class CSVTransformer extends TransformStream {
   #fn;
   #options;
+  #concurrent = [];
   #batch = [];
   #firstChunk = true;
 
@@ -201,6 +206,7 @@ export class CSVTransformer extends TransformStream {
     options.rawOutput ??= false;
     options.onError ??= null;
     options.maxBatchSize ??= 1;
+    options.maxConcurrent ??= 1;
 
     this.#fn = fn;
     this.#options = options;
@@ -228,32 +234,58 @@ export class CSVTransformer extends TransformStream {
     }
   }
 
+  async #enqueueConcurrent(controller) {
+    const results = await Promise.allSettled(this.#concurrent);
+    this.#concurrent.length = 0;
+    for (const r of results) {
+      const { status, value, reason } = r;
+      if (status === 'rejected') {
+        if (reason instanceof Error) {
+          throw reason;
+        }
+        else {
+          throw new Error(reason);
+        }
+      }
+      else {
+        this.#enqueueRow(value, controller);
+      }
+    }
+  }
+
   async #transform(chunk, controller) {
-    const { includeHeaders, rawInput, maxBatchSize } = this.#options;
+    const { includeHeaders, rawInput, maxBatchSize, maxConcurrent } = this.#options;
     const row = rawInput ? chunk : JSON.parse(chunk);
-    let out;
+
     if (this.#firstChunk) {
       this.#firstChunk = false;
-      out = includeHeaders ? await this.#wrappedFn(row) : row;
+      const out = includeHeaders ? await this.#wrappedFn(row) : row;
+      this.#enqueueRow(out, controller);
+      return;
     }
-    else if (maxBatchSize > 1) {
+
+    if (maxBatchSize > 1) {
       this.#batch.push(row);
       if (this.#batch.length === maxBatchSize) {
-        out = await this.#wrappedFn(this.#batch);
+        this.#concurrent.push(this.#wrappedFn(this.#batch));
         this.#batch.length = 0;
       }
     }
     else {
-      out = await this.#wrappedFn(row);
+      this.#concurrent.push(this.#wrappedFn(row));
     }
 
-    this.#enqueueRow(out, controller);
+    if (this.#concurrent.length === maxConcurrent) {
+      await this.#enqueueConcurrent(controller);
+    }
   }
 
   async #flush(controller) {
     if (this.#batch.length > 0) {
-      const out = await this.#wrappedFn(this.#batch);
-      this.#enqueueRow(out, controller);
+      this.#concurrent.push(this.#wrappedFn(this.#batch));
+    }
+    if (this.#concurrent.length > 0) {
+      await this.#enqueueConcurrent(controller);
     }
   }
 }
