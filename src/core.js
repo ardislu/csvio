@@ -13,20 +13,18 @@ import { fileURLToPath } from 'node:url';
  * @throws {TypeError} If `path` is not a `string`, `Buffer`, or `URL`, or it is a `URL` that is not using the `file` schema.
  */
 export function parsePathLike(path) {
-  let parsedPath;
   if (typeof path === 'string') {
-    parsedPath = normalize(path);
+    return normalize(path);
   }
   else if (ArrayBuffer.isView(path) || path instanceof ArrayBuffer) {
-    parsedPath = normalize(new TextDecoder().decode(path));
+    return normalize(new TextDecoder().decode(path));
   }
   else if (path instanceof URL) {
-    parsedPath = fileURLToPath(path);
+    return fileURLToPath(path);
   }
   else {
     throw new TypeError(`Expected a string, Buffer, or URL, but received ${typeof path}.`);
   }
-  return parsedPath;
 }
 
 /**
