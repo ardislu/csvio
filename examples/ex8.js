@@ -1,6 +1,6 @@
 // ## Example 8: Processing rows concurrently (async)
 // 
-// Set the `maxConcurrent` option to a number greater than `1` to process rows in parallel. The transformation function
+// Set the `maxConcurrent` option to a number greater than `1` to process rows concurrently. The transformation function
 // will be automatically turned into a promise if it isn't already async.
 // 
 // Note that execution is blocked until all promises in a concurrent group settle. So if there is one transformation that
@@ -18,7 +18,7 @@ function tick() {
 }
 
 let firstChunk = true;
-async function parallel(row) {
+async function concurrent(row) {
   if (firstChunk) {
     firstChunk = false;
     return ['tick number', ...row];
@@ -28,5 +28,5 @@ async function parallel(row) {
 }
 
 await new CSVReader(new URL('./data/ex8-in.csv', import.meta.url))
-  .pipeThrough(new CSVTransformer(parallel, { includeHeaders: true, maxConcurrent: 5 }))
+  .pipeThrough(new CSVTransformer(concurrent, { includeHeaders: true, maxConcurrent: 5 }))
   .pipeTo(new CSVWriter(new URL('./data/ex8-out.csv', import.meta.url)));
