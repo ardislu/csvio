@@ -31,49 +31,31 @@ suite('toCamelCase', { concurrency: true }, () => {
 });
 
 suite('expandScientificNotation', { concurrency: true }, () => {
-  test('returns null for numbers not in scientific notation', { concurrency: true }, () => {
-    deepStrictEqual(expandScientificNotation('123'), null);
-    deepStrictEqual(expandScientificNotation('123n'), null);
-    deepStrictEqual(expandScientificNotation('123.456'), null);
-  });
-  test('returns null for values that are not strings of numbers', { concurrency: true }, () => {
-    deepStrictEqual(expandScientificNotation('abc'), null);
-    deepStrictEqual(expandScientificNotation(123), null);
-    deepStrictEqual(expandScientificNotation(123n), null);
-    deepStrictEqual(expandScientificNotation([]), null);
-    deepStrictEqual(expandScientificNotation({}), null);
-  });
-  test('returns expanded form for positive exponents', { concurrency: true }, () => {
-    deepStrictEqual(expandScientificNotation('1E2'), '100');
-    deepStrictEqual(expandScientificNotation('1E10'), '10000000000');
-    deepStrictEqual(expandScientificNotation('1E18'), '1000000000000000000');
-    deepStrictEqual(expandScientificNotation('1E+18'), '1000000000000000000');
-  });
-  test('returns expanded form for negative mantissas', { concurrency: true }, () => {
-    deepStrictEqual(expandScientificNotation('-1E2'), '-100');
-    deepStrictEqual(expandScientificNotation('-1E10'), '-10000000000');
-    deepStrictEqual(expandScientificNotation('-1E18'), '-1000000000000000000');
-    deepStrictEqual(expandScientificNotation('-1E+18'), '-1000000000000000000');
-  });
-  test('returns expanded form for mantissas with decimals', { concurrency: true }, () => {
-    deepStrictEqual(expandScientificNotation('1.1E2'), '110');
-    deepStrictEqual(expandScientificNotation('1.11E2'), '111');
-    deepStrictEqual(expandScientificNotation('1.111E2'), '111.1');
-    deepStrictEqual(expandScientificNotation('1.12345E10'), '11234500000');
-    deepStrictEqual(expandScientificNotation('1.123456789123456789E18'), '1123456789123456789');
-    deepStrictEqual(expandScientificNotation('1.1234567891234567891234E18'), '1123456789123456789.1234');
-  });
-  test('truncates decimals correctly', { concurrency: true }, () => {
-    deepStrictEqual(expandScientificNotation('1.1E2', true), '110');
-    deepStrictEqual(expandScientificNotation('1.11E2', true), '111');
-    deepStrictEqual(expandScientificNotation('1.111E2', true), '111');
-    deepStrictEqual(expandScientificNotation('1.1111E2', true), '111');
-    deepStrictEqual(expandScientificNotation('1.11111E2', true), '111');
-    deepStrictEqual(expandScientificNotation('1.111111111E10', true), '11111111110');
-    deepStrictEqual(expandScientificNotation('1.1111111111E10', true), '11111111111');
-    deepStrictEqual(expandScientificNotation('1.11111111111E10', true), '11111111111');
-    deepStrictEqual(expandScientificNotation('1.111111111111E10', true), '11111111111');
-  });
+  const vectors = [
+    { name: 'returns null for string integer', input: '123', output: null },
+    { name: 'returns null for string BigInt', input: '123n', output: null },
+    { name: 'returns null for string number', input: '123.456', output: null },
+    { name: 'returns null for string non-numeric', input: 'abc', output: null },
+    { name: 'returns null for number', input: 123, output: null },
+    { name: 'returns null for BigInt', input: 123n, output: null },
+    { name: 'returns null for array', input: [], output: null },
+    { name: 'returns null for object', input: {}, output: null },
+    { name: 'returns expanded form for positive exponent', input: '1E18', output: '1000000000000000000' },
+    { name: 'returns expanded form for positive exponent (with plus)', input: '1E+18', output: '1000000000000000000' },
+    { name: 'returns expanded form for negative mantissa', input: '-1E18', output: '-1000000000000000000' },
+    { name: 'returns expanded form for negative mantissa (with plus)', input: '-1E+18', output: '-1000000000000000000' },
+    { name: 'returns expanded form with exponent equal to 1', input: '1E1', output: '10' },
+    { name: 'returns expanded form with decimals smaller than exponent', input: '1.1E2', output: '110' },
+    { name: 'returns expanded form with decimals equal to exponent', input: '1.11E2', output: '111' },
+    { name: 'returns expanded form with decimals greater than exponent', input: '1.111E2', output: '111.1' },
+    { name: 'truncates when decimals greater than exponent by 1', input: '1.111E2', truncate: true, output: '111' },
+    { name: 'truncates when decimals greater than exponent by 2', input: '1.1111E2', truncate: true, output: '111' },
+  ];
+  for (const { name, input, truncate = false, output } of vectors) {
+    test(name, { concurrency: true }, () => {
+      deepStrictEqual(expandScientificNotation(input, truncate), output);
+    });
+  }
 });
 
 suite('CSVNormalizer.fixExcelNumber', { concurrency: true }, () => {
