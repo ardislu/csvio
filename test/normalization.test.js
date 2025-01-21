@@ -84,27 +84,22 @@ suite('CSVNormalizer.fixExcelNumber', { concurrency: true }, () => {
 });
 
 suite('CSVNormalizer.fixExcelBigInt', { concurrency: true }, () => {
-  test('parses BigInt', { concurrency: true }, () => {
-    deepStrictEqual(CSVNormalizer.fixExcelBigInt('123'), '123');
-    deepStrictEqual(CSVNormalizer.fixExcelBigInt('123456'), '123456');
-    deepStrictEqual(CSVNormalizer.fixExcelBigInt('123456789123456789123456789'), '123456789123456789123456789');
-  });
-  test('fixes BigInt mangled to scientific notation', { concurrency: true }, () => {
-    deepStrictEqual(CSVNormalizer.fixExcelBigInt('1E+18'), '1000000000000000000');
-    deepStrictEqual(CSVNormalizer.fixExcelBigInt('1.123456789123456789E18'), '1123456789123456789');
-    deepStrictEqual(CSVNormalizer.fixExcelBigInt('1.1234567891234567891234E18'), '1123456789123456789');
-  });
-  test('fixes BigInt mangled to accounting format', { concurrency: true }, () => {
-    deepStrictEqual(CSVNormalizer.fixExcelBigInt(' $123.00 '), '123');
-    deepStrictEqual(CSVNormalizer.fixExcelBigInt(' $123.45 '), '123');
-    deepStrictEqual(CSVNormalizer.fixExcelBigInt('  $1,123,123,123,123,123,123.12  '), '1123123123123123123');
-  });
-  test('passes through non-BigInt values', { concurrency: true }, () => {
-    deepStrictEqual(CSVNormalizer.fixExcelBigInt('abc'), 'abc');
-  });
-  test('passes through blank value', { concurrency: true }, () => {
-    deepStrictEqual(CSVNormalizer.fixExcelBigInt(''), '');
-  });
+  const vectors = [
+    { name: 'parses BigInt', input: '123456789123456789123456789', output: '123456789123456789123456789' },
+    { name: 'fixes scientific notation mangling', input: '1E+18', output: '1000000000000000000' },
+    { name: 'fixes scientific notation mangling with decimal', input: '1.123456789123456789E18', output: '1123456789123456789' },
+    { name: 'fixes scientific notation mangling with decimal (truncated)', input: '1.1234567891234567891234E18', output: '1123456789123456789' },
+    { name: 'fixes accounting mangling integer', input: ' $123.00 ', output: '123' },
+    { name: 'fixes accounting mangling number (truncated)', input: ' $123.45 ', output: '123' },
+    { name: 'fixes accounting mangling BigInt with commas', input: '  $1,123,123,123,123,123,123.12  ', output: '1123123123123123123' },
+    { name: 'passes through non-BigInt values', input: 'abc', output: 'abc' },
+    { name: 'passes through blank value', input: '', output: '' },
+  ];
+  for (const { name, input, output } of vectors) {
+    test(name, { concurrency: true }, () => {
+      deepStrictEqual(CSVNormalizer.fixExcelBigInt(input), output);
+    });
+  }
 });
 
 suite('CSVNormalizer.fixExcelDate', { concurrency: true }, () => {
