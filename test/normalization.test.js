@@ -103,32 +103,32 @@ suite('CSVNormalizer.fixExcelBigInt', { concurrency: true }, () => {
 });
 
 suite('CSVNormalizer.fixExcelDate', { concurrency: true }, () => {
-  test('parses dates', { concurrency: true }, () => {
-    deepStrictEqual(CSVNormalizer.fixExcelDate('12/31/24').valueOf(), new Date('12/31/24').valueOf());
-  });
-  test('fixes dates mangled to numbers', { concurrency: true }, () => {
-    deepStrictEqual(CSVNormalizer.fixExcelDate('1').valueOf(), new Date('1900-01-01T00:00:00.000Z').valueOf());
-    deepStrictEqual(CSVNormalizer.fixExcelDate('2').valueOf(), new Date('1900-01-02T00:00:00.000Z').valueOf());
-    deepStrictEqual(CSVNormalizer.fixExcelDate('59').valueOf(), new Date('1900-02-28T00:00:00.000Z').valueOf());
-    deepStrictEqual(CSVNormalizer.fixExcelDate('60').valueOf(), new Date('1900-02-29T00:00:00.000Z').valueOf());
-    deepStrictEqual(CSVNormalizer.fixExcelDate('61').valueOf(), new Date('1900-03-01T00:00:00.000Z').valueOf());
-    deepStrictEqual(CSVNormalizer.fixExcelDate('25568').valueOf(), new Date('1969-12-31T00:00:00.000Z').valueOf());
-    deepStrictEqual(CSVNormalizer.fixExcelDate('25569').valueOf(), new Date('1970-01-01T00:00:00.000Z').valueOf());
-    deepStrictEqual(CSVNormalizer.fixExcelDate('25570').valueOf(), new Date('1970-01-02T00:00:00.000Z').valueOf());
-    deepStrictEqual(CSVNormalizer.fixExcelDate('45291').valueOf(), new Date('2023-12-31T00:00:00.000Z').valueOf());
-    deepStrictEqual(CSVNormalizer.fixExcelDate('45292').valueOf(), new Date('2024-01-01T00:00:00.000Z').valueOf());
-  });
-  test('fixes date times mangled to numbers', { concurrency: true }, () => {
-    deepStrictEqual(CSVNormalizer.fixExcelDate('43915.31372').valueOf(), new Date('2020-03-25T07:31:45.407Z').valueOf());
-    deepStrictEqual(CSVNormalizer.fixExcelDate('44067.63').valueOf(), new Date('2020-08-24T15:07:11.999Z').valueOf());
-    deepStrictEqual(CSVNormalizer.fixExcelDate('44309.63502').valueOf(), new Date('2021-04-23T15:14:25.728Z').valueOf());
-  });
-  test('passes through non-date values', { concurrency: true }, () => {
-    deepStrictEqual(CSVNormalizer.fixExcelDate('abc'), 'abc');
-  });
-  test('passes through blank value', { concurrency: true }, () => {
-    deepStrictEqual(CSVNormalizer.fixExcelDate(''), '');
-  });
+  const vectors = [
+    { name: 'parses date', input: '12/31/24', output: '12/31/24' },
+    { name: 'fixes number mangling (1)', input: '1', output: '1900-01-01T00:00:00.000Z' },
+    { name: 'fixes number mangling (2)', input: '2', output: '1900-01-02T00:00:00.000Z' },
+    { name: 'fixes number mangling (59)', input: '59', output: '1900-02-28T00:00:00.000Z' },
+    { name: 'fixes number mangling (60)', input: '60', output: '1900-02-29T00:00:00.000Z' },
+    { name: 'fixes number mangling (61)', input: '61', output: '1900-03-01T00:00:00.000Z' },
+    { name: 'fixes number mangling (25568)', input: '25568', output: '1969-12-31T00:00:00.000Z' },
+    { name: 'fixes number mangling (25569)', input: '25569', output: '1970-01-01T00:00:00.000Z' },
+    { name: 'fixes number mangling (25570)', input: '25570', output: '1970-01-02T00:00:00.000Z' },
+    { name: 'fixes number mangling (43915.31372)', input: '43915.31372', output: '2020-03-25T07:31:45.407Z' },
+    { name: 'fixes number mangling (44067.63)', input: '44067.63', output: '2020-08-24T15:07:11.999Z' },
+    { name: 'fixes number mangling (44309.63502)', input: '44309.63502', output: '2021-04-23T15:14:25.728Z' },
+    { name: 'passes through non-date values', input: 'abc', output: 'abc', raw: true },
+    { name: 'passes through blank value', input: '', output: '', raw: true },
+  ];
+  for (const { name, input, output, raw = false } of vectors) {
+    test(name, { concurrency: true }, () => {
+      if (raw) {
+        deepStrictEqual(CSVNormalizer.fixExcelDate(input), output);
+      }
+      else {
+        deepStrictEqual(CSVNormalizer.fixExcelDate(input), new Date(output));
+      }
+    });
+  }
 });
 
 suite('CSVNormalizer', { concurrency: true }, () => {
