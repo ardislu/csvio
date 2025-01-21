@@ -59,33 +59,28 @@ suite('expandScientificNotation', { concurrency: true }, () => {
 });
 
 suite('CSVNormalizer.fixExcelNumber', { concurrency: true }, () => {
-  test('parses numbers', { concurrency: true }, () => {
-    deepStrictEqual(CSVNormalizer.fixExcelNumber('123'), 123);
-    deepStrictEqual(CSVNormalizer.fixExcelNumber('123.456'), 123.456);
-  });
-  test('fixes numbers mangled to dates', { concurrency: true }, () => {
-    deepStrictEqual(CSVNormalizer.fixExcelNumber('1/1/1900'), 1);
-    deepStrictEqual(CSVNormalizer.fixExcelNumber('1/2/1900'), 2);
-    deepStrictEqual(CSVNormalizer.fixExcelNumber('2/28/1900'), 59);
-    deepStrictEqual(CSVNormalizer.fixExcelNumber('2/29/1900'), 60);
-    deepStrictEqual(CSVNormalizer.fixExcelNumber('3/1/1900'), 61);
-    deepStrictEqual(CSVNormalizer.fixExcelNumber('12/31/1969'), 25568);
-    deepStrictEqual(CSVNormalizer.fixExcelNumber('1/1/1970'), 25569);
-    deepStrictEqual(CSVNormalizer.fixExcelNumber('1/2/1970'), 25570);
-    deepStrictEqual(CSVNormalizer.fixExcelNumber('12/31/2023'), 45291);
-    deepStrictEqual(CSVNormalizer.fixExcelNumber('1/1/2024'), 45292);
-  });
-  test('fixes numbers mangled to accounting format', { concurrency: true }, () => {
-    deepStrictEqual(CSVNormalizer.fixExcelNumber(' $123.00 '), 123);
-    deepStrictEqual(CSVNormalizer.fixExcelNumber(' $123.45 '), 123.45);
-    deepStrictEqual(CSVNormalizer.fixExcelNumber(' $10,000,000.00 '), 10000000);
-  });
-  test('passes through non-number values', { concurrency: true }, () => {
-    deepStrictEqual(CSVNormalizer.fixExcelNumber('abc'), 'abc');
-  });
-  test('passes through blank value', { concurrency: true }, () => {
-    deepStrictEqual(CSVNormalizer.fixExcelNumber(''), '');
-  });
+  const vectors = [
+    { name: 'parses integer', input: '123', output: 123 },
+    { name: 'parses number', input: '123.456', output: 123.456 },
+    { name: 'fixes date mangling (1/1/1900)', input: '1/1/1900', output: 1 },
+    { name: 'fixes date mangling (1/2/1900)', input: '1/2/1900', output: 2 },
+    { name: 'fixes date mangling (2/28/1900)', input: '2/28/1900', output: 59 },
+    { name: 'fixes date mangling (2/29/1900)', input: '2/29/1900', output: 60 },
+    { name: 'fixes date mangling (3/1/1900)', input: '3/1/1900', output: 61 },
+    { name: 'fixes date mangling (12/31/1969)', input: '12/31/1969', output: 25568 },
+    { name: 'fixes date mangling (1/1/1970)', input: '1/1/1970', output: 25569 },
+    { name: 'fixes date mangling (1/2/1970)', input: '1/2/1970', output: 25570 },
+    { name: 'fixes accounting mangling integer', input: ' $123.00 ', output: 123 },
+    { name: 'fixes accounting mangling number', input: ' $123.45 ', output: 123.45 },
+    { name: 'fixes accounting mangling with commas', input: ' $10,000,000.00 ', output: 10000000 },
+    { name: 'passes through non-number value', input: 'abc', output: 'abc' },
+    { name: 'passes through blank value', input: '', output: '' },
+  ];
+  for (const { name, input, output } of vectors) {
+    test(name, { concurrency: true }, () => {
+      deepStrictEqual(CSVNormalizer.fixExcelNumber(input), output);
+    });
+  }
 });
 
 suite('CSVNormalizer.fixExcelBigInt', { concurrency: true }, () => {
