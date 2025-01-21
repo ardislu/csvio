@@ -191,11 +191,11 @@ suite('CSVNormalizer', { concurrency: true }, () => {
   test('can remove empty rows', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['columnA', 'columnB'],
-      ['',''],
+      ['', ''],
       ['a', 'b'],
-      ['',''],
-      ['',''],
-      ['','']
+      ['', ''],
+      ['', ''],
+      ['', '']
     ])
       .pipeThrough(new CSVNormalizer([
         { name: 'columnA', type: 'string' },
