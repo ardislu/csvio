@@ -1,4 +1,4 @@
-// ## Example 5: Handling an irregularly-shaped CSV file
+// ## Example 1.4: Handling an irregularly-shaped CSV file
 // 
 // `CSVReader` can parse CSVs that have rows with a mismatching number of columns, for example CSVs
 // with informational file headers. This information can be handled as required in the transformation function.
@@ -24,6 +24,6 @@ function parse(row) {
   return [report, id, date, ...row];
 }
 
-await new CSVReader(new URL('./data/ex5-in.csv', import.meta.url))
+await new CSVReader(new URL('./data/ex1_4-in.csv', import.meta.url))
   .pipeThrough(new CSVTransformer(parse, { includeHeaders: true }))
-  .pipeTo(new CSVWriter(new URL('./data/ex5-out.csv', import.meta.url)));
+  .pipeTo(new CSVWriter(new URL('./data/ex1_4-out.csv', import.meta.url)));

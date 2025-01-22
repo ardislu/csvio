@@ -1,4 +1,4 @@
-// ## Example 6: Handling a flaky transformation (basic retry strategy)
+// ## Example 2.1: Basic retry strategy
 // 
 // Pass a function to the `onError` option of `CSVTransformer` to catch errors thrown by the transformation
 // function.
@@ -25,6 +25,6 @@ function flaky(row) {
   return [`${v}: pass`];
 }
 
-await new CSVReader(new URL('./data/ex6-in.csv', import.meta.url))
+await new CSVReader(new URL('./data/ex2_1-in.csv', import.meta.url))
   .pipeThrough(new CSVTransformer(flaky, { onError: (row, e, fn) => retry(row, fn, 1000) }))
-  .pipeTo(new CSVWriter(new URL('./data/ex6-out.csv', import.meta.url)));
+  .pipeTo(new CSVWriter(new URL('./data/ex2_1-out.csv', import.meta.url)));

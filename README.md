@@ -4,7 +4,7 @@ CSV I/O (`csvio`) is a Node.js library for processing CSV files.
 
 ## Example
 
-Assume `./examples/data/ex1-in.csv` looks like:
+Assume `./examples/data/ex1_1-in.csv` looks like:
 
 ```plaintext
 columnA,columnB
@@ -24,12 +24,12 @@ function timesTwo(row) {
   return [Number(row[0]) * 2, Number(row[1]) * 2];
 }
 
-await new CSVReader('./examples/data/ex1-in.csv')
+await new CSVReader('./examples/data/ex1_1-in.csv')
   .pipeThrough(new CSVTransformer(timesTwo))
-  .pipeTo(new CSVWriter('./examples/data/ex1-out.csv'));
+  .pipeTo(new CSVWriter('./examples/data/ex1_1-out.csv'));
 ```
 
-A new `./examples/data/ex1-out.csv` file will be created:
+A new `./examples/data/ex1_1-out.csv` file will be created:
 
 ```plaintext
 columnA,columnB
@@ -76,7 +76,7 @@ A `ReadableStream` where each chunk is one row from a local CSV file.
 ```javascript
 import { CSVReader } from './src/index.js';
 
-const readableStream = new CSVReader('./examples/data/ex1-in.csv');
+const readableStream = new CSVReader('./examples/data/ex1_1-in.csv');
 
 for await (const row of readableStream) {
   console.log(row);

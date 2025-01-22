@@ -1,4 +1,4 @@
-// ## Example 8: Processing rows concurrently (async)
+// ## Example 3.2: Concurrent processing (async) using `maxConcurrent`
 // 
 // Set the `maxConcurrent` option to a number greater than `1` to process rows concurrently. The transformation function
 // will be automatically turned into a promise if it isn't already async.
@@ -27,6 +27,6 @@ async function concurrent(row) {
   return [tick(), ...row];
 }
 
-await new CSVReader(new URL('./data/ex8-in.csv', import.meta.url))
+await new CSVReader(new URL('./data/ex3_2-in.csv', import.meta.url))
   .pipeThrough(new CSVTransformer(concurrent, { includeHeaders: true, maxConcurrent: 5 }))
-  .pipeTo(new CSVWriter(new URL('./data/ex8-out.csv', import.meta.url)));
+  .pipeTo(new CSVWriter(new URL('./data/ex3_2-out.csv', import.meta.url)));

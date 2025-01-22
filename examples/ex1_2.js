@@ -1,4 +1,4 @@
-// ## Example 2: Updating headers in the output
+// ## Example 1.2: Updating headers in the output
 // 
 // Set `includeHeaders: true` to manually handle the header row (first row).
 // 
@@ -18,6 +18,6 @@ function sum(row) {
   return [...row, Number(row[0]) + Number(row[1])];
 }
 
-await new CSVReader(new URL('./data/ex2-in.csv', import.meta.url))
+await new CSVReader(new URL('./data/ex1_2-in.csv', import.meta.url))
   .pipeThrough(new CSVTransformer(sum, { includeHeaders: true }))
-  .pipeTo(new CSVWriter(new URL('./data/ex2-out.csv', import.meta.url)));
+  .pipeTo(new CSVWriter(new URL('./data/ex1_2-out.csv', import.meta.url)));

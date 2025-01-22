@@ -1,4 +1,4 @@
-// ## Example 9: Handling a flaky transformation (graceful failure)
+// ## Example 2.2: Graceful failure (placeholder value)
 
 import { CSVReader, CSVTransformer, CSVWriter } from '../src/index.js';
 
@@ -17,6 +17,6 @@ function flaky(row) {
   return row;
 }
 
-await new CSVReader(new URL('./data/ex9-in.csv', import.meta.url))
+await new CSVReader(new URL('./data/ex2_2-in.csv', import.meta.url))
   .pipeThrough(new CSVTransformer(flaky, { onError: row => graceful(row) }))
-  .pipeTo(new CSVWriter(new URL('./data/ex9-out.csv', import.meta.url)));
+  .pipeTo(new CSVWriter(new URL('./data/ex2_2-out.csv', import.meta.url)));

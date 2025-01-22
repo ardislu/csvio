@@ -22,7 +22,7 @@ await Promise.all([
 const tests = [];
 const files = await opendir(tempExamples, { recursive: true });
 for await (const file of files) {
-  const { name } = /(?<name>ex\d+).js/.exec(file.name)?.groups ?? { name: null }; // Assuming naming convention "ex*.js"
+  const { name } = /(?<name>ex\d+_\d+).js/.exec(file.name)?.groups ?? { name: null }; // Assuming naming convention "ex*_*.js"
   if (name === null) { continue; }
   tests.push({
     name,

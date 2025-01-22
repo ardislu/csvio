@@ -1,4 +1,4 @@
-// ## Example 3: Chaining multiple transformations
+// ## Example 1.3: Chaining multiple transformations
 // 
 // Set `rawInput: true` and/or `rawOutput: true` to skip JSON deserialization (`rawInput`) and/or JSON serialization
 // (`rawOutput`) when handling the transformation function input/output. These options are intended for advanced
@@ -22,7 +22,7 @@ function calculate(obj) {
   return [name, paddedId];
 }
 
-await new CSVReader(new URL('./data/ex3-in.csv', import.meta.url))
+await new CSVReader(new URL('./data/ex1_3-in.csv', import.meta.url))
   .pipeThrough(new CSVTransformer(parse, { includeHeaders: true, rawOutput: true }))
   .pipeThrough(new CSVTransformer(calculate, { includeHeaders: true, rawInput: true }))
-  .pipeTo(new CSVWriter(new URL('./data/ex3-out.csv', import.meta.url)));
+  .pipeTo(new CSVWriter(new URL('./data/ex1_3-out.csv', import.meta.url)));

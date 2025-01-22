@@ -1,4 +1,4 @@
-// ## Example 7: Processing rows in batches (multi-row input)
+// ## Example 3.1: Batch processing (multi-row input) using `maxBatchSize`
 // 
 // Set the `maxBatchSize` option to a number greater than `1` to collect rows into batches before passing the whole
 // batch to the transformation function.
@@ -28,6 +28,6 @@ function process(batch) {
   return batch.map(row => [batchNumber, sum, ...row]);
 }
 
-await new CSVReader(new URL('./data/ex7-in.csv', import.meta.url))
+await new CSVReader(new URL('./data/ex3_1-in.csv', import.meta.url))
   .pipeThrough(new CSVTransformer(process, { includeHeaders: true, maxBatchSize: 5 }))
-  .pipeTo(new CSVWriter(new URL('./data/ex7-out.csv', import.meta.url)));
+  .pipeTo(new CSVWriter(new URL('./data/ex3_1-out.csv', import.meta.url)));

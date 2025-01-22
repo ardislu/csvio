@@ -1,4 +1,4 @@
-// ## Example 1: Basic usage
+// ## Example 1.1: Basic usage
 // 
 // Minimal example of a user-defined function to transform a CSV.
 // 
@@ -14,6 +14,6 @@ function timesTwo(row) {
   return [Number(row[0]) * 2, Number(row[1]) * 2];
 }
 
-await new CSVReader(new URL('./data/ex1-in.csv', import.meta.url))
+await new CSVReader(new URL('./data/ex1_1-in.csv', import.meta.url))
   .pipeThrough(new CSVTransformer(timesTwo))
-  .pipeTo(new CSVWriter(new URL('./data/ex1-out.csv', import.meta.url)));
+  .pipeTo(new CSVWriter(new URL('./data/ex1_1-out.csv', import.meta.url)));

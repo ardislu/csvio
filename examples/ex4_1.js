@@ -1,6 +1,6 @@
-// ## Example 4: Using `CSVNormalizer` and `CSVDenormalizer`
+// ## Example 4.1: Using `CSVNormalizer` and `CSVDenormalizer`
 // 
-// These functions fix common CSV data mangling caused by Excel. In `ex4-in.csv`:
+// These functions fix common CSV data mangling caused by Excel. In `ex4_1-in.csv`:
 // - The "Index" column has been mangled into Excel's "Accounting" format
 // - The "Phone Number" column has been mangled into scientific notation
 // - The "Join Timestamp" column has been mangled into a number
@@ -30,7 +30,7 @@ const headers = [
   }
 ];
 
-await new CSVReader(new URL('./data/ex4-in.csv', import.meta.url))
+await new CSVReader(new URL('./data/ex4_1-in.csv', import.meta.url))
   .pipeThrough(new CSVNormalizer(headers))
   .pipeThrough(new CSVDenormalizer())
-  .pipeTo(new CSVWriter(new URL('./data/ex4-out.csv', import.meta.url)));
+  .pipeTo(new CSVWriter(new URL('./data/ex4_1-out.csv', import.meta.url)));
