@@ -148,6 +148,16 @@ suite('CSVReader', { concurrency: true }, () => {
       ]
     },
     {
+      name: 'parses UTF-16 LE CSV',
+      input: './test/data/utf-16le.csv',
+      options: { encoding: 'utf-16le' },
+      output: [
+        ['column1', 'column2'],
+        ['ab', 'cd'],
+        ['12', '34']
+      ]
+    },
+    {
       name: 'parses single value (no commas or newlines) CSV',
       input: './test/data/single-value.csv',
       output: [
@@ -181,11 +191,11 @@ suite('CSVReader', { concurrency: true }, () => {
       ]
     }
   ];
-  for (const { name, input, output, negativeOutput } of vectors) {
+  for (const { name, input, options = {}, output, negativeOutput } of vectors) {
     test(name, { concurrency: true }, async () => {
-      await new CSVReader(input).pipeTo(csvStreamEqualWritable(output));
+      await new CSVReader(input, options).pipeTo(csvStreamEqualWritable(output));
       if (negativeOutput !== undefined) {
-        await new CSVReader(input).pipeTo(csvStreamNotEqualWritable(negativeOutput));
+        await new CSVReader(input, options).pipeTo(csvStreamNotEqualWritable(negativeOutput));
       }
     });
   }

@@ -27,6 +27,16 @@ export function parsePathLike(path) {
   }
 }
 
+// https://github.com/DefinitelyTyped/DefinitelyTyped/blob/e9296eba83c97aa1fc5d2689ad0539da9427977f/types/node/buffer.d.ts#L246-L258
+/** @typedef {"ascii"|"utf8"|"utf-8"|"utf16le"|"utf-16le"|"ucs2"|"ucs-2"|"base64"|"base64url"|"latin1"|"binary"|"hex"} BufferEncoding */
+
+/**
+ * Options to configure `CSVReader`.
+ * @typedef {Object} CSVReaderOptions
+ * @property {BufferEncoding} [encoding='utf-8'] The character encoding of the input CSV file. Can be any value accepted by
+ * Node.js's [`Buffer`](https://nodejs.org/api/buffer.html#buffers-and-character-encodings). The default value is `utf-8`.
+ */
+
 /**
  * A simple streaming parser for CSV files.
  * 
@@ -46,9 +56,11 @@ export class CSVReader extends ReadableStream {
 
   /**
    * @param {PathLike} path A `string`, `Buffer`, or `URL` representing a path to a local CSV file.
+   * @param {CSVReaderOptions} options Object containing flags to configure the reader.
    */
-  constructor(path) {
-    const readStream = createReadStream(path, { encoding: 'utf-8' });
+  constructor(path, options = {}) {
+    const { encoding = 'utf-8' } = options;
+    const readStream = createReadStream(path, { encoding });
     const readableStream = Readable.toWeb(readStream).pipeThrough(new TransformStream({
       transform: (chunk, controller) => this.#transform(chunk, controller),
       flush: (controller) => this.#flush(controller)
