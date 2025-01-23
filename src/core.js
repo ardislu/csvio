@@ -3,7 +3,7 @@ import { mkdir, open } from 'node:fs/promises';
 import { dirname, normalize } from 'node:path';
 import { Readable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
-/** @import { PathLike } from 'node:fs' */
+/** @import { PathLike } from 'node:fs'; */
 
 /**
  * Parse and normalize a `PathLike` object into a string.
