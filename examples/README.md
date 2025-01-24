@@ -16,7 +16,7 @@ These examples demonstrate the most common, expected usage.
 
 [Example 1.1: Basic usage](./ex1_1.js)
 
-[Example 1.2: Updating headers in the output](./ex1_2.js)
+[Example 1.2: Replace headers in the output](./ex1_2.js)
 
 [Example 1.3: Chaining multiple transformations](./ex1_3.js)
 

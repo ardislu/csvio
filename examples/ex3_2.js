@@ -17,16 +17,11 @@ function tick() {
   return Math.floor(ms / 100);
 }
 
-let firstChunk = true;
 async function concurrent(row) {
-  if (firstChunk) {
-    firstChunk = false;
-    return ['tick number', ...row];
-  }
   await setTimeout(100); // Simulate some slow task, e.g. a network request
   return [tick(), ...row];
 }
 
 await new CSVReader(new URL('./data/ex3_2-in.csv', import.meta.url))
-  .pipeThrough(new CSVTransformer(concurrent, { handleHeaders: true, maxConcurrent: 5 }))
+  .pipeThrough(new CSVTransformer(concurrent, { handleHeaders: h => ['tick number', ...h], maxConcurrent: 5 }))
   .pipeTo(new CSVWriter(new URL('./data/ex3_2-out.csv', import.meta.url)));

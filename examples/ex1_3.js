@@ -4,6 +4,9 @@
 // (`rawOutput`) when handling the transformation function input/output. These options are intended for advanced
 // transformations (e.g., transformations spread across multiple functions or lower-level transformations directly
 // on byte arrays).
+// 
+// Set `handleHeaders` to `true` to pass the header row to the transformation function as a normal row and manually
+// handle the header output processing. This setting is required if the input CSV does not have a header row.
 
 import { CSVReader, CSVTransformer, CSVWriter } from '../src/index.js';
 
