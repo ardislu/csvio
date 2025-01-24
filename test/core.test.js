@@ -274,6 +274,16 @@ suite('CSVTransformer', { concurrency: true }, () => {
         ['1', '2']
       ]));
   });
+  test('deletes header row when handleHeaders returns null', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['a', 'b'],
+      ['1', '2']
+    ])
+      .pipeThrough(new CSVTransformer(r => r, { handleHeaders: () => null }))
+      .pipeTo(csvStreamEqualWritable([
+        ['1', '2']
+      ]));
+  });
   test('enqueues multiple rows when Array<Array<any>> is returned', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['columnA', 'columnB'],
