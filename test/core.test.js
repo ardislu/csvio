@@ -216,7 +216,7 @@ suite('CSVTransformer', { concurrency: true }, () => {
       ['columnA', 'columnB'],
       ['a', 'b']
     ])
-      .pipeThrough(new CSVTransformer(() => '["abc", "def"]', { includeHeaders: true, rawOutput: true }))
+      .pipeThrough(new CSVTransformer(() => '["abc", "def"]', { handleHeaders: true, rawOutput: true }))
       .pipeTo(csvStreamEqualWritable([
         ['abc', 'def'],
         ['abc', 'def']
@@ -239,6 +239,39 @@ suite('CSVTransformer', { concurrency: true }, () => {
         ['a', 'b'],
         ['a', 'b'],
         ['a', 'b'],
+      ]));
+  });
+  test('passes through header row when handleHeaders is true', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['a', 'b'],
+      ['1', '2']
+    ])
+      .pipeThrough(new CSVTransformer(r => r.map(f => `${f}-modified`), { handleHeaders: true }))
+      .pipeTo(csvStreamEqualWritable([
+        ['a-modified', 'b-modified'],
+        ['1-modified', '2-modified']
+      ]));
+  });
+  test('replaces header row when handleHeaders is Array<any>', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['a', 'b'],
+      ['1', '2']
+    ])
+      .pipeThrough(new CSVTransformer(r => r, { handleHeaders: ['aaa', 'bbb'] }))
+      .pipeTo(csvStreamEqualWritable([
+        ['aaa', 'bbb'],
+        ['1', '2']
+      ]));
+  });
+  test('processes header row when handleHeaders is TransformationFunction', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['a', 'b'],
+      ['1', '2']
+    ])
+      .pipeThrough(new CSVTransformer(r => r, { handleHeaders: h => [...h, 'new header'] }))
+      .pipeTo(csvStreamEqualWritable([
+        ['a', 'b', 'new header'],
+        ['1', '2']
       ]));
   });
   test('enqueues multiple rows when Array<Array<any>> is returned', { concurrency: true }, async () => {

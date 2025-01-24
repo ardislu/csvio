@@ -25,5 +25,5 @@ function parse(row) {
 }
 
 await new CSVReader(new URL('./data/ex1_4-in.csv', import.meta.url))
-  .pipeThrough(new CSVTransformer(parse, { includeHeaders: true }))
+  .pipeThrough(new CSVTransformer(parse, { handleHeaders: true }))
   .pipeTo(new CSVWriter(new URL('./data/ex1_4-out.csv', import.meta.url)));

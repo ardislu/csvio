@@ -23,6 +23,6 @@ function calculate(obj) {
 }
 
 await new CSVReader(new URL('./data/ex1_3-in.csv', import.meta.url))
-  .pipeThrough(new CSVTransformer(parse, { includeHeaders: true, rawOutput: true }))
-  .pipeThrough(new CSVTransformer(calculate, { includeHeaders: true, rawInput: true }))
+  .pipeThrough(new CSVTransformer(parse, { handleHeaders: true, rawOutput: true }))
+  .pipeThrough(new CSVTransformer(calculate, { handleHeaders: true, rawInput: true }))
   .pipeTo(new CSVWriter(new URL('./data/ex1_3-out.csv', import.meta.url)));

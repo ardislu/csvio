@@ -28,5 +28,5 @@ async function concurrent(row) {
 }
 
 await new CSVReader(new URL('./data/ex3_2-in.csv', import.meta.url))
-  .pipeThrough(new CSVTransformer(concurrent, { includeHeaders: true, maxConcurrent: 5 }))
+  .pipeThrough(new CSVTransformer(concurrent, { handleHeaders: true, maxConcurrent: 5 }))
   .pipeTo(new CSVWriter(new URL('./data/ex3_2-out.csv', import.meta.url)));

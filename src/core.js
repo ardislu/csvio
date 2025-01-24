@@ -157,10 +157,12 @@ export class CSVReader extends ReadableStream {
 /**
  * Options to configure `CSVTransformer`.
  * @typedef {Object} CSVTransformerOptions
- * @property {boolean} [includeHeaders=false] Set to `true` to pass the header row (assumed to be the first row of the CSV) to `fn()`. Otherwise,
- * the header row will flow through to the next stream without going through `fn()`. The default value is `false`.
+ * @property {boolean|Array<any>|TransformationFunction} [handleHeaders=false] A `boolean`, `Array<any>`, or `TransformationFunction` to process
+ * the header row (first row) of the CSV. If `false`, the header row will pass through the stream. If `true`, the header row will be passed to
+ * `fn()`. If `Array<any>`, the header row will be replaced with the `Array<any>`. If `TransformationFunction`, the header row will be passed
+ * to the `TransformationFunction`. The default value is `false`.
  * 
- * NOTE: If the CSV has no header row, set `includeHeaders` to `true` and process the first row normally in `fn()`.
+ * NOTE: If the CSV has no header row, set `handleHeaders` to `true` and process the first row normally in `fn()`.
  * @property {boolean} [rawInput=false] Set to `true` to send the raw CSV row to `fn()` as a `string`. Otherwise, the CSV row will be deserialized
  * using `JSON.parse()` before being sent to `fn()`. The default value is `false`.
  * @property {boolean} [rawOutput=false] Set to `true` to send the raw return value of `fn()` to the next stream. Otherwise, the return value of
@@ -214,7 +216,7 @@ export class CSVTransformer extends TransformStream {
       flush: (controller) => this.#flush(controller),
     });
 
-    options.includeHeaders ??= false;
+    options.handleHeaders ??= false;
     options.rawInput ??= false;
     options.rawOutput ??= false;
     options.onError ??= null;
@@ -223,6 +225,19 @@ export class CSVTransformer extends TransformStream {
 
     this.#fn = fn;
     this.#options = options;
+  }
+
+  async #wrappedHeaderFn(row) {
+    const { onError, handleHeaders } = this.#options;
+    if (typeof handleHeaders === 'boolean') {
+      return handleHeaders ? await this.#wrappedFn(row) : row;
+    }
+    if (Array.isArray(handleHeaders)) {
+      return handleHeaders;
+    }
+    if (onError === null) { return await handleHeaders(row); }
+    try { return await handleHeaders(row); }
+    catch (e) { return await onError(row, e, handleHeaders); }
   }
 
   async #wrappedFn(row) {
@@ -267,12 +282,12 @@ export class CSVTransformer extends TransformStream {
   }
 
   async #transform(chunk, controller) {
-    const { includeHeaders, rawInput, maxBatchSize, maxConcurrent } = this.#options;
+    const { rawInput, maxBatchSize, maxConcurrent } = this.#options;
     const row = rawInput ? chunk : JSON.parse(chunk);
 
     if (this.#firstChunk) {
       this.#firstChunk = false;
-      const out = includeHeaders ? await this.#wrappedFn(row) : row;
+      const out = await this.#wrappedHeaderFn(row);
       this.#enqueueRow(out, controller);
       return;
     }

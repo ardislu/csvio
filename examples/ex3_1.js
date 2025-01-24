@@ -29,5 +29,5 @@ function process(batch) {
 }
 
 await new CSVReader(new URL('./data/ex3_1-in.csv', import.meta.url))
-  .pipeThrough(new CSVTransformer(process, { includeHeaders: true, maxBatchSize: 5 }))
+  .pipeThrough(new CSVTransformer(process, { handleHeaders: true, maxBatchSize: 5 }))
   .pipeTo(new CSVWriter(new URL('./data/ex3_1-out.csv', import.meta.url)));
