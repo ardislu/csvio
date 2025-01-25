@@ -32,6 +32,8 @@ These examples demonstrate using the `onError` option to handle transformations 
 
 [Example 2.2: Graceful failure (placeholder value)](./ex2_2.js)
 
+[Example 2.3: Truncated binary exponential backoff (retry with graceful failure)](./ex2_3.js)
+
 ### Section 3: Batch and concurrent processing
 
 These examples demonstrate using the `maxBatchSize` and `maxConcurrent` options to process more than one CSV row at a time.
