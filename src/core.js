@@ -170,9 +170,9 @@ export class CSVReader extends ReadableStream {
  * @property {null|function(TransformationInput,Error,TransformationFunction):TransformationOutput} [onError=null] Set to a function to catch
  * errors thrown by the transformation function. The input data, the error that was thrown, and the transformation function itself will be passed
  * to the `onError` function. The default value is `null` (errors will not be caught).
- * @property {Number} [maxBatchSize=1] The maximum number of rows that will be passed to the transformation function per function call (greedy).
+ * @property {number} [maxBatchSize=1] The maximum number of rows that will be passed to the transformation function per function call (greedy).
  * The default value is `1`.
- * @property {Number} [maxConcurrent=1] The maximum concurrent executions of the transformation function (greedy). The transformation function
+ * @property {number} [maxConcurrent=1] The maximum concurrent executions of the transformation function (greedy). The transformation function
  * will be automatically turned into a promise if it isn't already async. Execution is blocked until all promises in a concurrent group settle
  * (i.e., if one transformation in a group is hanging, further rows will NOT be processed even if all other transformations in the group are
  * resolved). The default value is `1`.
