@@ -378,7 +378,7 @@ export class CSVWriter extends WritableStream {
    * @property {number} elapsed The number of milliseconds that have elapsed between this writer's creation and the output CSV file
    * handle closing, or until now if the writer is still writing. Measured using `performance.now()`.
    * @property {number} rows The estimated number of CSV rows that have been written. If the data passed to the writer is
-   * a string, the string is counted as one CSV row (i.e., raw string data is NOT parsed again).
+   * a string, the string is counted as one CSV row (i.e., raw string data is NOT parsed again). Includes the header row (first row).
    * @property {boolean} done If `true`, the writer is finished writing to the output CSV file and the file handle is closed.
    */
 
