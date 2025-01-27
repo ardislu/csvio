@@ -1,6 +1,6 @@
 import { createReadStream } from 'node:fs';
 import { mkdir, open } from 'node:fs/promises';
-import { dirname, normalize } from 'node:path';
+import { dirname, basename, normalize } from 'node:path';
 import { Readable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
 /** @import { PathLike } from 'node:fs'; */
@@ -327,6 +327,8 @@ export class CSVTransformer extends TransformStream {
  * @extends WritableStream
  */
 export class CSVWriter extends WritableStream {
+  #status;
+
   /**
    * @param {PathLike} path A `string`, `Buffer`, or `URL` representing a path to a local CSV file destination. If the file already
    * exists, its **data will be overwritten**.
@@ -334,6 +336,13 @@ export class CSVWriter extends WritableStream {
   constructor(path) {
     const fullPath = parsePathLike(path);
     const dir = dirname(fullPath);
+    const status = {
+      name: basename(fullPath),
+      start: performance.now(),
+      elapsed: 0,
+      rows: 0,
+      done: false
+    };
     let handle;
     super({
       async start() {
@@ -343,17 +352,47 @@ export class CSVWriter extends WritableStream {
       async write(chunk) {
         let data;
         try {
-          data = CSVWriter.arrayToCSVString(JSON.parse(chunk));
+          const parsed = JSON.parse(chunk);
+          data = CSVWriter.arrayToCSVString(parsed);
+          status.rows += parsed.length;
         }
         catch {
           data = chunk;
+          status.rows++;
         }
         await handle.write(data);
       },
       async close() {
         await handle.close();
+        status.elapsed = performance.now() - status.start;
+        status.done = true;
       }
     });
+
+    this.#status = status;
+  }
+
+  /**
+   * @typedef CSVWriterStatus The current status of the CSVWriter.
+   * @property {string} name The name of the output CSV file that this writer is writing to.
+   * @property {number} elapsed The number of milliseconds that have elapsed between this writer's creation and the output CSV file
+   * handle closing, or until now if the writer is still writing. Measured using `performance.now()`.
+   * @property {number} rows The estimated number of CSV rows that have been written. If the data passed to the writer is
+   * a string, the string is counted as one CSV row (i.e., raw string data is NOT parsed again).
+   * @property {boolean} done If `true`, the writer is finished writing to the output CSV file and the file handle is closed.
+   */
+
+  /** @type {CSVWriterStatus} */
+  get status() {
+    if (!this.#status.done) {
+      this.#status.elapsed = performance.now() - this.#status.start;
+    }
+    return {
+      name: this.#status.name,
+      elapsed: this.#status.elapsed,
+      rows: this.#status.rows,
+      done: this.#status.done
+    }
   }
 
   /**

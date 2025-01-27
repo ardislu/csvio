@@ -1,7 +1,8 @@
 import { suite, test } from 'node:test';
-import { deepStrictEqual, throws, rejects } from 'node:assert/strict';
+import { ok, deepStrictEqual, throws, rejects } from 'node:assert/strict';
 import { unlink } from 'node:fs/promises';
-import { normalize, resolve } from 'node:path';
+import { normalize, basename, resolve } from 'node:path';
+import { setTimeout } from 'node:timers/promises';
 import { pathToFileURL } from 'node:url';
 
 import { csvStreamEqualWritable, csvStreamNotEqualWritable, createCSVMockStream, createTempFile } from './utils.js';
@@ -478,4 +479,45 @@ suite('CSVWriter', { concurrency: true }, () => {
       await new CSVReader(temp).pipeTo(csvStreamEqualWritable(csv));
     });
   }
+});
+
+suite('CSVWriter status', { concurrency: true }, () => {
+  test('records file name', { concurrency: true }, async (t) => {
+    const temp = await createTempFile();
+    t.after(async () => await unlink(temp));
+    const writer = new CSVWriter(temp);
+    await createCSVMockStream([['']]).pipeTo(writer);
+    deepStrictEqual(writer.status.name, basename(temp));
+  });
+  test('records elapsed time', { concurrency: true }, async (t) => {
+    const temp = await createTempFile();
+    t.after(async () => await unlink(temp));
+    const writer = new CSVWriter(temp);
+    await createCSVMockStream([['']]).pipeTo(writer);
+    ok(writer.status.elapsed > 0);
+  });
+  test('elapsed time does not change after finishing writing', { concurrency: true }, async (t) => {
+    const temp = await createTempFile();
+    t.after(async () => await unlink(temp));
+    const writer = new CSVWriter(temp);
+    await createCSVMockStream([['']]).pipeTo(writer);
+    const { elapsed: elapsed1 } = writer.status;
+    await setTimeout(5);
+    const { elapsed: elapsed2 } = writer.status;
+    deepStrictEqual(elapsed1, elapsed2);
+  });
+  test('records rows written', { concurrency: true }, async (t) => {
+    const temp = await createTempFile();
+    t.after(async () => await unlink(temp));
+    const writer = new CSVWriter(temp);
+    await createCSVMockStream([[''], [''], ['']]).pipeTo(writer);
+    deepStrictEqual(writer.status.rows, 3);
+  });
+  test('records done status', { concurrency: true }, async (t) => {
+    const temp = await createTempFile();
+    t.after(async () => await unlink(temp));
+    const writer = new CSVWriter(temp);
+    await createCSVMockStream([['']]).pipeTo(writer);
+    ok(writer.status.done);
+  });
 });
