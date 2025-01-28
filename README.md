@@ -150,10 +150,16 @@ Example and test CSVs use `CRLF` (`\r\n`) as the record delimiter, as suggested 
 
 If your IDE is configured to automatically convert `CRLF` line endings to `LF`, you must undo this conversion for all the CSV files inside `/test/data` and `/examples/data`.
 
-Run all tests:
+Run primary tests:
 
 ```plaintext
 npm test
+```
+
+Run `large.test.js` tests (writing, reading, and transforming ~100 MB CSV files). These tests take ~30s to complete, so they are separated from the primary tests:
+
+```plaintext
+npm run test:large
 ```
 
 ## Other CSV libraries

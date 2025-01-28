@@ -14,7 +14,7 @@
   ],
   "exports": "./src/index.js",
   "scripts": {
-    "test": "node --test",
-    "test:coverage": "npm run test -- --experimental-test-coverage"
+    "test": "node --test --test-skip-pattern=\"/^large:*/\"",
+    "test:large": "node --test --test-name-pattern=\"/^large:*/\""
   }
 }

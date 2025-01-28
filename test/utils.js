@@ -1,6 +1,6 @@
 import { deepStrictEqual, notStrictEqual } from 'node:assert/strict';
 import { tmpdir } from 'node:os';
-import { open } from 'node:fs/promises';
+import { mkdtemp, open } from 'node:fs/promises';
 import { normalize } from 'node:path';
 
 /**
@@ -148,4 +148,66 @@ export async function createTempFile() {
   const path = normalize(`${tmpdir()}/scsv_test_${crypto.randomUUID()}.tmp`);
   await open(path, 'a+');
   return path;
+}
+
+/**
+ * Simple, small, and fast pseudorandom number generator to deterministically generate large amounts of mock test data.
+ * 
+ * API is intended to follow [`crypto.getRandomValues()`](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues).
+ * 
+ * Hash function source:
+ * - https://burtleburtle.net/bob/hash/integer.html
+ * - https://web.archive.org/web/20090408063205/http://www.cris.com/~Ttwang/tech/inthash.htm
+ * @param {ArrayBufferView<ArrayBufferLike>} typedArray An integer-based `TypedArray` with a byte length that is a multiple of 4.
+ * All elements in the array will be overwritten with random numbers.
+ * @param {Number} seed A number to initiate the pseudorandom hash function.
+ * @returns {ArrayBufferView<ArrayBufferLike>} The same array passed as `typedArray` but with its contents replaced with pseudorandom
+ * numbers. Note that `typedArray` is modified in-place and no copy is made.
+ */
+function getPseudoRandomValues(typedArray, seed) {
+  function hash(n) {
+    n = n ^ (n >> 4);
+    n = (n ^ 0xdeadbeef) + (n << 5);
+    n = n ^ (n >> 11);
+    return n;
+  }
+
+  const array = new Uint32Array(typedArray.buffer);
+  let h = hash(seed);
+  for (let i = 0; i < array.length; i++) {
+    h = hash(h);
+    array[i] = h;
+  }
+  return typedArray;
+}
+
+/**
+ * Create a stream of pseudorandom CSV data for test mocking purposes.
+ * 
+ * @param {Number} rows The number of rows the CSV stream will return.
+ * @param {Number} columns The number of columns in each CSV row.
+ * @param {Number} seed The seed used to deterministically generate the pseudorandom values in the CSV stream.
+ * @returns {ReadableStream} A `ReadableStream` where each row is emitted as a separate chunk.
+ */
+export function createRandomCSV(rows, columns, seed) {
+  const chunks = (function* () {
+    while (rows) {
+      const data = new Uint32Array(columns);
+      getPseudoRandomValues(data, seed);
+      seed = data[columns - 1];
+      rows--;
+      yield Array.from(data);
+    }
+  })();
+  return new ReadableStream({
+    pull(controller) {
+      const { value, done } = chunks.next();
+      if (done) {
+        controller.close();
+      }
+      else {
+        controller.enqueue(JSON.stringify(value));
+      }
+    }
+  });
 }
