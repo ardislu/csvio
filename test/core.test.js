@@ -339,6 +339,20 @@ suite('CSVTransformer', { concurrency: true }, () => {
       { name: 'Error', message: 'inner' }
     );
   });
+  test('raises new error if transformation function rejects with non-error type', { concurrency: true }, async () => {
+    await rejects(
+      createCSVMockStream([
+        ['columnA'],
+        ['1']
+      ])
+        .pipeThrough(new CSVTransformer(() => Promise.reject('Not an error type')))
+        .pipeTo(csvStreamEqualWritable([
+          ['columnA'],
+          ['1']
+        ])),
+      { name: 'Error', message: 'Not an error type' }
+    );
+  });
   test('creates one batch when maxBatchSize is greater than CSV row length', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['columnA', 'columnB'],
