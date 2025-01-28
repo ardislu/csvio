@@ -312,6 +312,19 @@ suite('CSVTransformer', { concurrency: true }, () => {
         ['2: caught']
       ]));
   });
+  test('passes handleHeaders to onError if handleHeaders is a function', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA'],
+      ['1'],
+      ['2']
+    ])
+      .pipeThrough(new CSVTransformer(r => r, { handleHeaders: () => { throw new Error() }, onError: r => [`${r[0]}: caught`] }))
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA: caught'],
+        ['1'],
+        ['2']
+      ]));
+  });
   test('bubbles up errors re-raised by onError function', { concurrency: true }, async () => {
     await rejects(
       createCSVMockStream([
