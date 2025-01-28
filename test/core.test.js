@@ -506,6 +506,19 @@ suite('CSVWriter', { concurrency: true }, () => {
       await new CSVReader(temp).pipeTo(csvStreamEqualWritable(csv));
     });
   }
+  test('writes raw CSV string', { concurrency: true, only: true }, async (t) => {
+    const temp = await createTempFile();
+    t.after(async () => await unlink(temp));
+    await createCSVMockStream([['']])
+      .pipeThrough(new CSVTransformer(() => 'row 1,a\r\nrow 2,b\r\nrow 3,c', { handleHeaders: true, rawOutput: true }))
+      .pipeTo(new CSVWriter(temp));
+    await new CSVReader(temp).pipeTo(
+      csvStreamEqualWritable([
+        ['row 1', 'a'],
+        ['row 2', 'b'],
+        ['row 3', 'c']
+      ]));
+  });
 });
 
 suite('CSVWriter status', { concurrency: true }, () => {
@@ -546,5 +559,14 @@ suite('CSVWriter status', { concurrency: true }, () => {
     const writer = new CSVWriter(temp);
     await createCSVMockStream([['']]).pipeTo(writer);
     ok(writer.status.done);
+  });
+  test('counts raw CSV string as one row', { concurrency: true }, async (t) => {
+    const temp = await createTempFile();
+    t.after(async () => await unlink(temp));
+    const writer = new CSVWriter(temp);
+    await createCSVMockStream([['']])
+      .pipeThrough(new CSVTransformer(() => 'row 1,a\r\nrow 2,b\r\nrow 3,c'), { handleHeaders: true, rawOutput: true })
+      .pipeTo(writer);
+    deepStrictEqual(writer.status.rows, 1);
   });
 });
