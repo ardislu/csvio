@@ -156,6 +156,12 @@ Run primary tests:
 npm test
 ```
 
+Run coverage report for primary tests:
+
+```plaintext
+npm run test:coverage
+```
+
 Run `large.test.js` tests (writing, reading, and transforming ~100 MB CSV files). These tests take ~30s to complete, so they are separated from the primary tests:
 
 ```plaintext
