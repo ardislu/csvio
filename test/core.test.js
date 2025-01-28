@@ -536,6 +536,25 @@ suite('CSVWriter status', { concurrency: true }, () => {
     await createCSVMockStream([['']]).pipeTo(writer);
     ok(writer.status.elapsed > 0);
   });
+  test('elapsed time changes while writing', { concurrency: true }, async (t) => {
+    const temp = await createTempFile();
+    t.after(async () => await unlink(temp));
+    const writer = new CSVWriter(temp);
+    const elapsedArray = [];
+    await createCSVMockStream([[''], [''], [''], ['']])
+      .pipeThrough(new CSVTransformer(async r => {
+        const { elapsed } = writer.status;
+        elapsedArray.push(elapsed);
+        await setTimeout(5);
+        return r;
+      }, { handleHeaders: true }))
+      .pipeTo(writer);
+    const { elapsed } = writer.status;
+    elapsedArray.push(elapsed);
+    const uniqueElapsed = new Set(elapsedArray);
+    deepStrictEqual(elapsedArray.length, 5);
+    deepStrictEqual(elapsedArray.length, uniqueElapsed.size);
+  });
   test('elapsed time does not change after finishing writing', { concurrency: true }, async (t) => {
     const temp = await createTempFile();
     t.after(async () => await unlink(temp));
