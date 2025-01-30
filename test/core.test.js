@@ -584,8 +584,14 @@ suite('CSVWriter status', { concurrency: true }, () => {
     t.after(async () => await unlink(temp));
     const writer = new CSVWriter(temp);
     await createCSVMockStream([['']])
-      .pipeThrough(new CSVTransformer(() => 'row 1,a\r\nrow 2,b\r\nrow 3,c'), { handleHeaders: true, rawOutput: true })
+      .pipeThrough(new CSVTransformer(() => 'row 1,a\r\nrow 2,b\r\nrow 3,c', { handleHeaders: true, rawOutput: true }))
       .pipeTo(writer);
     deepStrictEqual(writer.status.rows, 1);
+    await new CSVReader(temp)
+      .pipeTo(csvStreamEqualWritable([
+        ['row 1', 'a'],
+        ['row 2', 'b'],
+        ['row 3', 'c']
+      ]));
   });
 });
