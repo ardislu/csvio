@@ -47,9 +47,9 @@ export async function csvStreamEqual(stream, csv) {
 
 /**
  * A `WritableStream` version of `csvStreamEqual`. Compares each field in a CSV stream with a given
- * array, assuming each chunk of the stream is a serialized `Array<string>` representing a row of a CSV.
+ * array, assuming each chunk of the stream is a serialized `Array<any>` representing a row of a CSV.
  * 
- * @param {Array<Array<string>>} csv A 2-D array representing the CSV file, where each inner array
+ * @param {Array<Array<any>>} csv A 2-D array representing the CSV file, where each inner array
  * is a row of the CSV.
  * @returns {WritableStream} A `WritableStream` sink of a CSV stream that will be compared against the given array.
  */

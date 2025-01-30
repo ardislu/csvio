@@ -143,7 +143,7 @@ export class CSVReader extends ReadableStream {
  */
 
 /**
- * A row or rows of output CSV data, or null to skip a row.
+ * A row or rows of output CSV data, or `null` to skip a row.
  * @typedef {Array<Array<any>>|Array<any>|string|null} TransformationOutput
  */
 
@@ -151,7 +151,16 @@ export class CSVReader extends ReadableStream {
  * A function to process a row or rows of CSV data from `CSVReader`.
  * @callback TransformationFunction
  * @param {TransformationInput} row A row or rows of input CSV data before transformation.
- * @returns {TransformationOutput} A row or rows of output CSV data after transformation, or null to skip a row.
+ * @returns {TransformationOutput|Promise<TransformationOutput>} A row or rows of output CSV data after transformation, or `null` to skip a row.
+ */
+
+/**
+ * A function to handle errors thrown by a transformation function.
+ * @callback TransformationErrorFunction
+ * @param {TransformationInput} row The row passed to the transformation function which threw the error.
+ * @param {Error} error The error thrown by the transformation function.
+ * @param {TransformationFunction} fn The transformation function itself. This argument can be used to retry a transformation.
+ * @returns {TransformationOutput|Promise<TransformationOutput>} A row or rows of output CSV data, or `null` to skip this row.
  */
 
 /**
@@ -167,9 +176,9 @@ export class CSVReader extends ReadableStream {
  * using `JSON.parse()` before being sent to `fn()`. The default value is `false`.
  * @property {boolean} [rawOutput=false] Set to `true` to send the raw return value of `fn()` to the next stream. Otherwise, the return value of
  * `fn()` will be serialized using `JSON.stringify()` before being sent to the next stream. The default value is `false`.
- * @property {null|function(TransformationInput,Error,TransformationFunction):TransformationOutput} [onError=null] Set to a function to catch
- * errors thrown by the transformation function. The input data, the error that was thrown, and the transformation function itself will be passed
- * to the `onError` function. The default value is `null` (errors will not be caught).
+ * @property {null|TransformationErrorFunction} [onError=null] Set to a function to catch errors thrown by the transformation function. The
+ * input data, the error that was thrown, and the transformation function itself will be passed to the `onError` function. The default value
+ * is `null` (errors will not be caught).
  * @property {number} [maxBatchSize=1] The maximum number of rows that will be passed to the transformation function per function call (greedy).
  * The default value is `1`.
  * @property {number} [maxConcurrent=1] The maximum concurrent executions of the transformation function (greedy). The transformation function
