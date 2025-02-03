@@ -26,6 +26,8 @@ These examples demonstrate the most common, expected usage.
 
 [Example 1.6: Track the status of the CSV processing](./ex1_6.js)
 
+[Example 1.7: Abort a transformation](./ex1_7.js)
+
 ### Section 2: Error strategies
 
 These examples demonstrate using the `onError` option to handle transformations that may throw errors.
