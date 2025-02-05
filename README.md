@@ -4,41 +4,43 @@ CSV I/O (`csvio`) is a Node.js library for processing CSV files.
 
 ## Example
 
-Assume `./examples/data/ex1_1-in.csv` looks like:
+Assume `./in.csv` looks like:
 
-```plaintext
-columnA,columnB
-1,1
-100,100
-223423,455947
-348553,692708
-536368,676147
-```
+Code    | Quantity | Price
+------- | -------- | -----
+US-1234 | 1        | 12.00
+US-5678 | 3        | 8.35
+CA-8765 | 2        | 4.11
+CA-4321 | 4        | 3.43
 
 Run:
 
 ```javascript
 import { CSVReader, CSVTransformer, CSVWriter } from './src/index.js';
 
-function timesTwo(row) {
-  return [Number(row[0]) * 2, Number(row[1]) * 2];
+function calculate(row) { // Input is a simple array representing one CSV row
+  const [country, id] = row[0].split('-');
+  const total = (Number(row[1]) * Number(row[2])).toFixed(2);
+  return [country, id, total]; // Output is also a simple array
 }
 
-await new CSVReader('./examples/data/ex1_1-in.csv')
-  .pipeThrough(new CSVTransformer(timesTwo))
-  .pipeTo(new CSVWriter('./examples/data/ex1_1-out.csv'));
+// Specify output headers with a simple array
+const headers = ['Country', 'ID', 'Total'];
+
+// Use web standard Streams API
+await new CSVReader('./in.csv') // Automatically handles path-like input
+  .pipeThrough(new CSVTransformer(calculate, { handleHeaders: headers }))
+  .pipeTo(new CSVWriter('./out.csv'));
 ```
 
-A new `./examples/data/ex1_1-out.csv` file will be created:
+A new `./out.csv` file will be created:
 
-```plaintext
-columnA,columnB
-2,2
-200,200
-446846,911894
-697106,1385416
-1072736,1352294
-```
+Country | ID   | Total
+------- | ---- | -----
+US      | 1234 | 12.00
+US      | 5678 | 25.05
+CA      | 8765 | 8.22
+CA      | 4321 | 13.72
 
 See the [`examples`](./examples) folder for more end-to-end examples.
 
