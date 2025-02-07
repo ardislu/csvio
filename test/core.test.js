@@ -519,6 +519,22 @@ suite('CSVWriter', { concurrency: true }, () => {
         ['row 3', 'c']
       ]));
   });
+  test('flushes progress to disk on uncaught error', { concurrency: true }, async (t) => {
+    const temp = await createTempFile();
+    t.after(async () => await unlink(temp));
+    await rejects(async () => {
+      await ReadableStream.from((function* () {
+        yield '["header1","header2"]';
+        yield '["1","1"]';
+        throw new Error();
+      })()).pipeTo(new CSVWriter(temp))
+    });
+    await new CSVReader(temp).pipeTo(
+      csvStreamEqualWritable([
+        ['header1', 'header2'],
+        ['1', '1'],
+      ]));
+  });
 });
 
 suite('CSVWriter status', { concurrency: true }, () => {
