@@ -506,7 +506,7 @@ suite('CSVWriter', { concurrency: true }, () => {
       await new CSVReader(temp).pipeTo(csvStreamEqualWritable(csv));
     });
   }
-  test('writes raw CSV string', { concurrency: true, only: true }, async (t) => {
+  test('writes raw CSV string', { concurrency: true }, async (t) => {
     const temp = await createTempFile();
     t.after(async () => await unlink(temp));
     await createCSVMockStream([['']])
