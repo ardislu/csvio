@@ -1,4 +1,4 @@
-import { suite, test, after } from 'node:test';
+import { suite, test, before, after } from 'node:test';
 import { ok, deepStrictEqual } from 'node:assert/strict';
 import { unlink, stat } from 'node:fs/promises';
 
@@ -6,7 +6,8 @@ import { createRandomCSV, createTempFile } from './utils.js';
 import { CSVReader, CSVTransformer, CSVWriter } from '../src/core.js';
 
 suite('large: 100000 row x 100 column CSV (~100 MB)', { concurrency: 1 }, async () => {
-  const temp = await createTempFile();
+  let temp;
+  before(async () => { temp = await createTempFile() });
   after(async () => await unlink(temp));
 
   test('CSVWriter writes file', async () => {
@@ -66,7 +67,8 @@ suite('large: 100000 row x 100 column CSV (~100 MB)', { concurrency: 1 }, async 
 });
 
 suite('large: 100 row x 100000 column CSV (~100 MB)', { concurrency: 1 }, async () => {
-  const temp = await createTempFile();
+  let temp;
+  before(async () => { temp = await createTempFile() });
   after(async () => await unlink(temp));
 
   test('CSVWriter writes file', async () => {
