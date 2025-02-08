@@ -135,7 +135,7 @@ export function createCSVMockStream(data) {
  * @returns {Promise<string>} A `Promise<string>` for the full path to a newly-created temporary folder.
  */
 export async function createTempFolder() {
-  const path = normalize(`${tmpdir()}/scsv_test_`);
+  const path = normalize(`${tmpdir()}/csvio_test_`);
   return mkdtemp(path);
 }
 
@@ -145,7 +145,7 @@ export async function createTempFolder() {
  * @returns {Promise<string>} A `Promise<string>` for the full path to a newly-created temporary file.
  */
 export async function createTempFile() {
-  const path = normalize(`${tmpdir()}/scsv_test_${crypto.randomUUID()}.tmp`);
+  const path = normalize(`${tmpdir()}/csvio_test_${crypto.randomUUID()}.tmp`);
   await open(path, 'a+');
   return path;
 }
