@@ -191,23 +191,12 @@ function getPseudoRandomValues(typedArray, seed) {
  */
 export function createRandomCSV(rows, columns, seed) {
   const chunks = (function* () {
-    while (rows) {
+    while (rows--) {
       const data = new Uint32Array(columns);
       getPseudoRandomValues(data, seed);
       seed = data[columns - 1];
-      rows--;
-      yield Array.from(data);
+      yield JSON.stringify(Array.from(data));
     }
   })();
-  return new ReadableStream({
-    pull(controller) {
-      const { value, done } = chunks.next();
-      if (done) {
-        controller.close();
-      }
-      else {
-        controller.enqueue(JSON.stringify(value));
-      }
-    }
-  });
+  return ReadableStream.from(chunks);
 }
