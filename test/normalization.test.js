@@ -1,7 +1,7 @@
 import { suite, test } from 'node:test';
 import { deepStrictEqual } from 'node:assert/strict';
 
-import { csvStreamEqual, csvStreamEqualWritable, createCSVMockStream } from './utils.js';
+import { csvStreamEqual, csvStreamEqualWritable, createCSVMockStream, assertConsole } from './utils.js';
 import { CSVReader } from '../src/core.js';
 import { toCamelCase, expandScientificNotation, CSVNormalizer, CSVDenormalizer } from '../src/normalization.js';
 
@@ -73,11 +73,14 @@ suite('CSVNormalizer.fixExcelNumber', { concurrency: true }, () => {
     { name: 'fixes accounting mangling integer', input: ' $123.00 ', output: 123 },
     { name: 'fixes accounting mangling number', input: ' $123.45 ', output: 123.45 },
     { name: 'fixes accounting mangling with commas', input: ' $10,000,000.00 ', output: 10000000 },
-    { name: 'passes through non-number value', input: 'abc', output: 'abc' },
+    { name: 'passes through non-number value', input: 'abc', output: 'abc', consoleCounts: { warn: 1 } },
     { name: 'passes through blank value', input: '', output: '' },
   ];
-  for (const { name, input, output } of vectors) {
-    test(name, { concurrency: true }, () => {
+  for (const { name, input, output, consoleCounts } of vectors) {
+    test(name, { concurrency: true }, (t) => {
+      if (consoleCounts !== undefined) {
+        assertConsole(t, consoleCounts);
+      }
       deepStrictEqual(CSVNormalizer.fixExcelNumber(input), output);
     });
   }
@@ -92,11 +95,14 @@ suite('CSVNormalizer.fixExcelBigInt', { concurrency: true }, () => {
     { name: 'fixes accounting mangling integer', input: ' $123.00 ', output: '123' },
     { name: 'fixes accounting mangling number (truncated)', input: ' $123.45 ', output: '123' },
     { name: 'fixes accounting mangling BigInt with commas', input: '  $1,123,123,123,123,123,123.12  ', output: '1123123123123123123' },
-    { name: 'passes through non-BigInt values', input: 'abc', output: 'abc' },
+    { name: 'passes through non-BigInt values', input: 'abc', output: 'abc', consoleCounts: { warn: 1 } },
     { name: 'passes through blank value', input: '', output: '' },
   ];
-  for (const { name, input, output } of vectors) {
-    test(name, { concurrency: true }, () => {
+  for (const { name, input, output, consoleCounts } of vectors) {
+    test(name, { concurrency: true }, (t) => {
+      if (consoleCounts !== undefined) {
+        assertConsole(t, consoleCounts);
+      }
       deepStrictEqual(CSVNormalizer.fixExcelBigInt(input), output);
     });
   }
@@ -116,11 +122,15 @@ suite('CSVNormalizer.fixExcelDate', { concurrency: true }, () => {
     { name: 'fixes number mangling (43915.31372)', input: '43915.31372', output: '2020-03-25T07:31:45.407Z' },
     { name: 'fixes number mangling (44067.63)', input: '44067.63', output: '2020-08-24T15:07:11.999Z' },
     { name: 'fixes number mangling (44309.63502)', input: '44309.63502', output: '2021-04-23T15:14:25.728Z' },
-    { name: 'passes through non-date values', input: 'abc', output: 'abc', raw: true },
+    { name: 'passes through non-date values', input: 'abc', output: 'abc', raw: true, consoleCounts: { warn: 1 } },
     { name: 'passes through blank value', input: '', output: '', raw: true },
   ];
-  for (const { name, input, output, raw = false } of vectors) {
-    test(name, { concurrency: true }, () => {
+  for (const { name, input, output, raw = false, consoleCounts } of vectors) {
+    test(name, { concurrency: true }, (t) => {
+      if (consoleCounts !== undefined) {
+        assertConsole(t, consoleCounts);
+      }
+
       if (raw) {
         deepStrictEqual(CSVNormalizer.fixExcelDate(input), output);
       }
@@ -197,7 +207,8 @@ suite('CSVNormalizer', { concurrency: true }, () => {
         ['a', 'b']
       ]));
   });
-  test('can ignore incorrect data types', { concurrency: true }, async () => {
+  test('can ignore incorrect data types', { concurrency: true }, async (t) => {
+    assertConsole(t, { warn: 2 });
     await createCSVMockStream([
       ['columnA', 'columnB'],
       ['a', 'b']

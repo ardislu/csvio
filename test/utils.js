@@ -2,6 +2,7 @@ import { deepStrictEqual, notStrictEqual } from 'node:assert/strict';
 import { tmpdir } from 'node:os';
 import { mkdtemp, open } from 'node:fs/promises';
 import { normalize } from 'node:path';
+/** @import { TestContext } from 'node:test'; */
 
 /**
  * Log an entire stream along with the field count for each row and the total row count.
@@ -100,6 +101,50 @@ export function csvStreamNotEqualWritable(csv) {
       }
       i++;
     }
+  });
+}
+
+/**
+ * @typedef AssertConsoleCounts Object containing the total number of times `console.log`, `console.info`, `console.warn`,
+ * and `console.error` are expected to be called.
+ * @property {number} [log=0] The number of times `console.log` is expected to be called.
+ * @property {number} [info=0] The number of times `console.info` is expected to be called.
+ * @property {number} [warn=0] The number of times `console.warn` is expected to be called.
+ * @property {number} [error=0] The number of times `console.error` is expected to be called.
+ */
+
+/**
+ * Silences console functions during a test and asserts a given number of calls were made during the test. 
+ * 
+ * **Important:** Console will only be silenced AFTER this function is called, and only until the test ends. Call this function
+ * early in the test to avoid unexpected console calls.
+ * 
+ * @param {TestContext} context A Node.js `TestContext` for a test case.
+ * @param {AssertConsoleCounts} [expected] Object containing counts for the total number of times console functions are expected
+ * to be called.
+ */
+export function assertConsole(context, expected = {}) {
+  expected.log ??= 0;
+  expected.info ??= 0;
+  expected.warn ??= 0;
+  expected.error ??= 0;
+  const actual = {
+    log: 0,
+    info: 0,
+    warn: 0,
+    error: 0
+  }
+
+  context.mock.method(console, 'log', () => actual.log++);
+  context.mock.method(console, 'info', () => actual.info++);
+  context.mock.method(console, 'warn', () => actual.warn++);
+  context.mock.method(console, 'error', () => actual.error++);
+
+  context.after(() => {
+    deepStrictEqual(actual.log, expected.log, `expected ${expected.log} console.log calls, got ${actual.log}`);
+    deepStrictEqual(actual.info, expected.info, `expected ${expected.info} console.info calls, got ${actual.info}`);
+    deepStrictEqual(actual.warn, expected.warn, `expected ${expected.warn} console.warn calls, got ${actual.warn}`);
+    deepStrictEqual(actual.error, expected.error, `expected ${expected.error} console.error calls, got ${actual.error}`);
   });
 }
 
