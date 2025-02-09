@@ -522,14 +522,16 @@ suite('CSVWriter', { concurrency: true }, () => {
   test('flushes progress to disk on uncaught error', { concurrency: true }, async (t) => {
     const temp = await createTempFile();
     t.after(async () => await unlink(temp));
+    const writer = new CSVWriter(temp);
     await rejects(async () => {
       await ReadableStream.from((function* () {
         yield '["header1","header2"]';
         yield '["1","1"]';
         throw new Error();
-      })()).pipeTo(new CSVWriter(temp))
+      })()).pipeTo(writer)
     });
-    await new CSVReader(temp).pipeTo(
+    deepStrictEqual(writer.status.done, true); // Confirm cleanup actions
+    await new CSVReader(temp).pipeTo( // Confirm flush to disk
       csvStreamEqualWritable([
         ['header1', 'header2'],
         ['1', '1'],

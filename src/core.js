@@ -375,6 +375,9 @@ export class CSVWriter extends WritableStream {
         await handle.close();
         status.elapsed = performance.now() - status.start;
         status.done = true;
+      },
+      async abort() {
+        await this.close();
       }
     });
 
