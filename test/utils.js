@@ -146,7 +146,8 @@ export async function createTempFolder() {
  */
 export async function createTempFile() {
   const path = normalize(`${tmpdir()}/csvio_test_${crypto.randomUUID()}.tmp`);
-  await open(path, 'a+');
+  const handle = await open(path, 'a+');
+  await handle.close();
   return path;
 }
 
