@@ -3,7 +3,7 @@ import { ok } from 'node:assert/strict';
 import { mkdir, cp, opendir, readFile, rm } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
-import { createTempFolder } from './utils.js';
+import { createTempFolder, assertConsole } from './utils.js';
 
 const dir = await createTempFolder();
 const tempExamples = pathToFileURL(`${dir}/examples/`); // Trailing forward slash is REQUIRED for using this URL as a URL base later
@@ -35,11 +35,22 @@ for await (const file of files) {
 suite('examples', { concurrency: true }, () => {
   after(async () => await rm(dir, { recursive: true, force: true }));
   for (const { name, code, output } of tests) {
-    test(name, { concurrency: true }, async () => {
-      const expected = await readFile(output);
-      await import(code);
-      const actual = await readFile(output);
-      ok(actual.equals(expected));
-    });
+    if (name === 'ex1_6') {
+      test(name, { concurrency: true }, async (t) => {
+        assertConsole(t, { log: 1 });
+        const expected = await readFile(output);
+        await import(code);
+        const actual = await readFile(output);
+        ok(actual.equals(expected));
+      });
+    }
+    else {
+      test(name, { concurrency: true }, async () => {
+        const expected = await readFile(output);
+        await import(code);
+        const actual = await readFile(output);
+        ok(actual.equals(expected));
+      });
+    }
   }
 });
