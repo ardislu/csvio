@@ -14,8 +14,8 @@
   ],
   "exports": "./src/index.js",
   "scripts": {
-    "test": "node --test --test-skip-pattern=\"/^large:*/\"",
-    "test:large": "node --test --test-name-pattern=\"/^large:*/\"",
+    "test": "node --test --test-skip-pattern=\"/^large:/\"",
+    "test:large": "node --test --test-name-pattern=\"/^large:/\"",
     "test:coverage": "npm run test -- --experimental-test-coverage",
     "bench": "node ./benchmark/core.bench.js"
   }
