@@ -207,6 +207,51 @@ suite('CSVNormalizer', { concurrency: true }, () => {
         ['a', 'b']
       ]));
   });
+  test('can pass through numbers', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'columnB'],
+      ['123', '456']
+    ])
+      .pipeThrough(new CSVNormalizer([
+        { name: 'columnA', type: 'number' },
+        { name: 'columnB', type: 'number' }
+      ], { passthroughNumber: true }))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA', 'columnB'],
+        ['123', '456']
+      ]));
+  });
+  test('can pass through BigInt', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'columnB'],
+      ['123', '456']
+    ])
+      .pipeThrough(new CSVNormalizer([
+        { name: 'columnA', type: 'bigint' },
+        { name: 'columnB', type: 'bigint' }
+      ], { passthroughBigInt: true }))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA', 'columnB'],
+        ['123', '456']
+      ]));
+  });
+  test('can pass through date', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'columnB'],
+      ['2025-02-10', '2025-02-09']
+    ])
+      .pipeThrough(new CSVNormalizer([
+        { name: 'columnA', type: 'date' },
+        { name: 'columnB', type: 'date' }
+      ], { passthroughDate: true }))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA', 'columnB'],
+        ['2025-02-10', '2025-02-09']
+      ]));
+  });
   test('can ignore incorrect data types', { concurrency: true }, async (t) => {
     assertConsole(t, { warn: 2 });
     await createCSVMockStream([

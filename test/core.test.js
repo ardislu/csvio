@@ -212,6 +212,17 @@ suite('CSVTransformer', { concurrency: true }, () => {
       .pipeThrough(new CSVTransformer(r => r))
       .pipeTo(csvStreamEqualWritable(csv));
   });
+  test('passes through raw input', { concurrency: true }, async () => {
+    await ReadableStream.from((function* () {
+      yield '["headerA","headerB"]';
+      yield '["111","222"]';
+    })())
+      .pipeThrough(new CSVTransformer(r => r, { handleHeaders: true, rawInput: true }))
+      .pipeTo(csvStreamEqualWritable([
+        ['headerA', 'headerB'],
+        ['111', '222']
+      ]));
+  });
   test('passes through raw output', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['columnA', 'columnB'],
