@@ -67,12 +67,8 @@ export function expandScientificNotation(str, truncate = false) {
  * @typedef {Object} CSVNormalizerOptions
  * @property {boolean} [passthroughEmptyRows=false] Set to `true` to send empty rows (i.e., rows where all field values are
  * `''`) downstream. Otherwise, empty rows will be removed. The default value is `false`.
- * @property {boolean} [passthroughNumber=false] Set to `true` to NOT apply data casting to `type='number'` columns. Otherwise,
- * there will be an attempt to cast columns with `type='number'` to a `number`. The default value is `false`.
- * @property {boolean} [passthroughBigInt=false] Set to `true` to NOT apply data casting to `type='bigint'` columns. Otherwise,
- * there will be an attempt to cast columns with `type='bigint'` to a `BigInt`. The default value is `false`.
- * @property {boolean} [passthroughDate=false] Set to `true` to NOT apply data casting to `type='date'` columns. Otherwise,
- * there will be an attempt to cast columns with `type='date'` to a `Date`. The default value is `false`.
+ * @property {boolean} [typeCastOnly=false] Set to `true` to NOT apply any error correction to 'number', `bigint`, or `date`
+ * columns. Only type casting will be applied to the data. The default value is `false`.
  */
 
 /**
@@ -108,9 +104,7 @@ export class CSVNormalizer extends TransformStream {
     });
 
     options.passthroughEmptyRows ??= false;
-    options.passthroughNumber ??= false;
-    options.passthroughBigInt ??= false;
-    options.passthroughDate ??= false;
+    options.typeCastOnly ??= false;
     this.#options = options;
 
     for (const { name, type, displayName = name, defaultValue = null } of headers) {
@@ -130,7 +124,7 @@ export class CSVNormalizer extends TransformStream {
   }
 
   #transform(chunk, controller) {
-    const { passthroughNumber, passthroughBigInt, passthroughDate, passthroughEmptyRows } = this.#options;
+    const { passthroughEmptyRows, typeCastOnly } = this.#options;
     const row = JSON.parse(chunk);
 
     // Assume first row is headers and use it to prepare the columns object
@@ -157,9 +151,9 @@ export class CSVNormalizer extends TransformStream {
       const emptyField = value === '' ? true : false;
       switch (type) {
         case 'string': break;
-        case 'number': value = passthroughNumber ? value : CSVNormalizer.fixExcelNumber(value); break;
-        case 'bigint': value = passthroughBigInt ? value : CSVNormalizer.fixExcelBigInt(value); break;
-        case 'date': value = passthroughDate ? value : CSVNormalizer.fixExcelDate(value); break;
+        case 'number': value = typeCastOnly ? Number(value) : CSVNormalizer.fixExcelNumber(value); break;
+        case 'bigint': value = typeCastOnly ? BigInt(value).toString() : CSVNormalizer.fixExcelBigInt(value); break;
+        case 'date': value = typeCastOnly ? new Date(value).toISOString() : CSVNormalizer.fixExcelDate(value); break;
       }
       if (emptyField && defaultValue !== null) {
         value = defaultValue;

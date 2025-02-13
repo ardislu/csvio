@@ -215,11 +215,11 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       .pipeThrough(new CSVNormalizer([
         { name: 'columnA', type: 'number' },
         { name: 'columnB', type: 'number' }
-      ], { passthroughNumber: true }))
+      ], { typeCastOnly: true }))
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
         ['columnA', 'columnB'],
-        ['123', '456']
+        [123, 456]
       ]));
   });
   test('can pass through BigInt', { concurrency: true }, async () => {
@@ -230,7 +230,7 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       .pipeThrough(new CSVNormalizer([
         { name: 'columnA', type: 'bigint' },
         { name: 'columnB', type: 'bigint' }
-      ], { passthroughBigInt: true }))
+      ], { typeCastOnly: true }))
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
         ['columnA', 'columnB'],
@@ -245,11 +245,11 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       .pipeThrough(new CSVNormalizer([
         { name: 'columnA', type: 'date' },
         { name: 'columnB', type: 'date' }
-      ], { passthroughDate: true }))
+      ], { typeCastOnly: true }))
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
         ['columnA', 'columnB'],
-        ['2025-02-10', '2025-02-09']
+        ['2025-02-10T00:00:00.000Z', '2025-02-09T00:00:00.000Z']
       ]));
   });
   test('can ignore incorrect data types', { concurrency: true }, async (t) => {
