@@ -19,14 +19,13 @@ await benchmarkIterations('Read 1MB'.padEnd(NAME_LENGTH, '.'), 20, async () => {
   for await (const _ of r) { }
 });
 
-iter = 0
 await benchmarkIterations('Transform 1MB'.padEnd(NAME_LENGTH, '.'), 20, async () => {
   const r = createRandomCSV(1000, 100, iter++).pipeThrough(new CSVTransformer(r => r.map(f => Number(f) + 1)));
   for await (const _ of r) { }
 });
 
 await benchmark('Write 100MB'.padEnd(NAME_LENGTH, '.'), async () => {
-  await createRandomCSV(100000, 100, 2).pipeTo(new CSVWriter(temp));
+  await createRandomCSV(100000, 100, iter++).pipeTo(new CSVWriter(temp));
 });
 
 await benchmark('Read 100MB'.padEnd(NAME_LENGTH, '.'), async () => {
@@ -35,6 +34,6 @@ await benchmark('Read 100MB'.padEnd(NAME_LENGTH, '.'), async () => {
 });
 
 await benchmark('Transform 100MB'.padEnd(NAME_LENGTH, '.'), async () => {
-  const r = createRandomCSV(100000, 100, 2).pipeThrough(new CSVTransformer(r => r.map(f => Number(f) + 1)));
+  const r = createRandomCSV(100000, 100, iter++).pipeThrough(new CSVTransformer(r => r.map(f => Number(f) + 1)));
   for await (const _ of r) { }
 });
