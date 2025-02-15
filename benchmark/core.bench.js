@@ -8,6 +8,7 @@ const NAME_LENGTH = 15;
 
 const temp = await createTempFile();
 process.on('exit', () => unlinkSync(temp));
+process.on('SIGINT', () => process.exit());
 
 let iter = 0;
 await benchmarkIterations('1MB Write'.padEnd(NAME_LENGTH, '.'), 20, async () => {
