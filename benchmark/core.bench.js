@@ -10,44 +10,44 @@ const temp = await createTempFile();
 process.on('exit', () => unlinkSync(temp));
 
 let iter = 0;
-await benchmarkIterations('Write 1MB'.padEnd(NAME_LENGTH, '.'), 20, async () => {
+await benchmarkIterations('1MB Write'.padEnd(NAME_LENGTH, '.'), 20, async () => {
   await createRandomCSV(1000, 100, iter++).pipeTo(new CSVWriter(temp));
 });
 
-await benchmarkIterations('Read 1MB'.padEnd(NAME_LENGTH, '.'), 20, async () => {
+await benchmarkIterations('1MB Read'.padEnd(NAME_LENGTH, '.'), 20, async () => {
   const r = new CSVReader(temp);
   for await (const _ of r) { }
 });
 
-await benchmarkIterations('Transform 1MB'.padEnd(NAME_LENGTH, '.'), 20, async () => {
+await benchmarkIterations('1MB Transform'.padEnd(NAME_LENGTH, '.'), 20, async () => {
   const r = createRandomCSV(1000, 100, iter++).pipeThrough(new CSVTransformer(r => r.map(f => Number(f) + 1)));
   for await (const _ of r) { }
 });
 
-await benchmark('Write 50MB'.padEnd(NAME_LENGTH, '.'), async () => {
+await benchmark('50MB Write'.padEnd(NAME_LENGTH, '.'), async () => {
   await createRandomCSV(50000, 100, iter++).pipeTo(new CSVWriter(temp));
 });
 
-await benchmark('Read 50MB'.padEnd(NAME_LENGTH, '.'), async () => {
+await benchmark('50MB Read'.padEnd(NAME_LENGTH, '.'), async () => {
   const r = new CSVReader(temp);
   for await (const _ of r) { }
 });
 
-await benchmark('Transform 50MB'.padEnd(NAME_LENGTH, '.'), async () => {
+await benchmark('50MB Transform'.padEnd(NAME_LENGTH, '.'), async () => {
   const r = createRandomCSV(50000, 100, iter++).pipeThrough(new CSVTransformer(r => r.map(f => Number(f) + 1)));
   for await (const _ of r) { }
 });
 
-await benchmark('Write 100MB'.padEnd(NAME_LENGTH, '.'), async () => {
+await benchmark('100MB Write'.padEnd(NAME_LENGTH, '.'), async () => {
   await createRandomCSV(100000, 100, iter++).pipeTo(new CSVWriter(temp));
 });
 
-await benchmark('Read 100MB'.padEnd(NAME_LENGTH, '.'), async () => {
+await benchmark('100MB Read'.padEnd(NAME_LENGTH, '.'), async () => {
   const r = new CSVReader(temp);
   for await (const _ of r) { }
 });
 
-await benchmark('Transform 100MB'.padEnd(NAME_LENGTH, '.'), async () => {
+await benchmark('100MB Transform'.padEnd(NAME_LENGTH, '.'), async () => {
   const r = createRandomCSV(100000, 100, iter++).pipeThrough(new CSVTransformer(r => r.map(f => Number(f) + 1)));
   for await (const _ of r) { }
 });
