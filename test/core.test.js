@@ -57,7 +57,7 @@ suite('CSVReader', { concurrency: true }, () => {
   const vectors = [
     {
       name: 'parses simple CSV',
-      input: './test/data/simple.csv',
+      input: './data/simple.csv',
       output: [
         ['column1', 'column2', 'column3'],
         ['abc', 'def', 'ghi'],
@@ -67,7 +67,7 @@ suite('CSVReader', { concurrency: true }, () => {
     },
     {
       name: 'parses escaping CSV',
-      input: './test/data/escaping.csv',
+      input: './data/escaping.csv',
       output: [
         ['name', 'value'],
         ['Three spaces', '   '],
@@ -95,7 +95,7 @@ suite('CSVReader', { concurrency: true }, () => {
     },
     {
       name: 'parses escaping edges CSV',
-      input: './test/data/escaping-edges.csv',
+      input: './data/escaping-edges.csv',
       output: [
         [',,,', '"""'],
         ['"""', ',,,'],
@@ -105,7 +105,7 @@ suite('CSVReader', { concurrency: true }, () => {
     },
     {
       name: 'parses sparse CSV',
-      input: './test/data/sparse.csv',
+      input: './data/sparse.csv',
       output: [
         ['column1', 'column2', 'column3'],
         [''],
@@ -130,7 +130,7 @@ suite('CSVReader', { concurrency: true }, () => {
     },
     {
       name: 'parses line feed end-of-line CSV',
-      input: './test/data/lf-eol.csv',
+      input: './data/lf-eol.csv',
       output: [
         ['column1', 'column2'],
         ['a', 'b'],
@@ -141,7 +141,7 @@ suite('CSVReader', { concurrency: true }, () => {
     },
     {
       name: 'parses byte order mark CSV',
-      input: './test/data/bom.csv',
+      input: './data/bom.csv',
       output: [
         ['column1', 'column2'],
         ['ab', 'cd'],
@@ -150,7 +150,7 @@ suite('CSVReader', { concurrency: true }, () => {
     },
     {
       name: 'parses UTF-16 LE CSV',
-      input: './test/data/utf-16le.csv',
+      input: './data/utf-16le.csv',
       options: { encoding: 'utf-16le' },
       output: [
         ['column1', 'column2'],
@@ -160,14 +160,14 @@ suite('CSVReader', { concurrency: true }, () => {
     },
     {
       name: 'parses single value (no commas or newlines) CSV',
-      input: './test/data/single-value.csv',
+      input: './data/single-value.csv',
       output: [
         ['abc']
       ]
     },
     {
       name: 'parses single column (no commas) CSV',
-      input: './test/data/single-column.csv',
+      input: './data/single-column.csv',
       output: [
         ['abc'],
         ['def'],
@@ -176,14 +176,14 @@ suite('CSVReader', { concurrency: true }, () => {
     },
     {
       name: 'parses single row (no newlines) CSV',
-      input: './test/data/single-row.csv',
+      input: './data/single-row.csv',
       output: [
         ['abc', 'def', 'ghi']
       ]
     },
     {
       name: 'parses blank CSV',
-      input: './test/data/blank.csv',
+      input: './data/blank.csv',
       output: [
         ['']
       ],
@@ -194,9 +194,10 @@ suite('CSVReader', { concurrency: true }, () => {
   ];
   for (const { name, input, options = {}, output, negativeOutput } of vectors) {
     test(name, { concurrency: true }, async () => {
-      await new CSVReader(input, options).pipeTo(csvStreamEqualWritable(output));
+      const path = new URL(input, import.meta.url); // Makes the path relative to this file, not the command's execution directory
+      await new CSVReader(path, options).pipeTo(csvStreamEqualWritable(output));
       if (negativeOutput !== undefined) {
-        await new CSVReader(input, options).pipeTo(csvStreamNotEqualWritable(negativeOutput));
+        await new CSVReader(path, options).pipeTo(csvStreamNotEqualWritable(negativeOutput));
       }
     });
   }
