@@ -1,7 +1,7 @@
 import { suite, test } from 'node:test';
 import { deepStrictEqual } from 'node:assert/strict';
 
-import { csvStreamEqual, csvStreamEqualWritable, createCSVMockStream, assertConsole } from './utils.js';
+import { csvStreamEqualWritable, createCSVMockStream, assertConsole } from './utils.js';
 import { CSVReader } from '../src/core.js';
 import { toCamelCase, expandScientificNotation, CSVNormalizer, CSVDenormalizer } from '../src/normalization.js';
 
@@ -278,14 +278,14 @@ suite('CSVNormalizer and CSVDenormalizer end-to-end', { concurrency: true }, () 
       { name: 'bigintCol', displayName: 'BigInt Column', type: 'bigint' },
       { name: 'dateCol', displayName: 'Date Column', type: 'date' }
     ]
-    const stream = new CSVReader('./test/data/normalization.csv')
+    await new CSVReader('./test/data/normalization.csv')
       .pipeThrough(new CSVNormalizer(headers))
-      .pipeThrough(new CSVDenormalizer());
-    await csvStreamEqual(stream, [
-      ['String Column', 'Number Column', 'BigInt Column', 'Date Column'],
-      ['abc 👨‍👩‍👧‍👦', 123456789.123456, '1000000000000000000', '2024-01-01T00:00:00.000Z'],
-      [', " 🏴‍☠️', 1000, '-1234567890000000000000000', '2024-06-01T00:00:00.000Z'],
-      ['N/A', 123100, '1000000000000000000', '2024-12-31T08:00:00.000Z']
-    ]);
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['String Column', 'Number Column', 'BigInt Column', 'Date Column'],
+        ['abc 👨‍👩‍👧‍👦', 123456789.123456, '1000000000000000000', '2024-01-01T00:00:00.000Z'],
+        [', " 🏴‍☠️', 1000, '-1234567890000000000000000', '2024-06-01T00:00:00.000Z'],
+        ['N/A', 123100, '1000000000000000000', '2024-12-31T08:00:00.000Z']
+      ]));
   });
 });

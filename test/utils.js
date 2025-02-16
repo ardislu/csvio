@@ -5,50 +5,8 @@ import { normalize } from 'node:path';
 /** @import { TestContext } from 'node:test'; */
 
 /**
- * Log an entire stream along with the field count for each row and the total row count.
- * 
- * @param {ReadableStream} stream A stream of CSV data.
- * @param {string} [id] Optional label to include in the log.
- */
-export async function csvStreamLog(stream, id) {
-  let out = '============================================================\n';
-  out += `\x1b[45m${id ?? ''}\x1b[0m`;
-  out += '\n------------------------------------------------------------\n';
-  let totalRows = 0;
-  for await (const value of stream) {
-    const row = JSON.parse(value);
-    const rowNoNewlines = row.map(f => f.replaceAll('\n', '\\n').replaceAll('\r', '\\r'));
-    out += `${row.length} || ${rowNoNewlines.join(' | ')}\n`;
-    totalRows++;
-  }
-  out += '------------------------------------------------------------\n';
-  out += `Total row count: ${totalRows}\n`;
-  out += '============================================================';
-  console.log(out);
-}
-
-/**
- * Compare each field in a CSV stream with a given array, assuming each chunk of the stream is a
- * serialized `Array<any>` representing a row of a CSV. 
- * 
- * @param {ReadableStream} stream A stream of CSV data.
- * @param {Array<Array<any>>} csv A 2-D array representing the CSV file, where each inner array
- * is a row of the CSV.
- */
-export async function csvStreamEqual(stream, csv) {
-  let i = 0;
-  for await (const value of stream) {
-    const row = JSON.parse(value);
-    for (let j = 0; j < csv[i].length; j++) {
-      deepStrictEqual(row[j], csv[i][j]);
-    }
-    i++;
-  }
-}
-
-/**
- * A `WritableStream` version of `csvStreamEqual`. Compares each field in a CSV stream with a given
- * array, assuming each chunk of the stream is a serialized `Array<any>` representing a row of a CSV.
+ * A `WritableStream` sink that compares each field in a CSV stream with a given array, assuming each chunk of the
+ * stream is a serialized `Array<any>` representing a row of a CSV.
  * 
  * @param {Array<Array<any>>} csv A 2-D array representing the CSV file, where each inner array
  * is a row of the CSV.
@@ -65,23 +23,6 @@ export function csvStreamEqualWritable(csv) {
       i++;
     }
   });
-}
-
-/**
- * Negative version of `csvStreamEqual`. Tests that the given stream is NOT equal to the given CSV.
- * 
- * @param {ReadableStream} stream A stream of CSV data.
- * @param {Array<Array<any>>} csv A 2-D array representing the CSV file, where each inner array
- */
-export async function csvStreamNotEqual(stream, csv) {
-  let i = 0;
-  for await (const value of stream) {
-    const row = JSON.parse(value);
-    for (let j = 0; j < csv[i].length; j++) {
-      notStrictEqual(row[j], csv[i][j]);
-    }
-    i++;
-  }
 }
 
 /**
