@@ -16,7 +16,7 @@ CA-4321 | 4        | 3.43
 Run:
 
 ```javascript
-import { CSVReader, CSVTransformer, CSVWriter } from './src/index.js';
+import { CSVReader, CSVTransformer, CSVWriter } from 'csvio';
 
 function calculate(row) { // Input is a simple array representing one CSV row
   const [country, id] = row[0].split('-');
@@ -76,7 +76,7 @@ The core API is contained in `src/core.js` and exposes three classes to read, tr
 A `ReadableStream` where each chunk is one row from a local CSV file.
 
 ```javascript
-import { CSVReader } from './src/index.js';
+import { CSVReader } from 'csvio';
 
 const readableStream = new CSVReader('./examples/data/ex1_1-in.csv');
 
@@ -96,7 +96,7 @@ for await (const row of readableStream) {
 A `TransformStream` that will apply a given function to each row in a streamed CSV.
 
 ```javascript
-import { CSVTransformer } from './src/index.js';
+import { CSVTransformer } from 'csvio';
 
 function edit(row) {
   return [`${row[0]}: transformed!`];
@@ -125,7 +125,7 @@ for await (const row of rows) {
 A `WritableStream` to save CSV row data to disk.
 
 ```javascript
-import { CSVWriter } from './src/index.js';
+import { CSVWriter } from 'csvio';
 
 const writableStream = new CSVWriter('./example.csv');
 
