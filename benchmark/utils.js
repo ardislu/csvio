@@ -1,5 +1,11 @@
 import { styleText } from 'node:util';
 
+/**
+ * Measure the time it tasks to execute `fn` and log the result to console.
+ * 
+ * @param {string} name A label for the benchmark.
+ * @param {function} fn The function to measure.
+ */
 export async function benchmark(name, fn) {
   performance.mark('start');
   await fn();
@@ -15,6 +21,14 @@ export async function benchmark(name, fn) {
   performance.clearMeasures();
 }
 
+/**
+ * Measure the average time it takes for `fn` to execute across `iterations` number of executions and
+ * log the result to console.
+ * 
+ * @param {string} name A label for the benchmark.
+ * @param {number} iterations The number of times to execute the function.
+ * @param {function} fn The function to benchmark.
+ */
 export async function benchmarkIterations(name, iterations, fn) {
   for (let i = 0; i < iterations; i++) {
     performance.mark(`start:${i}`);
