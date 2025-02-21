@@ -3,6 +3,19 @@ import { setTimeout } from 'node:timers/promises';
 /** @import {TransformationErrorFunction} from './core.js'; */
 
 /**
+ * A wrapper around `node:timers/promises`'s async `setTimeout`. This wrapper is required to mock for testing purposes.
+ * 
+ * @param {number} ms The duration to wait before resolving.
+ */
+/* node:coverage ignore next 3 */
+async function sleep(ms) {
+  await setTimeout(ms);
+}
+export const utils = Object.create(null, {
+  sleep: { value: sleep, writable: true, enumerable: true, configurable: true }
+});
+
+/**
  * Create a `TransformationErrorFunction` that handles errors by filling the output row with a given placeholder value.
  * 
  * @param {string} value The placeholder value to fill the row with. This value will be used for each field in the row.
@@ -66,7 +79,7 @@ function backoff(iterations, maxExponent, value) {
       const exponent = n > maxExponent ? maxExponent : n;
       const duration = (2 ** exponent) * 1000; // 1s, 2s, 4s, 8s, 16s, ...
       const jitter = Math.random() * 1000;
-      await setTimeout(duration + jitter);
+      await utils.sleep(duration + jitter);
       try { return await fn(row); }
       catch { }
     }

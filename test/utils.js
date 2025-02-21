@@ -1,8 +1,10 @@
-import { deepStrictEqual, notStrictEqual } from 'node:assert/strict';
+import { deepStrictEqual, notStrictEqual, ok } from 'node:assert/strict';
 import { tmpdir } from 'node:os';
 import { mkdtemp, open } from 'node:fs/promises';
 import { normalize } from 'node:path';
 /** @import { TestContext } from 'node:test'; */
+
+import { utils } from '../src/errorStrategies.js';
 
 /**
  * A `WritableStream` sink that compares each field in a CSV stream with a given array, assuming each chunk of the
@@ -86,6 +88,42 @@ export function assertConsole(context, expected = {}) {
     deepStrictEqual(actual.info, expected.info, `expected ${expected.info} console.info calls, got ${actual.info}`);
     deepStrictEqual(actual.warn, expected.warn, `expected ${expected.warn} console.warn calls, got ${actual.warn}`);
     deepStrictEqual(actual.error, expected.error, `expected ${expected.error} console.error calls, got ${actual.error}`);
+  });
+}
+
+/**
+ * @typedef AssertSleepDurations Object containing the minimum and maximum bounds of the total timeout duration.
+ * @property {number} min The minimum total timeout duration that is expected.
+ * @property {number} max The maximum total timeout duration that is expected.
+ */
+
+/**
+ * Progresses asynchronous (`node:timers/promises`) `setTimeout` calls instantly and asserts the total duration passed
+ * to all `setTimeout` calls are within given expected bounds.
+ * 
+ * **Important**: The built-in `setTimeout` can **NOT** be mocked directly. As a workaround, use the `utils.sleep`
+ * wrapper function from `errorStrategies.js`.
+ * 
+ * BAD:
+ * ```javascript
+ * await setTimeout(1000);
+ * ```
+ * 
+ * GOOD:
+ * ```javascript
+ * await utils.sleep(1000);
+ * ```
+ * 
+ * @param {TestContext} context A Node.js `TestContext` for a test case.
+ * @param {AssertSleepDurations} expected Object containing the minimum and maximum bounds of the total sleep
+ * duration.
+ */
+export function assertSleep(context, expected) {
+  let actual = 0;
+  context.mock.method(utils, 'sleep', duration => actual += duration);
+  context.after(() => {
+    ok(actual >= expected.min, `expected minimum ${expected.min} total sleep duration, got ${actual}`);
+    ok(actual <= expected.max, `expected maximum ${expected.max} total sleep duration, got ${actual}`);
   });
 }
 
