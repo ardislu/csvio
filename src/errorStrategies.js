@@ -77,4 +77,9 @@ function backoff(iterations, maxExponent, value) {
   }
 }
 
-export const ErrorStrategies = { placeholder, retry, backoff };
+export const ErrorStrategies = Object.create(null, {
+  placeholder: { value: placeholder },
+  retry: { value: retry },
+  backoff: { value: backoff }
+});
+Object.freeze(ErrorStrategies);
