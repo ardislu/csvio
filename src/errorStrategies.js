@@ -11,9 +11,7 @@ import { setTimeout } from 'node:timers/promises';
 async function sleep(ms) {
   await setTimeout(ms);
 }
-export const utils = Object.create(null, {
-  sleep: { value: sleep, writable: true, enumerable: true, configurable: true }
-});
+export const utils = { sleep };
 
 /**
  * Create a `TransformationErrorFunction` that handles errors by filling the output row with a given placeholder value.
@@ -90,9 +88,5 @@ function backoff(iterations, maxExponent, value) {
   }
 }
 
-export const ErrorStrategies = Object.create(null, {
-  placeholder: { value: placeholder },
-  retry: { value: retry },
-  backoff: { value: backoff }
-});
+export const ErrorStrategies = { placeholder, retry, backoff };
 Object.freeze(ErrorStrategies);
