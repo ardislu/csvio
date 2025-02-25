@@ -33,8 +33,8 @@ function placeholder(value) {
 
 /**
  * @typedef {Object} RetryOptions
- * @property {string} [value] If provided, a placeholder value to set if the function still errors after the final iteration.
- * If `value` is unset, the final error thrown by the function is re-thrown.
+ * @property {string} [placeholder] A placeholder value to set if the function still errors after the final iteration.
+ * If unset, the final error thrown by the function is re-thrown.
  */
 
 /**
@@ -47,14 +47,13 @@ function placeholder(value) {
  * @throws If `value` is unset and the function throws an error after the final iteration, the error is re-thrown.
  */
 function retry(iterations, options = {}) {
-  let { value } = options;
   return async (row, e, fn) => {
     while (iterations--) {
       try { return await fn(row); }
       catch { }
     }
-    if (value !== undefined) {
-      return placeholder(value)(row, e, fn);
+    if (options.placeholder !== undefined) {
+      return placeholder(options.placeholder)(row, e, fn);
     }
     throw e;
   }
@@ -65,8 +64,8 @@ function retry(iterations, options = {}) {
  * @property {number} [maxExponent] If provided, the maximum exponent used to calculate the retry duration. In other words,
  * the `iterations` number at which the retry duration stops increasing. If `maxExponent` is unset, the retry duration
  * is unbounded and will increase after each retry.
- * @property {string} [value] If provided, a placeholder value to set if the function still errors after the final iteration.
- * If `value` is unset, the final error thrown by the function is re-thrown.
+ * @property {string} [placeholder] A placeholder value to set if the function still errors after the final iteration.
+ * If unset, the final error thrown by the function is re-thrown.
  */
 
 /**
@@ -80,19 +79,18 @@ function retry(iterations, options = {}) {
  * @throws If `value` is unset and the function throws an error after the final iteration, the error is re-thrown.
  */
 function backoff(iterations, options = {}) {
-  let { maxExponent, value } = options;
-  maxExponent ??= Infinity;
+  options.maxExponent ??= Infinity;
   return async (row, e, fn) => {
     for (let n = 0; n < iterations; n++) {
-      const exponent = n > maxExponent ? maxExponent : n;
+      const exponent = n > options.maxExponent ? options.maxExponent : n;
       const duration = (2 ** exponent) * 1000; // 1s, 2s, 4s, 8s, 16s, ...
       const jitter = Math.random() * 1000;
       await utils.sleep(duration + jitter);
       try { return await fn(row); }
       catch { }
     }
-    if (value !== undefined) {
-      return placeholder(value)(row, e, fn);
+    if (options.placeholder !== undefined) {
+      return placeholder(options.placeholder)(row, e, fn);
     }
     throw e;
   }
