@@ -32,16 +32,22 @@ function placeholder(value) {
 }
 
 /**
+ * @typedef {Object} RetryOptions
+ * @property {string} [value] If provided, a placeholder value to set if the function still errors after the final iteration.
+ * If `value` is unset, the final error thrown by the function is re-thrown.
+ */
+
+/**
  * Create a `TransformationErrorFunction` that handles errors by immediately retrying it `iterations` number of times.
  * 
  * @param {number} iterations The number of times to retry the function.
- * @param {string} [value] If provided, a placeholder value to set if the function still errors after the final iteration.
- * If `value` is unset, the final error thrown by the function is re-thrown.
+ * @param {RetryOptions} [options] Extra configuration options for the retry.
  * @returns {TransformationErrorFunction} A `TransformationErrorFunction` that may be passed to a `CSVTransformer`'s
  * `onError` option.
  * @throws If `value` is unset and the function throws an error after the final iteration, the error is re-thrown.
  */
-function retry(iterations, value) {
+function retry(iterations, options = {}) {
+  let { value } = options;
   return async (row, e, fn) => {
     while (iterations--) {
       try { return await fn(row); }
@@ -55,23 +61,27 @@ function retry(iterations, value) {
 }
 
 /**
+ * @typedef {Object} BackoffOptions
+ * @property {number} [maxExponent] If provided, the maximum exponent used to calculate the retry duration. In other words,
+ * the `iterations` number at which the retry duration stops increasing. If `maxExponent` is unset, the retry duration
+ * is unbounded and will increase after each retry.
+ * @property {string} [value] If provided, a placeholder value to set if the function still errors after the final iteration.
+ * If `value` is unset, the final error thrown by the function is re-thrown.
+ */
+
+/**
  * Create a `TransformationErrorFunction` that handles errors by retrying it an `iterations` number of times, with an
  * exponentially increasing duration in between each retry (i.e., an exponential backoff).
  * 
  * @param {number} iterations The number of times to retry the function.
- * @param {number} [maxExponent] If provided, the maximum exponent used to calculate the retry duration. In other words,
- * the `iterations` number at which the retry duration stops increasing. If `maxExponent` is unset, the retry duration
- * is unbounded and will increase after each retry.
- * @param {string} [value] If provided, a placeholder value to set if the function still errors after the final iteration.
- * If `value` is unset, the final error thrown by the function is re-thrown.
+ * @param {BackoffOptions} [options] Extra configuration options for the backoff.
  * @returns {TransformationErrorFunction} A `TransformationErrorFunction` that may be passed to a `CSVTransformer`'s
  * `onError` option.
  * @throws If `value` is unset and the function throws an error after the final iteration, the error is re-thrown.
  */
-function backoff(iterations, maxExponent, value) {
-  if (maxExponent === undefined) {
-    maxExponent = Infinity;
-  }
+function backoff(iterations, options = {}) {
+  let { maxExponent, value } = options;
+  maxExponent ??= Infinity;
   return async (row, e, fn) => {
     for (let n = 0; n < iterations; n++) {
       const exponent = n > maxExponent ? maxExponent : n;

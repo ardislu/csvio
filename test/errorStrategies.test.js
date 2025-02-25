@@ -139,7 +139,7 @@ suite('ErrorStrategies.retry', { concurrency: true }, () => {
       ['header'],
       ['0']
     ])
-      .pipeThrough(new CSVTransformer(fn, { onError: retry(1, 'n/a') }))
+      .pipeThrough(new CSVTransformer(fn, { onError: retry(1, { value: 'n/a' }) }))
       .pipeTo(csvStreamEqualWritable([
         ['header'],
         ['n/a']
@@ -199,7 +199,7 @@ suite('ErrorStrategies.backoff', { concurrency: 1 }, () => { // TODO: These test
       ['header'],
       ['0']
     ])
-      .pipeThrough(new CSVTransformer(fn, { onError: backoff(10, 0) }))
+      .pipeThrough(new CSVTransformer(fn, { onError: backoff(10, { maxExponent: 0 }) }))
       .pipeTo(csvStreamEqualWritable([
         ['header'],
         [11]
@@ -214,7 +214,7 @@ suite('ErrorStrategies.backoff', { concurrency: 1 }, () => { // TODO: These test
       ['header'],
       ['0']
     ])
-      .pipeThrough(new CSVTransformer(fn, { onError: backoff(7, 4) }))
+      .pipeThrough(new CSVTransformer(fn, { onError: backoff(7, { maxExponent: 4 }) }))
       .pipeTo(csvStreamEqualWritable([
         ['header'],
         [8]
@@ -228,7 +228,7 @@ suite('ErrorStrategies.backoff', { concurrency: 1 }, () => { // TODO: These test
       ['header'],
       ['0']
     ])
-      .pipeThrough(new CSVTransformer(fn, { onError: backoff(3, Infinity, 'n/a') }))
+      .pipeThrough(new CSVTransformer(fn, { onError: backoff(3, { value: 'n/a' }) }))
       .pipeTo(csvStreamEqualWritable([
         ['header'],
         ['n/a']
