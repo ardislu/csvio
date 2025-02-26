@@ -133,6 +133,19 @@ suite('ErrorStrategies.retry', { concurrency: true }, () => {
         [10]
       ]));
   });
+  test('retries with interval', async (t) => {
+    assertSleep(t, { min: 10 * 1000, max: 10 * 1000 + 1000 });
+    const fn = retryFactory(11); // 1st try + 10 retries = pass on 11th with extra retries available
+    await createCSVMockStream([
+      ['header'],
+      ['0']
+    ])
+      .pipeThrough(new CSVTransformer(fn, { onError: retry(10, { interval: 1000 }) }))
+      .pipeTo(csvStreamEqualWritable([
+        ['header'],
+        [11]
+      ]));
+  });
   test('sets placeholder if failed after last iteration and placeholder is given', async () => {
     const fn = retryFactory(100);
     await createCSVMockStream([

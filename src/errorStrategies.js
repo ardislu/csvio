@@ -33,6 +33,8 @@ function placeholder(value) {
 
 /**
  * @typedef {Object} RetryOptions
+ * @property {number} [interval] The duration (in milliseconds) to wait in between each retry. The default value is `0`
+ * (retry immediately).
  * @property {string} [placeholder] A placeholder value to set if the function still errors after the final iteration.
  * If unset, the final error thrown by the function is re-thrown.
  */
@@ -47,8 +49,10 @@ function placeholder(value) {
  * @throws If `value` is unset and the function throws an error after the final iteration, the error is re-thrown.
  */
 function retry(iterations, options = {}) {
+  options.interval ??= 0;
   return async (row, e, fn) => {
     while (iterations--) {
+      await utils.sleep(options.interval);
       try { return await fn(row); }
       catch { }
     }
