@@ -87,7 +87,7 @@ suite('ErrorStrategies.placeholder', { concurrency: true }, () => {
   });
 });
 
-suite('ErrorStrategies.retry', { concurrency: true }, () => {
+suite('ErrorStrategies.retry', { concurrency: 1 }, () => { // TODO: concurrency does not work when mocking utils.sleep
   test('retries until successful (1 retry, 2 total calls)', async () => {
     const fn = retryFactory(2); // 1st try + 1 retry = 2 total calls
     await createCSVMockStream([
@@ -133,9 +133,22 @@ suite('ErrorStrategies.retry', { concurrency: true }, () => {
         [10]
       ]));
   });
-  test('retries with interval', async (t) => {
+  test('retries with interval (1 retry)', async (t) => {
+    assertSleep(t, { min: 1000, max: 1100 });
+    const fn = retryFactory(2); // 1st try + 1 retry = pass on 2nd
+    await createCSVMockStream([
+      ['header'],
+      ['0']
+    ])
+      .pipeThrough(new CSVTransformer(fn, { onError: retry(1, { interval: 1000 }) }))
+      .pipeTo(csvStreamEqualWritable([
+        ['header'],
+        [2]
+      ]));
+  });
+  test('retries with interval (10 retries)', async (t) => {
     assertSleep(t, { min: 10 * 1000, max: 10 * 1000 + 1000 });
-    const fn = retryFactory(11); // 1st try + 10 retries = pass on 11th with extra retries available
+    const fn = retryFactory(11); // 1st try + 10 retries = pass on 11th
     await createCSVMockStream([
       ['header'],
       ['0']
