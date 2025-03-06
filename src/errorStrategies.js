@@ -14,6 +14,17 @@ async function sleep(ms) {
 export const utils = { sleep };
 
 /**
+ * Create a `TransformationErrorFunction` that handles errors by silently swallowing the error and skipping the output
+ * row.
+ * 
+ * @returns {TransformationErrorFunction} A `TransformationErrorFunction` that may be passed to a `CSVTransformer`'s
+ * `onError` option.
+ */
+function skip() {
+  return () => null;
+}
+
+/**
  * Create a `TransformationErrorFunction` that handles errors by filling the output row with a given placeholder value.
  * 
  * @param {string} value The placeholder value to fill the row with. This value will be used for each field in the row.
@@ -100,5 +111,5 @@ function backoff(iterations, options = {}) {
   }
 }
 
-export const ErrorStrategies = { placeholder, retry, backoff };
+export const ErrorStrategies = { skip, placeholder, retry, backoff };
 Object.freeze(ErrorStrategies);

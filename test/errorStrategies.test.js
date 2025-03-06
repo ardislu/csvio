@@ -5,7 +5,7 @@ import { csvStreamEqualWritable, createCSVMockStream, assertSleep } from './util
 import { CSVTransformer } from '../src/core.js';
 import { ErrorStrategies } from '../src/errorStrategies.js';
 
-const { placeholder, retry, backoff } = ErrorStrategies;
+const { skip, placeholder, retry, backoff } = ErrorStrategies;
 
 /**
  * Generate a function that will throw errors until it is called **exactly** `count` times.
@@ -37,6 +37,21 @@ function getExponentialSleepBounds(iterations) {
   const max = min + (1000 * iterations);
   return { min, max };
 }
+
+suite('ErrorStrategies.skip', { concurrency: true }, () => {
+  test('skips errors', async () => {
+    await createCSVMockStream([
+      ['header', 'header', 'header'],
+      ['1', '1', '1'],
+      ['2', '2', '2'],
+      ['3', '3', '3']
+    ])
+      .pipeThrough(new CSVTransformer(r => { throw new Error(); }, { onError: skip() }))
+      .pipeTo(csvStreamEqualWritable([
+        ['header', 'header', 'header']
+      ]));
+  });
+});
 
 suite('ErrorStrategies.placeholder', { concurrency: true }, () => {
   test('sets placeholders on all fields in a row', async () => {
