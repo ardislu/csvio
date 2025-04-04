@@ -71,10 +71,6 @@ export function createFileStream(path) {
 /**
  * A simple streaming parser for CSV files.
  * 
- * Uses Node.js's [`fs.createReadStream()`](https://nodejs.org/api/fs.html#fscreatereadstreampath-options) to read a local
- * CSV file then parses the file contents and returns the data through a [Streams API](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API)
- * `ReadableStream`.
- * 
  * Each chunk is one row of the CSV file, in the form of a string that may be deserialized using `JSON.parse()`.
  * @extends ReadableStream
  */
