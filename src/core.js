@@ -1,7 +1,5 @@
-import { createReadStream } from 'node:fs';
 import { mkdir, open } from 'node:fs/promises';
 import { dirname, basename, normalize } from 'node:path';
-import { Readable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
 /** @import { PathLike } from 'node:fs'; */
 
@@ -27,14 +25,47 @@ export function parsePathLike(path) {
   }
 }
 
-// https://github.com/DefinitelyTyped/DefinitelyTyped/blob/e9296eba83c97aa1fc5d2689ad0539da9427977f/types/node/buffer.d.ts#L246-L258
-/** @typedef {"ascii"|"utf8"|"utf-8"|"utf16le"|"utf-16le"|"ucs2"|"ucs-2"|"base64"|"base64url"|"latin1"|"binary"|"hex"} BufferEncoding */
+/**
+ * Creates a readable byte stream from a local file.
+ * 
+ * Most code was copied from https://streams.spec.whatwg.org/#example-rbs-pull
+ * @param {PathLike} path  A `string`, `Buffer`, or `URL` representing a path to a local file.
+ * @returns {ReadableStream<Uint8Array<ArrayBufferLike>>}
+ */
+export function createFileStream(path) {
+  let handle;
+  let position = 0;
+
+  return new ReadableStream({
+    type: 'bytes',
+    autoAllocateChunkSize: 1024,
+    async start() {
+      handle = await open(path, "r");
+    },
+    async pull(controller) {
+      const v = controller.byobRequest.view;
+      const { bytesRead } = await handle.read(v, 0, v.byteLength, position);
+      if (bytesRead === 0) {
+        await handle.close();
+        controller.close();
+        controller.byobRequest.respond(0);
+      }
+      else {
+        position += bytesRead;
+        controller.byobRequest.respond(bytesRead);
+      }
+    },
+    cancel() {
+      return handle.close();
+    }
+  });
+}
 
 /**
  * Options to configure `CSVReader`.
  * @typedef {Object} CSVReaderOptions
- * @property {BufferEncoding} [encoding='utf-8'] The character encoding of the input CSV file. Can be any value accepted by
- * Node.js's [`Buffer`](https://nodejs.org/api/buffer.html#buffers-and-character-encodings). The default value is `utf-8`.
+ * @property {string} [encoding='utf-8'] The character encoding of the input CSV file. Can be any [Encoding API
+ * encoding](https://developer.mozilla.org/en-US/docs/Web/API/Encoding_API/Encodings). The default value is `utf-8`.
  */
 
 /**
@@ -60,11 +91,12 @@ export class CSVReader extends ReadableStream {
    */
   constructor(path, options = {}) {
     const { encoding = 'utf-8' } = options;
-    const readStream = createReadStream(path, { encoding });
-    const readableStream = Readable.toWeb(readStream).pipeThrough(new TransformStream({
-      transform: (chunk, controller) => this.#transform(chunk, controller),
-      flush: (controller) => this.#flush(controller)
-    }));
+    const readableStream = createFileStream(path)
+      .pipeThrough(new TextDecoderStream(encoding))
+      .pipeThrough(new TransformStream({
+        transform: (chunk, controller) => this.#transform(chunk, controller),
+        flush: (controller) => this.#flush(controller)
+      }));
     const reader = readableStream.getReader();
     super({
       async pull(controller) {
