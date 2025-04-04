@@ -159,6 +159,16 @@ suite('CSVReader', { concurrency: true }, () => {
       ]
     },
     {
+      name: 'parses UTF-16 BE CSV',
+      input: './data/utf-16be.csv',
+      options: { encoding: 'utf-16be' },
+      output: [
+        ['column1', 'column2'],
+        ['ab', 'cd'],
+        ['12', '34']
+      ]
+    },
+    {
       name: 'parses single value (no commas or newlines) CSV',
       input: './data/single-value.csv',
       output: [
