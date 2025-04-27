@@ -221,10 +221,16 @@ export class CSVReader extends ReadableStream {
  */
 export class CSVTransformer extends TransformStream {
   #fn;
-  #options;
   #concurrent = [];
   #batch = [];
   #firstChunk = true;
+
+  #handleHeaders;
+  #rawInput;
+  #rawOutput;
+  #onError;
+  #maxBatchSize;
+  #maxConcurrent;
 
   /**
    * @param {TransformationFunction} fn A function to process a row or rows of CSV data.
@@ -253,42 +259,39 @@ export class CSVTransformer extends TransformStream {
       flush: (controller) => this.#flush(controller),
     });
 
-    options.handleHeaders ??= false;
-    options.rawInput ??= false;
-    options.rawOutput ??= false;
-    options.onError ??= null;
-    options.maxBatchSize ??= 1;
-    options.maxConcurrent ??= 1;
+    this.#handleHeaders = options.handleHeaders ?? false;
+    this.#rawInput = options.rawInput ?? false;
+    this.#rawOutput = options.rawOutput ?? false;
+    this.#onError = options.onError ?? null;
+    this.#maxBatchSize = options.maxBatchSize ?? 1;
+    this.#maxConcurrent = options.maxConcurrent ?? 1;
 
     this.#fn = fn;
-    this.#options = options;
   }
 
   async #wrappedHeaderFn(row) {
-    const { onError, handleHeaders } = this.#options;
-    if (typeof handleHeaders === 'boolean') {
-      return handleHeaders ? await this.#wrappedFn(row) : row;
+    if (typeof this.#handleHeaders === 'boolean') {
+      return this.#handleHeaders ? await this.#wrappedFn(row) : row;
     }
-    if (Array.isArray(handleHeaders)) {
-      return handleHeaders;
+    if (Array.isArray(this.#handleHeaders)) {
+      return this.#handleHeaders;
     }
-    if (onError === null) { return await handleHeaders(row); }
-    try { return await handleHeaders(row); }
-    catch (e) { return await onError(row, e, handleHeaders); }
+    if (this.#onError === null) { return await this.#handleHeaders(row); }
+    try { return await this.#handleHeaders(row); }
+    catch (e) { return await this.#onError(row, e, this.#handleHeaders); }
   }
 
   async #wrappedFn(row) {
-    const { onError } = this.#options;
-    if (onError === null) { return await this.#fn(row); }
+    if (this.#onError === null) { return await this.#fn(row); }
     try { return await this.#fn(row); }
-    catch (e) { return await onError(row, e, this.#fn); }
+    catch (e) { return await this.#onError(row, e, this.#fn); }
   }
 
   #enqueueRow(row, controller) {
     if (row === null || row === undefined) { // Input row is consumed without emitting any output row
       return;
     }
-    else if (this.#options.rawOutput || typeof row === 'string') {
+    else if (this.#rawOutput || typeof row === 'string') {
       controller.enqueue(row);
     }
     else if (Array.isArray(row) && Array.isArray(row[0])) { // Multiple rows returned, enqueue each row separately
@@ -319,8 +322,7 @@ export class CSVTransformer extends TransformStream {
   }
 
   async #transform(chunk, controller) {
-    const { rawInput, maxBatchSize, maxConcurrent } = this.#options;
-    const row = rawInput ? chunk : JSON.parse(chunk);
+    const row = this.#rawInput ? chunk : JSON.parse(chunk);
 
     if (this.#firstChunk) {
       this.#firstChunk = false;
@@ -329,9 +331,9 @@ export class CSVTransformer extends TransformStream {
       return;
     }
 
-    if (maxBatchSize > 1) {
+    if (this.#maxBatchSize > 1) {
       this.#batch.push(row);
-      if (this.#batch.length === maxBatchSize) {
+      if (this.#batch.length === this.#maxBatchSize) {
         this.#concurrent.push(this.#wrappedFn(this.#batch));
         this.#batch.length = 0;
       }
@@ -340,7 +342,7 @@ export class CSVTransformer extends TransformStream {
       this.#concurrent.push(this.#wrappedFn(row));
     }
 
-    if (this.#concurrent.length === maxConcurrent) {
+    if (this.#concurrent.length === this.#maxConcurrent) {
       await this.#enqueueConcurrent(controller);
     }
   }
