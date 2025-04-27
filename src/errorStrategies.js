@@ -60,10 +60,10 @@ function placeholder(value) {
  * @throws If `value` is unset and the function throws an error after the final iteration, the error is re-thrown.
  */
 function retry(iterations, options = {}) {
-  options.interval ??= 0;
+  const interval = options.interval ?? 0;
   return async (row, e, fn) => {
     while (iterations--) {
-      await utils.sleep(options.interval);
+      await utils.sleep(interval);
       try { return await fn(row); }
       catch { }
     }
@@ -94,10 +94,10 @@ function retry(iterations, options = {}) {
  * @throws If `value` is unset and the function throws an error after the final iteration, the error is re-thrown.
  */
 function backoff(iterations, options = {}) {
-  options.maxExponent ??= Infinity;
+  const maxExponent = options.maxExponent ?? Infinity;
   return async (row, e, fn) => {
     for (let n = 0; n < iterations; n++) {
-      const exponent = n > options.maxExponent ? options.maxExponent : n;
+      const exponent = n > maxExponent ? maxExponent : n;
       const duration = (2 ** exponent) * 1000; // 1s, 2s, 4s, 8s, 16s, ...
       const jitter = Math.random() * 1000;
       await utils.sleep(duration + jitter);
