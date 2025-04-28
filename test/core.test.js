@@ -6,7 +6,7 @@ import { setTimeout } from 'node:timers/promises';
 import { pathToFileURL } from 'node:url';
 
 import { csvStreamEqualWritable, csvStreamNotEqualWritable, createCSVMockStream, createTempFile } from './utils.js';
-import { parsePathLike, CSVReader, CSVTransformer, CSVWriter } from '../src/core.js';
+import { parsePathLike, createFileStream, CSVReader, CSVTransformer, CSVWriter } from '../src/core.js';
 
 suite('CSVWriter.arrayToCSVString', { concurrency: true }, () => {
   const vectors = [
@@ -51,6 +51,63 @@ suite('parsePathLike', { concurrency: true }, () => {
       }
     });
   }
+});
+
+suite('createFileStream', { concurrency: true }, () => {
+  test('can cancel stream before reading', { concurrency: true }, async () => {
+    const path = new URL('./data/simple.csv', import.meta.url);
+    const s = createFileStream(path);
+    await s.cancel();
+    const c = await s.getReader({ mode: 'byob' }).read(new Uint8Array(1)).then(({ value }) => value);
+    deepStrictEqual(c?.[0], undefined); // Should be empty array because the stream was canceled
+  });
+  test('can cancel on reader before reading', { concurrency: true }, async () => {
+    const path = new URL('./data/simple.csv', import.meta.url);
+    const s = createFileStream(path);
+    const r = s.getReader({ mode: 'byob' });
+    await r.cancel();
+    r.releaseLock();
+    rejects(r.read(new Uint8Array(1)));
+  });
+  test('can read then cancel on stream', { concurrency: true }, async () => {
+    const path = new URL('./data/simple.csv', import.meta.url);
+    const s = createFileStream(path);
+    const r = s.getReader({ mode: 'byob' });
+    const c = await r.read(new Uint8Array(1)).then(({ value }) => value);
+    r.releaseLock();
+    await s.cancel();
+    rejects(r.read(new Uint8Array(1)));
+    deepStrictEqual(c?.[0], 99);
+  });
+  test('can read then cancel on reader', { concurrency: true }, async () => {
+    const path = new URL('./data/simple.csv', import.meta.url);
+    const s = createFileStream(path);
+    const r = s.getReader({ mode: 'byob' });
+    const c = await r.read(new Uint8Array(1)).then(({ value }) => value);
+    await r.cancel();
+    r.releaseLock();
+    rejects(r.read(new Uint8Array(1)));
+    deepStrictEqual(c?.[0], 99);
+  });
+  test('can re-acquire lock', { concurrency: true }, async () => {
+    const path = new URL('./data/simple.csv', import.meta.url);
+    const s = createFileStream(path);
+
+    const r = s.getReader({ mode: 'byob' });
+    const c = await r.read(new Uint8Array(1)).then(({ value }) => value);
+    r.releaseLock();
+
+    const r2 = s.getReader({ mode: 'byob' });
+    const c2 = await r2.read(new Uint8Array(1)).then(({ value }) => value);
+    r2.releaseLock();
+
+    await s.cancel();
+
+    rejects(r.read(new Uint8Array(1)));
+    rejects(r2.read(new Uint8Array(1)));
+    deepStrictEqual(c?.[0], 99);
+    deepStrictEqual(c2?.[0], 111);
+  });
 });
 
 suite('CSVReader', { concurrency: true }, () => {
