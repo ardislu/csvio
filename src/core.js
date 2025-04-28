@@ -312,17 +312,16 @@ export class CSVTransformer extends TransformStream {
     const results = await Promise.allSettled(this.#concurrent);
     this.#concurrent.length = 0;
     for (const r of results) {
-      const { status, value, reason } = r;
-      if (status === 'rejected') {
-        if (reason instanceof Error) {
-          throw reason;
+      if (r.status === 'rejected') {
+        if (r.reason instanceof Error) {
+          throw r.reason;
         }
         else {
-          throw new Error(reason);
+          throw new Error(r.reason);
         }
       }
       else {
-        this.#enqueueRow(value, controller);
+        this.#enqueueRow(r.value, controller);
       }
     }
   }
