@@ -36,11 +36,16 @@ export function createFileStream(path) {
   let handle;
   let position = 0;
 
+  // Can replace with Promise.withResolvers after Node.js v20 is no longer LTS
+  let resolveReady;
+  const ready = new Promise(r => { resolveReady = r });
+
   return new ReadableStream({
     type: 'bytes',
     autoAllocateChunkSize: 1024,
     async start() {
       handle = await open(path, "r");
+      resolveReady();
     },
     async pull(controller) {
       const v = controller.byobRequest.view;
@@ -55,7 +60,8 @@ export function createFileStream(path) {
         controller.byobRequest.respond(bytesRead);
       }
     },
-    cancel() {
+    async cancel() {
+      await ready; // If cancel() is called immediately after stream instantiation, start() may not have finished yet.
       return handle.close();
     }
   });
