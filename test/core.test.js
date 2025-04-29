@@ -268,6 +268,13 @@ suite('CSVReader', { concurrency: true }, () => {
       }
     });
   }
+  test('can cancel', { concurrency: true }, async () => {
+    const path = new URL('./data/simple.csv', import.meta.url);
+    const s = new CSVReader(path);
+    await s.cancel();
+    const c = await s.getReader().read().then(({ value }) => value);
+    deepStrictEqual(c, undefined);
+  });
 });
 
 suite('CSVTransformer', { concurrency: true }, () => {
@@ -615,6 +622,28 @@ suite('CSVWriter', { concurrency: true }, () => {
         ['header1', 'header2'],
         ['1', '1'],
       ]));
+  });
+  test('can close', { concurrency: true }, async (t) => {
+    const temp = await createTempFile();
+    t.after(async () => await unlink(temp));
+    const stream = new CSVWriter(temp);
+    const writer = stream.getWriter();
+    await writer.write('a');
+    writer.releaseLock();
+    await stream.close();
+    await rejects(writer.write('b'));
+    await new CSVReader(temp).pipeTo(csvStreamEqualWritable([['a']]));
+  });
+  test('can abort', { concurrency: true }, async (t) => {
+    const temp = await createTempFile();
+    t.after(async () => await unlink(temp));
+    const stream = new CSVWriter(temp);
+    const writer = stream.getWriter();
+    await writer.write('a');
+    writer.releaseLock();
+    await stream.abort();
+    await rejects(writer.write('b'));
+    await new CSVReader(temp).pipeTo(csvStreamEqualWritable([['a']]));
   });
 });
 
