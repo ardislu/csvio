@@ -10,13 +10,23 @@
     "node": ">=20"
   },
   "files": [
-    "src/*"
+    "./types/*",
+    "./src/*"
   ],
-  "exports": "./src/index.js",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
   "scripts": {
+    "types": "tsc ./src/index.js --allowJs --declaration --emitDeclarationOnly --declarationMap --outFile ./types/index.d.ts",
     "test": "node --test --test-skip-pattern=\"/^large:/\"",
     "test:large": "node --test --test-name-pattern=\"/^large:/\"",
     "test:coverage": "npm run test -- --experimental-test-coverage",
     "bench": "node ./benchmark/core.bench.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
   }
 }
