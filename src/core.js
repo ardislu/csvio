@@ -48,16 +48,23 @@ export function createFileStream(path) {
       resolveReady();
     },
     async pull(controller) {
-      const v = controller.byobRequest.view;
-      const { bytesRead } = await handle.read(v, 0, v.byteLength, position);
+      // byobRequest can never be null if autoAllocateChunkSize is set.
+      // https://streams.spec.whatwg.org/#dom-underlyingsource-autoallocatechunksize
+      const byobRequest = /** @type {ReadableStreamBYOBRequest} */(controller.byobRequest);
+
+      // view can never be null since this is the first reference to the view within the response (i.e., it is
+      // impossible to respond to the byobRequest and set view to null before this moment).
+      const view = /** @type {ArrayBufferView<ArrayBufferLike>} */(byobRequest.view);
+
+      const { bytesRead } = await handle.read(view, 0, view.byteLength, position);
       if (bytesRead === 0) {
         await handle.close();
         controller.close();
-        controller.byobRequest.respond(0);
+        byobRequest.respond(0);
       }
       else {
         position += bytesRead;
-        controller.byobRequest.respond(bytesRead);
+        byobRequest.respond(bytesRead);
       }
     },
     async cancel() {
