@@ -20,13 +20,14 @@
     }
   },
   "scripts": {
-    "types": "tsc ./src/index.js --allowJs --declaration --emitDeclarationOnly --declarationMap --outFile ./types/index.d.ts",
+    "types": "tsc",
     "test": "node --test --test-skip-pattern=\"/^large:/\"",
     "test:large": "node --test --test-name-pattern=\"/^large:/\"",
     "test:coverage": "npm run test -- --experimental-test-coverage",
     "bench": "node ./benchmark/core.bench.js"
   },
   "devDependencies": {
+    "@types/node": "^22.15.21",
     "typescript": "^5.8.3"
   }
 }
