@@ -2,6 +2,7 @@ import { deepStrictEqual, notStrictEqual, ok } from 'node:assert/strict';
 import { tmpdir } from 'node:os';
 import { mkdtemp, open } from 'node:fs/promises';
 import { normalize } from 'node:path';
+import { ReadableStream } from 'node:stream/web';
 /** @import { TestContext } from 'node:test'; */
 
 import { utils } from '../src/errorStrategies.js';
