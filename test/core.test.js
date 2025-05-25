@@ -44,6 +44,7 @@ suite('parsePathLike', { concurrency: true }, () => {
   for (const { name, input, output, error } of vectors) {
     test(name, { concurrency: true }, () => {
       if (error !== undefined) {
+        // @ts-expect-error
         throws(() => parsePathLike(input), error);
       }
       else {
