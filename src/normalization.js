@@ -24,26 +24,31 @@ export function toCamelCase(str) {
  * 
  * @param {string} str A string representing a number expressed using scientific notation (e.g., `"1E+18"`).
  * @param {boolean} truncate If `true`, decimals will be truncated in the expanded string. Defaults to `false`.
- * @returns {string|null} A string representing the normal form of the number (e.g., `"1000000000000000000"`), or `null`
- * if the input could not be parsed.
+ * @returns {string} A string representing the normal form of the number (e.g., `"1000000000000000000"`).
+ * @throws {TypeError} If `str` is not a `string`, a `TypeError` will be thrown.
+ * @throws {SyntaxError} If `str` is not valid scientific notation, a `SyntaxError` will be thrown.
  */
 export function expandScientificNotation(str, truncate = false) {
+  if (typeof str !== 'string') {
+    throw new TypeError(`Expected a string, but received ${typeof str}.`);
+  }
+  const [mantissa, exponent] = str.split('E');
+  if (mantissa === undefined || exponent === undefined) {
+    throw new SyntaxError(`Unable to parse string "${str}" as scientific notation.`);
+  }
+  const e = Number(exponent);
   let expanded = null;
-  const [mantissa, exponent] = str.split?.('E') ?? [undefined, undefined];
-  if (mantissa !== undefined && exponent !== undefined) {
-    const e = Number(exponent);
-    if (mantissa.indexOf(DECIMAL_SEPARATOR) === -1) {
-      expanded = mantissa + '0'.repeat(e);
+  if (mantissa.indexOf(DECIMAL_SEPARATOR) === -1) {
+    expanded = mantissa + '0'.repeat(e);
+  }
+  else {
+    const [integer, decimal] = mantissa.split('.');
+    expanded = integer + decimal.padEnd(e, '0');
+    if (truncate) {
+      expanded = expanded.substring(0, e + 1);
     }
-    else {
-      const [integer, decimal] = mantissa.split('.');
-      expanded = integer + decimal.padEnd(e, '0');
-      if (truncate) {
-        expanded = expanded.substring(0, e + 1);
-      }
-      else if (mantissa.length - 2 > e) { // Must re-insert decimal
-        expanded = expanded.substring(0, e + 1) + '.' + expanded.substring(e + 1);
-      }
+    else if (mantissa.length - 2 > e) { // Must re-insert decimal
+      expanded = expanded.substring(0, e + 1) + '.' + expanded.substring(e + 1);
     }
   }
   return expanded;
@@ -228,7 +233,6 @@ export class CSVNormalizer extends TransformStream {
     // Excel converted to scientific notation
     try {
       const expanded = expandScientificNotation(original, true);
-      if (expanded === null) { throw new Error(); }
       return BigInt(expanded).toString();
     } catch { }
 

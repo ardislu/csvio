@@ -1,5 +1,5 @@
 import { suite, test } from 'node:test';
-import { deepStrictEqual } from 'node:assert/strict';
+import { deepStrictEqual, throws } from 'node:assert/strict';
 
 import { csvStreamEqualWritable, createCSVMockStream, assertConsole } from './utils.js';
 import { CSVReader } from '../src/core.js';
@@ -32,14 +32,14 @@ suite('toCamelCase', { concurrency: true }, () => {
 
 suite('expandScientificNotation', { concurrency: true }, () => {
   const vectors = [
-    { name: 'returns null for string integer', input: '123', output: null },
-    { name: 'returns null for string BigInt', input: '123n', output: null },
-    { name: 'returns null for string number', input: '123.456', output: null },
-    { name: 'returns null for string non-numeric', input: 'abc', output: null },
-    { name: 'returns null for number', input: 123, output: null },
-    { name: 'returns null for BigInt', input: 123n, output: null },
-    { name: 'returns null for array', input: [], output: null },
-    { name: 'returns null for object', input: {}, output: null },
+    { name: 'throws SyntaxError for string integer', input: '123', error: SyntaxError },
+    { name: 'throws SyntaxError for string BigInt', input: '123n', error: SyntaxError },
+    { name: 'throws SyntaxError for string number', input: '123.456', error: SyntaxError },
+    { name: 'throws SyntaxError for string non-numeric', input: 'abc', error: SyntaxError },
+    { name: 'throws TypeError for number', input: 123, error: TypeError },
+    { name: 'throws TypeError for BigInt', input: 123n, error: TypeError },
+    { name: 'throws TypeError for array', input: [], error: TypeError },
+    { name: 'throws TypeError for object', input: {}, error: TypeError },
     { name: 'returns expanded form for positive exponent', input: '1E18', output: '1000000000000000000' },
     { name: 'returns expanded form for positive exponent (with plus)', input: '1E+18', output: '1000000000000000000' },
     { name: 'returns expanded form for negative mantissa', input: '-1E18', output: '-1000000000000000000' },
@@ -51,9 +51,15 @@ suite('expandScientificNotation', { concurrency: true }, () => {
     { name: 'truncates when decimals greater than exponent by 1', input: '1.111E2', truncate: true, output: '111' },
     { name: 'truncates when decimals greater than exponent by 2', input: '1.1111E2', truncate: true, output: '111' },
   ];
-  for (const { name, input, truncate = false, output } of vectors) {
+  for (const { name, input, truncate = false, output, error } of vectors) {
     test(name, { concurrency: true }, () => {
-      deepStrictEqual(expandScientificNotation(input, truncate), output);
+      if (error !== undefined) {
+        // @ts-expect-error
+        throws(() => expandScientificNotation(input, truncate), error);
+      }
+      else {
+        deepStrictEqual(expandScientificNotation(input, truncate), output);
+      }
     });
   }
 });
