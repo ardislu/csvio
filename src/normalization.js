@@ -1,5 +1,5 @@
 // User locale's decimal separator
-const DECIMAL_SEPARATOR = /** @type {Intl.NumberFormatPart!} */(Intl.NumberFormat().formatToParts(.1).find(p => p.type === 'decimal')).value;
+const DECIMAL_SEPARATOR = Intl.NumberFormat().formatToParts(.1).find(p => p.type === 'decimal').value;
 
 /**
  * Convert a string to camelCase.

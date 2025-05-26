@@ -2,6 +2,7 @@ import { mkdir, open } from 'node:fs/promises';
 import { dirname, basename, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 /** @import { PathLike } from 'node:fs'; */
+/** @import { FileHandle } from 'node:fs/promises'; */
 
 /**
  * Parse and normalize a `PathLike` object into a string.
@@ -394,6 +395,7 @@ export class CSVWriter extends WritableStream {
       rows: 0,
       done: false
     };
+    /** @type FileHandle */
     let handle;
     super({
       async start() {
