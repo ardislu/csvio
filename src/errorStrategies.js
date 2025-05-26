@@ -51,7 +51,7 @@ function placeholder(value) {
  */
 
 /**
- * Create a `TransformationErrorFunction` that handles errors by immediately retrying it `iterations` number of times.
+ * Create a `TransformationErrorFunction` that handles errors by retrying it `iterations` number of times.
  * 
  * @param {number} iterations The number of times to retry the function.
  * @param {RetryOptions} [options] Extra configuration options for the retry.
