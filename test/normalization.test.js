@@ -1,9 +1,33 @@
 import { suite, test } from 'node:test';
-import { deepStrictEqual, throws } from 'node:assert/strict';
+import { ok, deepStrictEqual, throws } from 'node:assert/strict';
 
 import { csvStreamEqualWritable, createCSVMockStream, assertConsole } from './utils.js';
 import { CSVReader } from '../src/core.js';
-import { toCamelCase, expandScientificNotation, CSVNormalizer, CSVDenormalizer } from '../src/normalization.js';
+import { getDecimalSeparator, toCamelCase, expandScientificNotation, CSVNormalizer, CSVDenormalizer } from '../src/normalization.js';
+
+suite('getDecimalSeparator', { concurrency: true }, () => {
+  test('returns a value if no locale is specified', { concurrency: true }, () => {
+    const s = getDecimalSeparator();
+    ok(typeof s === 'string');
+    ok(s.length === 1);
+  });
+  test('returns "." for locale identifier "en-US"', { concurrency: true }, () => {
+    const s = getDecimalSeparator('en-US');
+    deepStrictEqual(s, '.');
+  });
+  test('returns "," for locale identifier "de-DE"', { concurrency: true }, () => {
+    const s = getDecimalSeparator('de-DE');
+    deepStrictEqual(s, ',');
+  });
+  test('returns "." for `Intl.Locale` object set to "en-US"', { concurrency: true }, () => {
+    const s = getDecimalSeparator(new Intl.Locale('en-US'));
+    deepStrictEqual(s, '.');
+  });
+  test('returns "," for `Intl.Locale` object set to "de-DE"', { concurrency: true }, () => {
+    const s = getDecimalSeparator(new Intl.Locale('de-DE'));
+    deepStrictEqual(s, ',');
+  });
+});
 
 suite('toCamelCase', { concurrency: true }, () => {
   const vectors = [

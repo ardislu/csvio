@@ -1,7 +1,14 @@
 import { TransformStream } from 'node:stream/web';
 
-// User locale's decimal separator
-const DECIMAL_SEPARATOR = Intl.NumberFormat().formatToParts(.1).find(p => p.type === 'decimal').value;
+/**
+ * Get the decimal separator character to parse numbers formatted in different locales.
+ * @param {string|Intl.Locale} [locale] A `string` Unicode locale identifier, or an `Intl.Locale` object specifying
+ * the locale that is applicable. If no value is provided, the current execution environment's locale is used.
+ * @returns {string} The locale's decimal separator as a `string` (e.g., "." for the "en-US" locale).
+ */
+export function getDecimalSeparator(locale) {
+  return Intl.NumberFormat(locale).formatToParts(.1).find(p => p.type === 'decimal').value;
+}
 
 /**
  * Convert a string to camelCase.
@@ -40,7 +47,7 @@ export function expandScientificNotation(str, truncate = false) {
   }
   const e = Number(exponent);
   let expanded = null;
-  if (mantissa.indexOf(DECIMAL_SEPARATOR) === -1) {
+  if (mantissa.indexOf(getDecimalSeparator()) === -1) {
     expanded = mantissa + '0'.repeat(e);
   }
   else {
@@ -201,7 +208,7 @@ export class CSVNormalizer extends TransformStream {
 
     // Excel added extra characters from setting the format to "Accounting" or other custom formats
     // Delete everything that's not a number or the decimal separator
-    const replaced = original.replaceAll(new RegExp(`[^0-9${DECIMAL_SEPARATOR}]`, 'g'), '');
+    const replaced = original.replaceAll(new RegExp(`[^0-9${getDecimalSeparator()}]`, 'g'), '');
     const num2 = Number(replaced);
     if (!Number.isNaN(num2) && replaced !== '') {
       return num2;
@@ -240,9 +247,10 @@ export class CSVNormalizer extends TransformStream {
     // Excel added extra characters from setting the format to "Accounting" or other custom formats
     // Delete everything that's not a number or the decimal separator
     try {
-      const str = original.replaceAll(new RegExp(`[^0-9${DECIMAL_SEPARATOR}]`, 'g'), '');
+      const decimalSeparator = getDecimalSeparator();
+      const str = original.replaceAll(new RegExp(`[^0-9${decimalSeparator}]`, 'g'), '');
       if (str === '') { throw new Error(); }
-      return BigInt(str.split(DECIMAL_SEPARATOR)[0]).toString();
+      return BigInt(str.split(decimalSeparator)[0]).toString();
     } catch { }
 
     // Otherwise, pass through as string
