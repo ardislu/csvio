@@ -265,7 +265,9 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       ['a', 'b']
     ])
       .pipeThrough(new CSVNormalizer([
+        // @ts-expect-error
         { name: 'columnA', type: 'abc' },
+        // @ts-expect-error
         { name: 'columnB', type: 'def' }
       ]))
       .pipeThrough(new CSVDenormalizer())
@@ -279,10 +281,10 @@ suite('CSVNormalizer', { concurrency: true }, () => {
 suite('CSVNormalizer and CSVDenormalizer end-to-end', { concurrency: true }, () => {
   test('can normalize', { concurrency: true }, async () => {
     const headers = [
-      { name: 'stringCol', displayName: 'String Column', type: 'string', defaultValue: 'N/A' },
-      { name: 'numberCol', displayName: 'Number Column', type: 'number' },
-      { name: 'bigintCol', displayName: 'BigInt Column', type: 'bigint' },
-      { name: 'dateCol', displayName: 'Date Column', type: 'date' }
+      /** @type {const} */({ name: 'stringCol', displayName: 'String Column', type: 'string', defaultValue: 'N/A' }),
+      /** @type {const} */({ name: 'numberCol', displayName: 'Number Column', type: 'number' }),
+      /** @type {const} */({ name: 'bigintCol', displayName: 'BigInt Column', type: 'bigint' }),
+      /** @type {const} */({ name: 'dateCol', displayName: 'Date Column', type: 'date' })
     ]
     await new CSVReader('./test/data/normalization.csv')
       .pipeThrough(new CSVNormalizer(headers))

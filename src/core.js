@@ -1,6 +1,7 @@
 import { mkdir, open } from 'node:fs/promises';
 import { dirname, basename, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ReadableStream, WritableStream, TransformStream } from 'node:stream/web';
 /** @import { PathLike } from 'node:fs'; */
 /** @import { FileHandle } from 'node:fs/promises'; */
 

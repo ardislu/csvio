@@ -1,3 +1,5 @@
+import { TransformStream } from 'node:stream/web';
+
 // User locale's decimal separator
 const DECIMAL_SEPARATOR = Intl.NumberFormat().formatToParts(.1).find(p => p.type === 'decimal').value;
 
@@ -23,7 +25,7 @@ export function toCamelCase(str) {
  * Convert scientific notation ("E" notation) to normal form.
  * 
  * @param {string} str A string representing a number expressed using scientific notation (e.g., `"1E+18"`).
- * @param {boolean} truncate If `true`, decimals will be truncated in the expanded string. Defaults to `false`.
+ * @param {boolean} [truncate=false] If `true`, decimals will be truncated in the expanded string. Defaults to `false`.
  * @returns {string} A string representing the normal form of the number (e.g., `"1000000000000000000"`).
  * @throws {TypeError} If `str` is not a `string`, a `TypeError` will be thrown.
  * @throws {SyntaxError} If `str` is not valid scientific notation, a `SyntaxError` will be thrown.
