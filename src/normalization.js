@@ -96,7 +96,8 @@ export function expandScientificNotation(str, truncate = false) {
 export class CSVNormalizer extends TransformStream {
   #columns = [];
   #firstChunk = true;
-  #options;
+  #passthroughEmptyRows;
+  #typeCastOnly;
 
   /**
    * @param {Array<CSVNormalizerHeader>} headers An array of metadata objects to configure the data casting and
@@ -108,9 +109,8 @@ export class CSVNormalizer extends TransformStream {
       transform: (chunk, controller) => this.#transform(chunk, controller)
     });
 
-    options.passthroughEmptyRows ??= false;
-    options.typeCastOnly ??= false;
-    this.#options = options;
+    this.#passthroughEmptyRows = options.passthroughEmptyRows ?? false;
+    this.#typeCastOnly = options.typeCastOnly ?? false;
 
     for (const { name, type, displayName = name, defaultValue = null } of headers) {
       let normalizedType = type.toLowerCase();
@@ -129,7 +129,6 @@ export class CSVNormalizer extends TransformStream {
   }
 
   #transform(chunk, controller) {
-    const { passthroughEmptyRows, typeCastOnly } = this.#options;
     const row = JSON.parse(chunk);
 
     // Assume first row is headers and use it to prepare the columns object
@@ -156,9 +155,9 @@ export class CSVNormalizer extends TransformStream {
       const emptyField = value === '' ? true : false;
       switch (type) {
         case 'string': break;
-        case 'number': value = typeCastOnly ? Number(value) : CSVNormalizer.fixExcelNumber(value); break;
-        case 'bigint': value = typeCastOnly ? BigInt(value).toString() : CSVNormalizer.fixExcelBigInt(value); break;
-        case 'date': value = typeCastOnly ? new Date(value).toISOString() : CSVNormalizer.fixExcelDate(value); break;
+        case 'number': value = this.#typeCastOnly ? Number(value) : CSVNormalizer.fixExcelNumber(value); break;
+        case 'bigint': value = this.#typeCastOnly ? BigInt(value).toString() : CSVNormalizer.fixExcelBigInt(value); break;
+        case 'date': value = this.#typeCastOnly ? new Date(value).toISOString() : CSVNormalizer.fixExcelDate(value); break;
       }
       if (emptyField && defaultValue !== null) {
         value = defaultValue;
@@ -166,7 +165,7 @@ export class CSVNormalizer extends TransformStream {
       out.push({ name, displayName, value, emptyField });
     }
 
-    if (!passthroughEmptyRows && out.every(f => f.emptyField)) { return; }
+    if (!this.#passthroughEmptyRows && out.every(f => f.emptyField)) { return; }
 
     controller.enqueue(JSON.stringify(out));
   }
