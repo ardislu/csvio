@@ -181,29 +181,56 @@ export class CSVReader extends ReadableStream {
 }
 
 /**
- * A row or rows of input CSV data.
- * @typedef {Array<Array<string>>|Array<string>|string} TransformationInput
- */
-
-/**
- * A row or rows of output CSV data, or `null` to skip a row.
+ * A row or rows of output CSV data, or `null` to not output anything.
  * @typedef {Array<Array<any>>|Array<any>|string|null} TransformationOutput
  */
 
 /**
- * A function to process a row or rows of CSV data from `CSVReader`.
+ * A function to process a row of CSV data from `CSVReader`.
  * @callback TransformationFunction
- * @param {TransformationInput} row A row or rows of input CSV data before transformation.
- * @returns {TransformationOutput|Promise<TransformationOutput>} A row or rows of output CSV data after transformation, or `null` to skip a row.
+ * @param {Array<string>} row A row of input CSV data before transformation.
+ * @returns {TransformationOutput|Promise<TransformationOutput>}
+ */
+
+/**
+ * A function to process a row or rows of raw CSV data from `CSVReader`.
+ * @callback TransformationFunctionRaw
+ * @param {string} row A row or rows of input CSV data represented as a raw `string`.
+ * @returns {TransformationOutput|Promise<TransformationOutput>}
+ */
+
+/**
+ * A function to process multiple rows of CSV data from `CSVReader`.
+ * @callback TransformationFunctionBatch
+ * @param {Array<Array<string>>} rows Multiple rows of input CSV data.
+ * @returns {TransformationOutput|Promise<TransformationOutput>}
  */
 
 /**
  * A function to handle errors thrown by a transformation function.
  * @callback TransformationErrorFunction
- * @param {TransformationInput} row The row passed to the transformation function which threw the error.
+ * @param {Array<string>} row The row passed to the transformation function which threw the error.
  * @param {Error} error The error thrown by the transformation function.
  * @param {TransformationFunction} fn The transformation function itself. This argument can be used to retry a transformation.
- * @returns {TransformationOutput|Promise<TransformationOutput>} A row or rows of output CSV data, or `null` to skip this row.
+ * @returns {TransformationOutput|Promise<TransformationOutput>}
+ */
+
+/**
+ * A function to handle errors thrown by a transformation function.
+ * @callback TransformationErrorFunctionRaw
+ * @param {string} row A row or rows of raw input CSV data passed to the transformation function which threw the error.
+ * @param {Error} error The error thrown by the transformation function.
+ * @param {TransformationFunctionRaw} fn The transformation function itself. This argument can be used to retry a transformation.
+ * @returns {TransformationOutput|Promise<TransformationOutput>}
+ */
+
+/**
+ * A function to handle errors thrown by a transformation function.
+ * @callback TransformationErrorFunctionBatch
+ * @param {Array<Array<string>>} rows The rows of input CSV data passed to the transformation function which threw the error.
+ * @param {Error} error The error thrown by the transformation function.
+ * @param {TransformationFunctionBatch} fn The transformation function itself. This argument can be used to retry a transformation.
+ * @returns {TransformationOutput|Promise<TransformationOutput>}
  */
 
 /**
@@ -215,15 +242,65 @@ export class CSVReader extends ReadableStream {
  * to the `TransformationFunction`. The default value is `false`.
  * 
  * NOTE: If the CSV has no header row, set `handleHeaders` to `true` and process the first row normally in `fn()`.
- * @property {boolean} [rawInput=false] Set to `true` to send the raw CSV row to `fn()` as a `string`. Otherwise, the CSV row will be deserialized
+ * @property {false} [rawInput] Set to `true` to send the raw CSV row to `fn()` as a `string`. Otherwise, the CSV row will be deserialized
  * using `JSON.parse()` before being sent to `fn()`. The default value is `false`.
  * @property {boolean} [rawOutput=false] Set to `true` to send the raw return value of `fn()` to the next stream. Otherwise, the return value of
  * `fn()` will be serialized using `JSON.stringify()` before being sent to the next stream. The default value is `false`.
  * @property {null|TransformationErrorFunction} [onError=null] Set to a function to catch errors thrown by the transformation function. The
- * input data, the error that was thrown, and the transformation function itself will be passed to the `onError` function. The default value
- * is `null` (errors will not be caught).
- * @property {number} [maxBatchSize=1] The maximum number of rows that will be passed to the transformation function per function call (greedy).
- * The default value is `1`.
+ * input data, the error that was thrown, and the transformation function itself will be passed to the `onError` function. The default value is
+ * `null` (errors will not be caught).
+ * @property {number} [maxConcurrent=1] The maximum concurrent executions of the transformation function (greedy). The transformation function
+ * will be automatically turned into a promise if it isn't already async. Execution is blocked until all promises in a concurrent group settle
+ * (i.e., if one transformation in a group is hanging, further rows will NOT be processed even if all other transformations in the group are
+ * resolved). The default value is `1`.
+ */
+
+/**
+ * Options to configure `CSVTransformer`.
+ * @typedef {Object} CSVTransformerOptionsRaw
+ * @property {boolean|Array<any>|TransformationFunctionRaw} [handleHeaders=false] A `boolean`, `Array<any>`, or `TransformationFunctionRaw` to
+ * process the header row (first row) of the CSV. If `false`, the header row will pass through the stream. If `true`, the header row will be passed
+ * to `fn()`. If `Array<any>`, the header row will be replaced with the `Array<any>`. If `TransformationFunctionRaw`, the header row will be passed
+ * to the `TransformationFunctionRaw` as a `string`. The default value is `false`.
+ * 
+ * NOTE: If the CSV has no header row, set `handleHeaders` to `true` and process the first row normally in `fn()`.
+ * @property {true} rawInput Set to `true` to send the raw CSV row to `fn()` as a `string`. Otherwise, the CSV row will be deserialized
+ * using `JSON.parse()` before being sent to `fn()`. The default value is `false`.
+ * @property {boolean} [rawOutput=false] Set to `true` to send the raw return value of `fn()` to the next stream. Otherwise, the return value of
+ * `fn()` will be serialized using `JSON.stringify()` before being sent to the next stream. The default value is `false`.
+ * @property {null|TransformationErrorFunctionRaw} [onError=null] Set to a function to catch errors thrown by the transformation function. The
+ * input data, the error that was thrown, and the transformation function itself will be passed to the `onError` function. The default value is
+ * `null` (errors will not be caught).
+ * @property {number} [maxBatchSize=1] Set to the maximum number of rows that will be passed to the transformation function per function call
+ * (greedy). The default value is `1`.
+ * 
+ * NOTE: If this value is set to any value (including `1`), then value passed to `fn()` will be a 2-D array of type `Array<Array<string>>`.
+ * @property {number} [maxConcurrent=1] The maximum concurrent executions of the transformation function (greedy). The transformation function
+ * will be automatically turned into a promise if it isn't already async. Execution is blocked until all promises in a concurrent group settle
+ * (i.e., if one transformation in a group is hanging, further rows will NOT be processed even if all other transformations in the group are
+ * resolved). The default value is `1`.
+ */
+
+/**
+ * Options to configure `CSVTransformer`.
+ * @typedef {Object} CSVTransformerOptionsBatch
+ * @property {boolean|Array<any>|TransformationFunction} [handleHeaders=false] A `boolean`, `Array<any>`, or `TransformationFunction` to process
+ * the header row (first row) of the CSV. If `false`, the header row will pass through the stream. If `true`, the header row will be passed to
+ * `fn()`. If `Array<any>`, the header row will be replaced with the `Array<any>`. If `TransformationFunction`, the header row will be passed
+ * to the `TransformationFunction`. The default value is `false`.
+ * 
+ * NOTE: If the CSV has no header row, set `handleHeaders` to `true` and process the first row normally in `fn()`.
+ * @property {false} [rawInput] Set to `true` to send the raw CSV row to `fn()` as a `string`. Otherwise, the CSV row will be deserialized
+ * using `JSON.parse()` before being sent to `fn()`. The default value is `false`.
+ * @property {boolean} [rawOutput=false] Set to `true` to send the raw return value of `fn()` to the next stream. Otherwise, the return value of
+ * `fn()` will be serialized using `JSON.stringify()` before being sent to the next stream. The default value is `false`.
+ * @property {null|TransformationErrorFunctionBatch} [onError=null] Set to a function
+ * to catch errors thrown by the transformation function. The input data, the error that was thrown, and the transformation function itself will
+ * be passed to the `onError` function. The default value is `null` (errors will not be caught).
+ * @property {number} maxBatchSize Set to the maximum number of rows that will be passed to the transformation function per function call
+ * (greedy). The default value is `1`.
+ * 
+ * NOTE: If this value is set to any value (including `1`), then value passed to `fn()` will be a 2-D array of type `Array<Array<string>>`.
  * @property {number} [maxConcurrent=1] The maximum concurrent executions of the transformation function (greedy). The transformation function
  * will be automatically turned into a promise if it isn't already async. Execution is blocked until all promises in a concurrent group settle
  * (i.e., if one transformation in a group is hanging, further rows will NOT be processed even if all other transformations in the group are
@@ -248,25 +325,27 @@ export class CSVTransformer extends TransformStream {
   #maxConcurrent;
 
   /**
-   * @param {TransformationFunction} fn A function to process a row or rows of CSV data.
-   * 
-   * If `options.rawInput` is `false` (default), the input will be a `Array<string>` representing a CSV row. If `options.rawInput`
-   * is `true`, the input will be a JSON `string` representing a CSV row.
-   * 
-   * If `options.rawOutput` is `false` (default), the expected output is a `Array<any>` which will be serialized with `JSON.stringify()`
-   * and enqueued, or a `Array<Array<any>>` which will have each of its sub-arrays serialized and enqueued separately. If
-   * `options.rawOutput` is `true`, the raw output will be sent to the next stream unmodified.
-   * 
-   * If `options.maxBatchSize` is a number greater than `1`, the input will represent multiple CSV rows as an `Array<Array<string>>`
-   * (if `options.rawInput` is `false`) or a `string` (if `options.rawInput` is `true`). The input will still be a 2-D array even
-   * if there is only 1 row in the batch (except for the header row). The header row is always processed by itself and passed as a
-   * `Array<string>`, regardless of the `options.maxBatchSize` value.
-   * 
-   * If `options.maxConcurrent` is a number greater than `1`, multiple instances of the transformation function will be executed
-   * concurrently in groups up to the size of `options.maxConcurrent`.
-   * 
-   * Return `null` to consume an input row without emitting an output row.
+   * @constructor
+   * @overload
+   * @param {TransformationFunction} fn A function to process a row of CSV data.
+   */
+  /**
+   * @constructor
+   * @overload
+   * @param {TransformationFunction} fn A function to process a row of CSV data.
    * @param {CSVTransformerOptions} options Object containing flags to configure the stream logic.
+   */
+  /**
+   * @constructor
+   * @overload
+   * @param {TransformationFunctionRaw} fn A function to process a row or rows of CSV data represented as a raw `string`.
+   * @param {CSVTransformerOptionsRaw} options Object containing flags to configure the stream logic.
+   */
+  /**
+   * @constructor
+   * @overload
+   * @param {TransformationFunctionBatch} fn A function to process multiple rows of CSV data from `CSVReader`.
+   * @param {CSVTransformerOptionsBatch} options Object containing flags to configure the stream logic.
    */
   constructor(fn, options = {}) {
     super({
