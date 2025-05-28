@@ -272,9 +272,7 @@ export class CSVReader extends ReadableStream {
  * input data, the error that was thrown, and the transformation function itself will be passed to the `onError` function. The default value is
  * `null` (errors will not be caught).
  * @property {number} [maxBatchSize=1] Set to the maximum number of rows that will be passed to the transformation function per function call
- * (greedy). The default value is `1`.
- * 
- * NOTE: If this value is set to any value (including `1`), then value passed to `fn()` will be a 2-D array of type `Array<Array<string>>`.
+ * (greedy).
  * @property {number} [maxConcurrent=1] The maximum concurrent executions of the transformation function (greedy). The transformation function
  * will be automatically turned into a promise if it isn't already async. Execution is blocked until all promises in a concurrent group settle
  * (i.e., if one transformation in a group is hanging, further rows will NOT be processed even if all other transformations in the group are
@@ -298,7 +296,7 @@ export class CSVReader extends ReadableStream {
  * to catch errors thrown by the transformation function. The input data, the error that was thrown, and the transformation function itself will
  * be passed to the `onError` function. The default value is `null` (errors will not be caught).
  * @property {number} maxBatchSize Set to the maximum number of rows that will be passed to the transformation function per function call
- * (greedy). The default value is `1`.
+ * (greedy).
  * 
  * NOTE: If this value is set to any value (including `1`), then value passed to `fn()` will be a 2-D array of type `Array<Array<string>>`.
  * @property {number} [maxConcurrent=1] The maximum concurrent executions of the transformation function (greedy). The transformation function
@@ -357,7 +355,7 @@ export class CSVTransformer extends TransformStream {
     this.#rawInput = options.rawInput ?? false;
     this.#rawOutput = options.rawOutput ?? false;
     this.#onError = options.onError ?? null;
-    this.#maxBatchSize = options.maxBatchSize ?? 1;
+    this.#maxBatchSize = options.maxBatchSize ?? null;
     this.#maxConcurrent = options.maxConcurrent ?? 1;
 
     this.#fn = fn;
@@ -424,7 +422,7 @@ export class CSVTransformer extends TransformStream {
       return;
     }
 
-    if (this.#maxBatchSize > 1) {
+    if (this.#maxBatchSize !== null) {
       this.#batch.push(row);
       if (this.#batch.length === this.#maxBatchSize) {
         this.#concurrent.push(this.#wrappedFn(this.#batch));

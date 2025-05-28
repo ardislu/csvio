@@ -441,6 +441,21 @@ suite('CSVTransformer', { concurrency: true }, () => {
       { name: 'Error', message: 'Not an error type' }
     );
   });
+  test('creates batch of 1 when maxBatchSize is equal to 1', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'columnB'],
+      ['1', '2'],
+      ['3', '4'],
+      ['5', '6']
+    ])
+      .pipeThrough(new CSVTransformer(b => b.map(r => r.map(f => Number(f) * 2)), { maxBatchSize: 1 }))
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA', 'columnB'],
+        [2, 4],
+        [6, 8],
+        [10, 12]
+      ]));
+  });
   test('creates one batch when maxBatchSize is greater than CSV row length', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['columnA', 'columnB'],
