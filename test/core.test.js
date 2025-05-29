@@ -441,65 +441,73 @@ suite('CSVTransformer', { concurrency: true }, () => {
       { name: 'Error', message: 'Not an error type' }
     );
   });
-  test('creates batch of 1 when maxBatchSize is equal to 1', { concurrency: true }, async () => {
+  test('creates batch of 1 when maxBatchSize is equal to 1', { concurrency: true }, async (t) => {
+    const fn = t.mock.fn(b => b.map(r => r.map(f => Number(f) * 2)));
     await createCSVMockStream([
       ['columnA', 'columnB'],
       ['1', '2'],
       ['3', '4'],
       ['5', '6']
     ])
-      .pipeThrough(new CSVTransformer(b => b.map(r => r.map(f => Number(f) * 2)), { maxBatchSize: 1 }))
+      .pipeThrough(new CSVTransformer(fn, { maxBatchSize: 1 }))
       .pipeTo(csvStreamEqualWritable([
         ['columnA', 'columnB'],
         [2, 4],
         [6, 8],
         [10, 12]
       ]));
+    deepStrictEqual(fn.mock.callCount(), 3);
   });
-  test('creates one batch when maxBatchSize is greater than CSV row length', { concurrency: true }, async () => {
+  test('creates one batch when maxBatchSize is greater than CSV row length', { concurrency: true }, async (t) => {
+    const fn = t.mock.fn(b => b.map(r => r.map(f => Number(f) * 2)));
     await createCSVMockStream([
       ['columnA', 'columnB'],
       ['1', '2'],
       ['3', '4'],
       ['5', '6']
     ])
-      .pipeThrough(new CSVTransformer(b => b.map(r => r.map(f => Number(f) * 2)), { maxBatchSize: 100 }))
+      .pipeThrough(new CSVTransformer(fn, { maxBatchSize: 100 }))
       .pipeTo(csvStreamEqualWritable([
         ['columnA', 'columnB'],
         [2, 4],
         [6, 8],
         [10, 12]
       ]));
+    deepStrictEqual(fn.mock.callCount(), 1);
   });
-  test('creates one batch when maxBatchSize is equal to CSV row length', { concurrency: true }, async () => {
+  test('creates one batch when maxBatchSize is equal to CSV row length', { concurrency: true }, async (t) => {
+    const fn = t.mock.fn(b => b.map(r => r.map(f => Number(f) * 2)));
     await createCSVMockStream([
       ['columnA', 'columnB'],
       ['1', '2'],
       ['3', '4'],
       ['5', '6']
     ])
-      .pipeThrough(new CSVTransformer(b => b.map(r => r.map(f => Number(f) * 2)), { maxBatchSize: 3 }))
+      .pipeThrough(new CSVTransformer(fn, { maxBatchSize: 3 }))
       .pipeTo(csvStreamEqualWritable([
         ['columnA', 'columnB'],
         [2, 4],
         [6, 8],
         [10, 12]
       ]));
+    deepStrictEqual(fn.mock.callCount(), 1);
   });
-  test('creates multiple batches when maxBatchSize is less than CSV row length', { concurrency: true }, async () => {
+  test('creates multiple batches when maxBatchSize is less than CSV row length', { concurrency: true }, async (t) => {
+    const fn = t.mock.fn(b => b.map(r => r.map(f => Number(f) * 2)));
     await createCSVMockStream([
       ['columnA', 'columnB'],
       ['1', '2'],
       ['3', '4'],
       ['5', '6']
     ])
-      .pipeThrough(new CSVTransformer(b => b.map(r => r.map(f => Number(f) * 2)), { maxBatchSize: 2 }))
+      .pipeThrough(new CSVTransformer(fn, { maxBatchSize: 2 }))
       .pipeTo(csvStreamEqualWritable([
         ['columnA', 'columnB'],
         [2, 4],
         [6, 8],
         [10, 12]
       ]));
+    deepStrictEqual(fn.mock.callCount(), 2);
   });
 });
 
