@@ -9,9 +9,11 @@
 // `CSVDenormalizer` converts the data stream back into a CSV row.
 
 import { CSVReader, CSVWriter, CSVNormalizer, CSVDenormalizer } from '../src/index.js';
+/** @import { CSVNormalizerHeader } from '../src/normalization.js'; */
 
 // The order of items in `headers` is significant, it determines the order of the output CSV columns.
 // If an input column is not provided in `headers`, the column is removed from the output CSV.
+/** @type { Array<CSVNormalizerHeader> } */
 const headers = [
   {
     name: 'index', // MUST match the input CSV column name in camelCase

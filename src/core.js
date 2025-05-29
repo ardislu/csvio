@@ -87,7 +87,7 @@ export function createFileStream(path) {
  * A simple streaming parser for CSV files.
  * 
  * Each chunk is one row of the CSV file, in the form of a string that may be deserialized using `JSON.parse()`.
- * @extends ReadableStream
+ * @extends ReadableStream<string>
  */
 export class CSVReader extends ReadableStream {
   #row = [];
