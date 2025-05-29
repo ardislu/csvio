@@ -27,7 +27,7 @@
     "bench": "node ./benchmark/core.bench.js"
   },
   "devDependencies": {
-    "@types/node": "^22.15.21",
+    "@types/node": "^22.15.24",
     "typescript": "^5.8.3"
   }
 }
