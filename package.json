@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "description": "A minimal library for processing CSV files.",
   "author": "Ardis Lu",
-  "repository": "github:ardislu/csvio",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ardislu/csvio.git"
+  },
   "license": "MIT",
   "type": "module",
   "engines": {
