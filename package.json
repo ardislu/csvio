@@ -2,6 +2,11 @@
   "name": "@ardislu/csvio",
   "version": "0.1.0",
   "description": "A minimal library for processing CSV files.",
+  "keywords": [
+    "csv",
+    "streams",
+    "data"
+  ],
   "author": "Ardis Lu",
   "repository": {
     "type": "git",
