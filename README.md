@@ -2,6 +2,18 @@
 
 CSV I/O (`csvio`) is a Node.js library for processing CSV files.
 
+## Install
+
+```
+npm i @ardislu/csvio
+```
+
+(OPTIONAL) If you are using TypeScript or you are type-checking JavaScript, also install `@types/node`:
+
+```
+npm i -D @types/node
+```
+
 ## Example
 
 Assume `./in.csv` looks like:
