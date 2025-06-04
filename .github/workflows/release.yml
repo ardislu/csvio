@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_call:
+    secrets:
+      NPM_TOKEN:
+        required: true
+
+jobs:
+  release:
+    name: Release on GitHub
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - id: "generate-body"
+        run: |
+          {
+            echo 'BODY<<EOF'
+            git tag -l --format='%(contents:subject)%0a%0a%(contents:body)' ${{ github.ref_name }}
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+      - run: echo ${{ steps.generate-body.outputs.BODY }}
+      - uses: softprops/action-gh-release@v2
+        with:
+          body: ${{ steps.generate-body.outputs.BODY }}
+
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".node-version"
+          registry-url: "https://registry.npmjs.org"
+      - run: npm ci
+      - run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
