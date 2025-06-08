@@ -31,8 +31,10 @@ suite('parsePathLike', { concurrency: true }, () => {
   const vectors = [
     { name: 'parses string relative path', input: './folder/example.txt', output: './folder/example.txt' },
     { name: 'parses string absolute path', input: '/absolute/path/to/file.txt', output: '/absolute/path/to/file.txt' },
-    { name: 'parses Buffer relative path', input: new TextEncoder().encode('./folder/example.txt'), output: './folder/example.txt' },
-    { name: 'parses Buffer absolute path', input: new TextEncoder().encode('/absolute/path/to/file.txt'), output: '/absolute/path/to/file.txt' },
+    { name: 'parses TypedArray relative path', input: new TextEncoder().encode('./folder/example.txt'), output: './folder/example.txt' },
+    { name: 'parses TypedArray absolute path', input: new TextEncoder().encode('/absolute/path/to/file.txt'), output: '/absolute/path/to/file.txt' },
+    { name: 'parses Buffer relative path', input: new TextEncoder().encode('./folder/example.txt').buffer, output: './folder/example.txt' },
+    { name: 'parses Buffer absolute path', input: new TextEncoder().encode('/absolute/path/to/file.txt').buffer, output: '/absolute/path/to/file.txt' },
     { name: 'parses URL relative path', input: pathToFileURL('./folder/example.txt'), output: resolve('./folder/example.txt') }, // Must use resolve because URLs automatically resolve to absolute path
     { name: 'parses URL absolute path', input: pathToFileURL('/absolute/path/to/file.txt'), output: resolve('/absolute/path/to/file.txt') },
     { name: 'parses URL with percent-encoding', input: pathToFileURL('./folder/example%20chars.txt'), output: resolve('./folder/example%20chars.txt') },

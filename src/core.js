@@ -8,7 +8,7 @@ import { ReadableStream, WritableStream, TransformStream } from 'node:stream/web
 /**
  * Parse and normalize a `PathLike` object into a string.
  * 
- * @param {PathLike|ArrayBufferView} path A `string`, `Buffer`, or `URL` representing a path to a local file.
+ * @param {PathLike|ArrayBufferView|ArrayBuffer} path A `string`, `Buffer`, or `URL` representing a path to a local file.
  * @returns {string} The normalized file path in string form.
  * @throws {TypeError} If `path` is not a `string`, `Buffer`, or `URL`, or it is a `URL` that is not using the `file` schema.
  */
