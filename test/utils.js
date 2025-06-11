@@ -186,7 +186,7 @@ export async function createTempFile() {
  * - https://web.archive.org/web/20090408063205/http://www.cris.com/~Ttwang/tech/inthash.htm
  * @param {ArrayBufferView<ArrayBufferLike>} typedArray An integer-based `TypedArray` with a byte length that is a multiple of 4.
  * All elements in the array will be overwritten with random numbers.
- * @param {Number} seed A number to initiate the pseudorandom hash function.
+ * @param {number} seed A number to initiate the pseudorandom hash function.
  * @returns {ArrayBufferView<ArrayBufferLike>} The same array passed as `typedArray` but with its contents replaced with pseudorandom
  * numbers. Note that `typedArray` is modified in-place and no copy is made.
  */
@@ -210,9 +210,9 @@ function getPseudoRandomValues(typedArray, seed) {
 /**
  * Create a stream of pseudorandom CSV data for test mocking purposes.
  * 
- * @param {Number} rows The number of rows the CSV stream will return.
- * @param {Number} columns The number of columns in each CSV row.
- * @param {Number} seed The seed used to deterministically generate the pseudorandom values in the CSV stream.
+ * @param {number} rows The number of rows the CSV stream will return.
+ * @param {number} columns The number of columns in each CSV row.
+ * @param {number} seed The seed used to deterministically generate the pseudorandom values in the CSV stream.
  * @returns {ReadableStream} A `ReadableStream` where each row is emitted as a separate chunk.
  */
 export function createRandomCSV(rows, columns, seed) {
