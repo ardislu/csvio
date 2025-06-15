@@ -33,7 +33,7 @@
     "test:large": "node --test --test-name-pattern=\"/^large:/\"",
     "test:coverage": "npm run test -- --experimental-test-coverage",
     "bench": "node ./benchmark/core.bench.js",
-    "prepack": "npm run types"
+    "prepack": "node ./npm/prepack.js"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
