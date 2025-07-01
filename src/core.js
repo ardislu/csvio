@@ -44,7 +44,7 @@ export function createFileStream(path) {
 
   return new ReadableStream({
     type: 'bytes',
-    autoAllocateChunkSize: 1024,
+    autoAllocateChunkSize: 65536, // 64 KiB
     async start() {
       handle = await open(path, "r");
       resolveReady();
