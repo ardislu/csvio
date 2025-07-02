@@ -55,6 +55,20 @@ suite('parsePathLike', { concurrency: true }, () => {
       }
     });
   }
+  test('parses SharedArrayBuffer relative path', { concurrency: true }, () => {
+    const str = './folder/example.txt';
+    const view = new Uint8Array(new SharedArrayBuffer(str.length));
+    new TextEncoder().encodeInto(str, view);
+    ok(view.buffer instanceof SharedArrayBuffer);
+    deepStrictEqual(parsePathLike(view.buffer), normalize(str));
+  })
+  test('parses SharedArrayBuffer absolute path', { concurrency: true }, () => {
+    const str = '/absolute/path/to/file.txt';
+    const view = new Uint8Array(new SharedArrayBuffer(str.length));
+    new TextEncoder().encodeInto(str, view);
+    ok(view.buffer instanceof SharedArrayBuffer);
+    deepStrictEqual(parsePathLike(view.buffer), normalize(str));
+  })
 });
 
 suite('createFileStream', { concurrency: true }, () => {

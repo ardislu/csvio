@@ -8,7 +8,7 @@ import { ReadableStream, WritableStream, TransformStream } from 'node:stream/web
 /**
  * Parse and normalize a `PathLike` object into a string.
  * 
- * @param {PathLike|ArrayBufferView|ArrayBuffer} path A `string`, `Buffer`, or `URL` representing a path to a local file.
+ * @param {PathLike|ArrayBufferView|ArrayBufferLike} path A `string`, `Buffer`, or `URL` representing a path to a local file.
  * @returns {string} The normalized file path in string form.
  * @throws {TypeError} If `path` is not a `string`, `Buffer`, or `URL`, or it is a `URL` that is not using the `file` schema.
  */
@@ -18,6 +18,14 @@ export function parsePathLike(path) {
   }
   else if (ArrayBuffer.isView(path) || path instanceof ArrayBuffer) {
     return normalize(new TextDecoder().decode(path));
+  }
+  // Although Node.js supports directly passing SharedArrayBuffer to TextDecoder().decode(), this capability is not yet
+  // supported by all JS runtimes. For compatibility with other runtimes, the below code will copy the SAB into a non-shared
+  // buffer and then decode it. Reference: https://github.com/whatwg/encoding/pull/182
+  else if (path instanceof SharedArrayBuffer) {
+    const copy = new Uint8Array(path.byteLength);
+    copy.set(new Uint8Array(path));
+    return normalize(new TextDecoder().decode(copy));
   }
   else if (path instanceof URL) {
     return fileURLToPath(path);
