@@ -18,7 +18,7 @@ npm i -D @types/node
 
 ## Example
 
-Assume `./in.csv` looks like:
+Assume you have a `./in.csv` file that looks like:
 
 Code    | Quantity | Price
 ------- | -------- | -----
@@ -27,7 +27,16 @@ US-5678 | 3        | 8.35
 CA-8765 | 2        | 4.11
 CA-4321 | 4        | 3.43
 
-Run:
+And you want to create a new `./out.csv` file that looks like:
+
+Country | ID   | Total
+------- | ---- | -----
+US      | 1234 | 12.00
+US      | 5678 | 25.05
+CA      | 8765 | 8.22
+CA      | 4321 | 13.72
+
+To do this, run:
 
 ```javascript
 import { CSVReader, CSVTransformer, CSVWriter } from '@ardislu/csvio';
@@ -47,15 +56,6 @@ await new CSVReader('./in.csv') // Automatically handles path-like input
   .pipeTo(new CSVWriter('./out.csv'));
 ```
 
-A new `./out.csv` file will be created:
-
-Country | ID   | Total
-------- | ---- | -----
-US      | 1234 | 12.00
-US      | 5678 | 25.05
-CA      | 8765 | 8.22
-CA      | 4321 | 13.72
-
 See the [`examples`](./examples) folder for more end-to-end examples.
 
 ## Why?
@@ -68,7 +68,7 @@ A common workflow is:
 
 Most people are interested in coding the processing logic for step (2) and less interested in coding the boilerplate for steps (1) and (3).
 
-CSV I/O provides the minimum code to accomplish **this specific workflow**. This library is *not* intended for any other workflow (e.g., parsing CSV files with custom delimiters, converting between CSV and other formats, generating CSV data). For those workflows, see ["Other CSV libraries"](#other-csv-libraries).
+CSV I/O provides minimal code optimized to accomplish **this specific workflow**. This library is *not* intended for any other workflow (e.g., parsing CSV files with custom delimiters, converting between CSV and other formats, generating CSV data). For those workflows, see ["Other CSV libraries"](#other-csv-libraries).
 
 ## Features
 
@@ -158,13 +158,40 @@ In addition to the core API, optional utilities are provided to address common C
 
 ### `CSVNormalizer` and `CSVDenormalizer`
 
-`TransformStream`s to parse CSVs that have been mangled by spreadsheet programs such as Excel.
+`CSVNormalizer` is a `TransformStream` that attempts to fix CSVs that have been mangled by spreadsheet programs such as Excel.
+
+`CSVDenormalizer` is a `TransformStream` that will convert objects normalized by `CSVNormalizer` back into a plain array.
+
+```javascript
+import { CSVNormalizer, CSVDenormalizer } from './src/index.js';
+
+const headers = [
+  { name: 'numberCol', displayName: 'Number Column', type: 'number' },
+  { name: 'dateCol', displayName: 'Date Column', type: 'date' }
+]
+
+const rows = ReadableStream.from((function* () {
+  yield '["numberCol","dateCol","",""]'; // Empty columns inserted
+  yield '["1E+18","45292","",""]'; // Number mangled to scientific notation; date mangled to number
+  yield '["","","",""]'; // Empty rows inserted
+  yield '["","","",""]';
+  yield '["","","",""]';
+})())
+  .pipeThrough(new CSVNormalizer(headers))
+  .pipeThrough(new CSVDenormalizer());
+
+for await (const row of rows) {
+  console.log(row);
+}
+// ["Number Column","Date Column"]
+// [1000000000000000000,"2024-01-01T00:00:00.000Z"]
+```
 
 ## Tests
 
-Example and test CSVs use `CRLF` (`\r\n`) as the record delimiter, as suggested by [RFC 4180](https://www.ietf.org/rfc/rfc4180.txt).
+All example and test CSVs (except for `lf-eol.csv`) use `CRLF` (`\r\n`) as the record delimiter, as suggested by [RFC 4180](https://www.ietf.org/rfc/rfc4180.txt).
 
-If your IDE is configured to automatically convert `CRLF` line endings to `LF`, you must undo this conversion for all the CSV files inside `/test/data` and `/examples/data`.
+If your IDE is configured to automatically convert `CRLF` line endings to `LF`, you must undo this conversion for the CSV files inside `/test/data` and `/examples/data`.
 
 Run primary tests:
 
@@ -178,7 +205,7 @@ Run coverage report for primary tests:
 npm run test:coverage
 ```
 
-Run `large.test.js` tests (writing, reading, and transforming ~100 MB CSV files). These tests take ~30s to complete, so they are separated from the primary tests:
+Run `large.test.js` tests (writing, reading, and transforming ~100 MB CSV files). These tests take longer to complete, so they are separated from the primary tests:
 
 ```plaintext
 npm run test:large
@@ -186,7 +213,7 @@ npm run test:large
 
 ## Other CSV libraries
 
-Here are more comprehensive CSV libraries that may be better for your use case.
+Here are other CSV libraries that may be better for your use case.
 
 - [Papa Parse](https://github.com/mholt/PapaParse)
 - [node-csv](https://github.com/adaltas/node-csv)
