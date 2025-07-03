@@ -45,7 +45,9 @@ suite('toCamelCase', { concurrency: true }, () => {
     { name: 'converts mixed casing', input: 'ExAmPlE oNe', output: 'exampleOne' },
     { name: 'converts mixed casing (multiple words)', input: 'eXaMpLe TwO-wItH_mOrE wOrDs', output: 'exampleTwoWithMoreWords' },
     { name: 'converts excess whitespace', input: '   exampleOne  \r\n', output: 'exampleOne' },
-    { name: 'converts excess whitespace (multiple words)', input: ' \r\n\r\n    example    Two\rWith More   \r\nWords  \r\n', output: 'exampleTwoWithMoreWords' }
+    { name: 'converts excess whitespace (multiple words)', input: ' \r\n\r\n    example    Two\rWith More   \r\nWords  \r\n', output: 'exampleTwoWithMoreWords' },
+    { name: 'handles empty string', input: '', output: '' },
+    { name: 'handles whitespace-only string', input: '  \r\n', output: '' }
   ];
   for (const { name, input, output } of vectors) {
     test(name, { concurrency: true }, () => {

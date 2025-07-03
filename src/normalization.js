@@ -20,6 +20,7 @@ export function getDecimalSeparator(locale) {
  */
 export function toCamelCase(str) {
   str = str.trim();
+  if (str === '') { return ''; }
   if (!/[\s\-_]+(.)/.test(str)) {  // No separator found, fix the first letter but must assume the rest is already in camelCase
     return `${str[0].toLowerCase()}${str.substring(1)}`;
   }
