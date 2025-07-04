@@ -7,19 +7,12 @@
 // takes very long, all row processing is blocked on the 1 transformation even if all others in the group have already
 // resolved.
 
-import { setTimeout } from 'node:timers/promises';
 import { CSVReader, CSVTransformer, CSVWriter } from '../src/index.js';
 
-// Returns how many 100ms increments have elapsed since this program began
-const start = performance.now();
-function tick() {
-  const ms = performance.now() - start;
-  return Math.floor(ms / 100);
-}
-
+let tick = 0;
 async function concurrent(row) {
-  await setTimeout(100); // Simulate some slow task, e.g. a network request
-  return [tick(), ...row];
+  setTimeout(() => tick++, 0); // Tick will only be incremented after the concurrent group is done
+  return [tick, ...row];
 }
 
 await new CSVReader(new URL('./data/ex3_2-in.csv', import.meta.url))
