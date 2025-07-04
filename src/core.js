@@ -509,7 +509,7 @@ export class CSVWriter extends WritableStream {
       async abort() {
         await this.close();
       }
-    });
+    }, new CountQueuingStrategy({ highWaterMark: 4 })); // "4" picked based on manual benchmarks
 
     this.#status = status;
   }

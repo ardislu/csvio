@@ -1,8 +1,8 @@
 // ## Example 1.7: Abort a transformation
 // 
 // Pass an [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) to `.pipeTo()` to gracefully
-// abort a transformation. All transformations enqueued up until the row causing the abort (but *not* including the abort
-// row itself) will be saved to disk.
+// abort a transformation. All transformations enqueued up until the row causing the abort (including the abort row
+// itself) will be saved to disk.
 // 
 // Aborting throws an error, so you must also add a `.catch()` to handle the abort.
 
