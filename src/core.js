@@ -39,16 +39,18 @@ export function parsePathLike(path) {
  * Creates a readable byte stream from a local file.
  * 
  * Most code was copied from https://streams.spec.whatwg.org/#example-rbs-pull
- * @param {PathLike} path  A `string`, `Buffer`, or `URL` representing a path to a local file.
+ * @param {PathLike} path A `string`, `Buffer`, or `URL` representing a path to a local file.
  * @returns {ReadableStream<Uint8Array<ArrayBufferLike>>}
  */
 export function createFileStream(path) {
+  /** @type FileHandle */
   let handle;
   let position = 0;
 
   // Can replace with Promise.withResolvers after Node.js v20 is no longer LTS
+  /** @type {() => void} */
   let resolveReady;
-  const ready = new Promise(r => { resolveReady = r });
+  const ready = /** @type {Promise<void>} */(new Promise(r => { resolveReady = r }));
 
   return new ReadableStream({
     type: 'bytes',
@@ -60,7 +62,7 @@ export function createFileStream(path) {
     async pull(controller) {
       // byobRequest can never be null if autoAllocateChunkSize is set.
       // https://streams.spec.whatwg.org/#dom-underlyingsource-autoallocatechunksize
-      const byobRequest = /** @type {ReadableStreamBYOBRequest} */(controller.byobRequest);
+      const byobRequest = /** @type {ReadableStreamBYOBRequest} */(/** @type {unknown}*/(controller.byobRequest));
 
       // view can never be null since this is the first reference to the view within the response (i.e., it is
       // impossible to respond to the byobRequest and set view to null before this moment).
@@ -98,8 +100,10 @@ export function createFileStream(path) {
  * @extends ReadableStream<string>
  */
 export class CSVReader extends ReadableStream {
+  /** @type {Array<string>} */
   #row = [];
   #field = '';
+  /** @type {string|null} */
   #lastChar = null;
   #escapeMode = false;
   #justExitedEscapeMode = false;
@@ -130,6 +134,7 @@ export class CSVReader extends ReadableStream {
     });
   }
 
+  /** @type {import('node:stream/web').TransformerTransformCallback<string,string>} */
   #transform(chunk, controller) {
     for (const char of chunk) {
       /* Escape mode logic */
@@ -177,6 +182,7 @@ export class CSVReader extends ReadableStream {
     }
   }
 
+  /** @type {import('node:stream/web').TransformerFlushCallback<string>} */
   #flush(controller) {
     if (this.#field !== '' || this.#row.length !== 0) { // CSV terminated without a trailing CRLF, leaving a row in the queue
       this.#row.push(this.#field); // Last field is always un-pushed if CSV terminated with nothing
@@ -319,7 +325,9 @@ export class CSVReader extends ReadableStream {
  */
 export class CSVTransformer extends TransformStream {
   #fn;
+  /** @type {Array<any>} */
   #concurrent = [];
+  /** @type {Array<any>} */
   #batch = [];
   #firstChunk = true;
 
@@ -420,6 +428,7 @@ export class CSVTransformer extends TransformStream {
     }
   }
 
+  /** @type {import('node:stream/web').TransformerTransformCallback<string,string>} */
   async #transform(chunk, controller) {
     const row = this.#rawInput ? chunk : JSON.parse(chunk);
 
@@ -446,6 +455,7 @@ export class CSVTransformer extends TransformStream {
     }
   }
 
+  /** @type {import('node:stream/web').TransformerFlushCallback<string>} */
   async #flush(controller) {
     if (this.#batch.length > 0) {
       this.#concurrent.push(this.#wrappedFn(this.#batch));

@@ -138,6 +138,7 @@ export class CSVNormalizer extends TransformStream {
     }
   }
 
+  /** @type {import('node:stream/web').TransformerTransformCallback<string,string>} */
   #transform(chunk, controller) {
     const row = JSON.parse(chunk);
 
@@ -302,6 +303,7 @@ export class CSVDenormalizer extends TransformStream {
   constructor() {
     let firstRow = true;
     super({
+      /** @type {import('node:stream/web').TransformerTransformCallback<string,string>} */
       transform(chunk, controller) {
         const row = JSON.parse(chunk);
         if (firstRow) {
