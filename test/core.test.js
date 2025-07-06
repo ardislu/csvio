@@ -327,6 +327,17 @@ suite('CSVTransformer', { concurrency: true }, () => {
         ['abc', 'def']
       ]));
   });
+  test('handles ArrayLike outputs', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'columnB'],
+      ['a', 'b']
+    ])
+      .pipeThrough(new CSVTransformer(() => ({ length: 2, 0: 'a2', 1: 'b2' })))
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA', 'columnB'],
+        ['a2', 'b2']
+      ]));
+  });
   test('consumes input row without output row when null is returned', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['columnA', 'columnB'],

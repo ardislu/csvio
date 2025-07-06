@@ -196,7 +196,7 @@ export class CSVReader extends ReadableStream {
 
 /**
  * A row or rows of output CSV data, or `null` to not output anything.
- * @typedef {Array<Array<any>>|Array<any>|string|null} TransformationOutput
+ * @typedef {Array<Array<any>>|Array<any>|ArrayLike<any>|string|null} TransformationOutput
  */
 
 /**
@@ -402,11 +402,16 @@ export class CSVTransformer extends TransformStream {
     else if (this.#rawOutput || typeof row === 'string') {
       controller.enqueue(row);
     }
-    else if (Array.isArray(row) && Array.isArray(row[0])) { // Multiple rows returned, enqueue each row separately
-      row.forEach(r => controller.enqueue(JSON.stringify(r)));
+    else if (Array.isArray(row)) {
+      if (Array.isArray(row[0])) { // Multiple rows returned, enqueue each row separately
+        row.forEach(r => controller.enqueue(JSON.stringify(r)));
+      }
+      else { // One row returned
+        controller.enqueue(JSON.stringify(row));
+      }
     }
-    else {
-      controller.enqueue(JSON.stringify(row));
+    else { // Assume ArrayLike output
+      controller.enqueue(JSON.stringify(Array.from(row)));
     }
   }
 
