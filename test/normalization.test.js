@@ -174,7 +174,7 @@ suite('CSVNormalizer.fixExcelDate', { concurrency: true }, () => {
 });
 
 suite('CSVNormalizer', { concurrency: true }, () => {
-  test('can remove extra columns', { concurrency: true }, async () => {
+  test('can remove extra columns in CSV', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['extra1', 'columnA', 'extra2', 'extra3', 'columnB'],
       ['123', 'a', '123', '123', 'b']
@@ -182,6 +182,24 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       .pipeThrough(new CSVNormalizer([
         { name: 'columnA', type: 'string' },
         { name: 'columnB', type: 'string' }
+      ]))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA', 'columnB'],
+        ['a', 'b']
+      ]));
+  });
+  test('can remove extra columns in headers input', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'columnB'],
+      ['a', 'b']
+    ])
+      .pipeThrough(new CSVNormalizer([
+        { name: 'columnA', type: 'string' },
+        { name: 'columnB', type: 'string' },
+        { name: 'extra1', type: 'string' },
+        { name: 'extra2', type: 'string' },
+        { name: 'extra3', type: 'string' }
       ]))
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
