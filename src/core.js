@@ -339,24 +339,20 @@ export class CSVTransformer extends TransformStream {
   #maxConcurrent;
 
   /**
-   * @constructor
    * @overload
    * @param {TransformationFunction} fn A function to process a row of CSV data.
    */
   /**
-   * @constructor
    * @overload
    * @param {TransformationFunction} fn A function to process a row of CSV data.
    * @param {CSVTransformerOptions} options Object containing flags to configure the stream logic.
    */
   /**
-   * @constructor
    * @overload
    * @param {TransformationFunctionRaw} fn A function to process a row or rows of CSV data represented as a raw `string`.
    * @param {CSVTransformerOptionsRaw} options Object containing flags to configure the stream logic.
    */
   /**
-   * @constructor
    * @overload
    * @param {TransformationFunctionBatch} fn A function to process multiple rows of CSV data from `CSVReader`.
    * @param {CSVTransformerOptionsBatch} options Object containing flags to configure the stream logic.
