@@ -20,6 +20,7 @@ export function csvStreamEqualWritable(csv) {
   return new WritableStream({
     write(chunk) {
       const row = JSON.parse(chunk);
+      deepStrictEqual(row.length, csv[i].length);
       for (let j = 0; j < csv[i].length; j++) {
         deepStrictEqual(row[j], csv[i][j]);
       }

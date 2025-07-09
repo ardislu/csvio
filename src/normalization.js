@@ -154,7 +154,7 @@ export class CSVNormalizer extends TransformStream {
         }
         i++;
       }
-      this.#columns.filter(c => c.index !== null); // Drop columns provided in the headers input but not in the CSV
+      this.#columns = this.#columns.filter(c => c.index !== null); // Drop columns provided in the headers input but not in the CSV
       this.#firstChunk = false;
       return;
     }
