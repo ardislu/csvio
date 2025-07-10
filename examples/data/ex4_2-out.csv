@@ -1,0 +1,4 @@
+columnA_new,columnB_new,columnC_new,sparse1_new,sparse2_new,sparse3_new,count
+A1,B1,C1,S1,,,4
+A2,B2,C2,,S2,,4
+A3,B3,C3,,,S3,4

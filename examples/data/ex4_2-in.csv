@@ -1,0 +1,7 @@
+columnA,columnB,columnC,sparse1,sparse2,sparse3,extra1,extra2,extra3,,,
+a1,b1,c1,s1,,,e,e,e,,,
+a2,b2,c2,,s2,,e,e,e,,,
+a3,b3,c3,,,s3,e,e,e,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,

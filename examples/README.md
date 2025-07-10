@@ -51,3 +51,5 @@ These examples demonstrate using the `maxBatchSize` and `maxConcurrent` options 
 These examples demonstrate the extended API.
 
 [Example 4.1: Using `CSVNormalizer` and `CSVDenormalizer`](./ex4_1.js) ([input](./data/ex4_1-in.csv), [output](./data/ex4_1-out.csv))
+
+[Example 4.2: Using `CSVNormalizer` and `CSVDenormalizer` with `CSVTransformer`](./ex4_2.js) ([input](./data/ex4_2-in.csv), [output](./data/ex4_2-out.csv))
