@@ -273,6 +273,26 @@ suite('CSVNormalizer', { concurrency: true }, () => {
         ['a', 'b']
       ]));
   });
+  test('handles sparse CSV', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['sparse1', 'sparse2', 'sparse3'],
+      ['s1', '', ''],
+      ['', 's2', ''],
+      ['', '', 's3']
+    ])
+      .pipeThrough(new CSVNormalizer([
+        { name: 'sparse1', type: 'string' },
+        { name: 'sparse2', type: 'string' },
+        { name: 'sparse3', type: 'string' },
+      ]))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['sparse1', 'sparse2', 'sparse3'],
+        ['s1', '', ''],
+        ['', 's2', ''],
+        ['', '', 's3']
+      ]));
+  });
   test('defaults to "string" type', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['columnA', 'columnB'],
