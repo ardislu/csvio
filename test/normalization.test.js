@@ -4,6 +4,7 @@ import { ok, deepStrictEqual, throws } from 'node:assert/strict';
 import { csvStreamEqualWritable, createCSVMockStream, assertConsole } from './utils.js';
 import { CSVReader, CSVTransformer } from '../src/core.js';
 import { getDecimalSeparator, toCamelCase, expandScientificNotation, CSVNormalizer, CSVDenormalizer } from '../src/normalization.js';
+/** @import { CSVNormalizerHeader } from '../src/normalization.js'; */
 
 suite('getDecimalSeparator', { concurrency: true }, () => {
   test('returns a value if no locale is specified', { concurrency: true }, () => {
@@ -381,11 +382,12 @@ suite('CSVDenormalizer', { concurrency: true }, () => {
 
 suite('CSVNormalizer and CSVDenormalizer end-to-end', { concurrency: true }, () => {
   test('can normalize', { concurrency: true }, async () => {
+    /** @type { Array<CSVNormalizerHeader> } */
     const headers = [
-      /** @type {const} */({ name: 'stringCol', displayName: 'String Column', type: 'string', defaultValue: 'N/A' }),
-      /** @type {const} */({ name: 'numberCol', displayName: 'Number Column', type: 'number' }),
-      /** @type {const} */({ name: 'bigintCol', displayName: 'BigInt Column', type: 'bigint' }),
-      /** @type {const} */({ name: 'dateCol', displayName: 'Date Column', type: 'date' })
+      { name: 'stringCol', displayName: 'String Column', type: 'string', defaultValue: 'N/A' },
+      { name: 'numberCol', displayName: 'Number Column', type: 'number' },
+      { name: 'bigintCol', displayName: 'BigInt Column', type: 'bigint' },
+      { name: 'dateCol', displayName: 'Date Column', type: 'date' }
     ]
     await new CSVReader('./test/data/normalization.csv')
       .pipeThrough(new CSVNormalizer(headers))
@@ -398,9 +400,10 @@ suite('CSVNormalizer and CSVDenormalizer end-to-end', { concurrency: true }, () 
       ]));
   });
   test('can normalize with transformation', { concurrency: true }, async () => {
+    /** @type { Array<CSVNormalizerHeader> } */
     const headers = [
-      /** @type {const} */({ name: 'columnA' }),
-      /** @type {const} */({ name: 'columnB' })
+      { name: 'columnA' },
+      { name: 'columnB' }
     ]
     await createCSVMockStream([
       ['columnA', '', 'columnB', '', ''],
