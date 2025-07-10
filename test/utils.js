@@ -132,8 +132,8 @@ export function assertSleep(context, expected) {
 /**
  * Simulate a stream of CSV data for test mocking purposes.
  * 
- * @param {Array<Array<string>>} data A 2-D array representing the CSV file to mock, where each inner array
- * is a row of the CSV.
+ * @param {Array<Array<string>>|Array<Array<Object>>} data A 2-D array representing the CSV file to mock, where
+ * each inner array is a row of the CSV.
  * @returns {ReadableStream} A `ReadableStream` where each row is emitted as a separate chunk.
  */
 export function createCSVMockStream(data) {

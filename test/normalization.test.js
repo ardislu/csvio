@@ -352,6 +352,33 @@ suite('CSVNormalizer', { concurrency: true }, () => {
   });
 });
 
+suite('CSVDenormalizer', { concurrency: true }, () => {
+  test('can process normalized rows', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      [{ displayName: 'Column A', value: 'a1' }, { displayName: 'Column B', value: 'b1' }],
+      [{ displayName: 'Column A', value: 'a2' }, { displayName: 'Column B', value: 'b2' }]
+    ])
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['Column A', 'Column B'],
+        ['a1', 'b1'],
+        ['a2', 'b2']
+      ]));
+  });
+  test('falls back on name if displayName is undefined', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      [{ name: 'Column A', value: 'a1' }, { displayName: 'Column B', value: 'b1' }],
+      [{ displayName: 'Column A', value: 'a2' }, { name: 'Column B', value: 'b2' }]
+    ])
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['Column A', 'Column B'],
+        ['a1', 'b1'],
+        ['a2', 'b2']
+      ]));
+  });
+});
+
 suite('CSVNormalizer and CSVDenormalizer end-to-end', { concurrency: true }, () => {
   test('can normalize', { concurrency: true }, async () => {
     const headers = [

@@ -308,7 +308,7 @@ export class CSVDenormalizer extends TransformStream {
         const row = JSON.parse(chunk);
         if (firstRow) {
           firstRow = false;
-          controller.enqueue(JSON.stringify(row.map(f => f.displayName)));
+          controller.enqueue(JSON.stringify(row.map(f => f?.displayName ?? f.name)));
         }
         controller.enqueue(JSON.stringify(row.map(f => f.value)));
       }
