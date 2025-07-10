@@ -2,7 +2,7 @@ import { suite, test } from 'node:test';
 import { ok, deepStrictEqual, throws } from 'node:assert/strict';
 
 import { csvStreamEqualWritable, createCSVMockStream, assertConsole } from './utils.js';
-import { CSVReader } from '../src/core.js';
+import { CSVReader, CSVTransformer } from '../src/core.js';
 import { getDecimalSeparator, toCamelCase, expandScientificNotation, CSVNormalizer, CSVDenormalizer } from '../src/normalization.js';
 
 suite('getDecimalSeparator', { concurrency: true }, () => {
@@ -395,6 +395,25 @@ suite('CSVNormalizer and CSVDenormalizer end-to-end', { concurrency: true }, () 
         ['abc 👨‍👩‍👧‍👦', 123456789.123456, '1000000000000000000', '2024-01-01T00:00:00.000Z'],
         [', " 🏴‍☠️', 1000, '-1234567890000000000000000', '2024-06-01T00:00:00.000Z'],
         ['N/A', 123100, '1000000000000000000', '2024-12-31T08:00:00.000Z']
+      ]));
+  });
+  test('can normalize with transformation', { concurrency: true }, async () => {
+    const headers = [
+      /** @type {const} */({ name: 'columnA' }),
+      /** @type {const} */({ name: 'columnB' })
+    ]
+    await createCSVMockStream([
+      ['columnA', '', 'columnB', '', ''],
+      ['a', '', 'b', '', ''],
+      ['', '', '', '', ''],
+      ['', '', '', '', '']
+    ])
+      .pipeThrough(new CSVNormalizer(headers))
+      .pipeThrough(new CSVTransformer(r => r.map(f => ({ name: `${f.name} updated`, value: `${f.value} updated` }))))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA updated', 'columnB updated'],
+        ['a updated', 'b updated']
       ]));
   });
 });

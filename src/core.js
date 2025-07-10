@@ -202,7 +202,7 @@ export class CSVReader extends ReadableStream {
 /**
  * A function to process a row of CSV data from `CSVReader`.
  * @callback TransformationFunction
- * @param {Array<string>} row A row of input CSV data before transformation.
+ * @param {Array<any>} row A row of input CSV data before transformation.
  * @returns {TransformationOutput|Promise<TransformationOutput>}
  */
 
@@ -216,14 +216,14 @@ export class CSVReader extends ReadableStream {
 /**
  * A function to process multiple rows of CSV data from `CSVReader`.
  * @callback TransformationFunctionBatch
- * @param {Array<Array<string>>} rows Multiple rows of input CSV data.
+ * @param {Array<Array<any>>} rows Multiple rows of input CSV data.
  * @returns {TransformationOutput|Promise<TransformationOutput>}
  */
 
 /**
  * A function to handle errors thrown by a transformation function.
  * @callback TransformationErrorFunction
- * @param {Array<string>} row The row passed to the transformation function which threw the error.
+ * @param {Array<any>} row The row passed to the transformation function which threw the error.
  * @param {Error} error The error thrown by the transformation function.
  * @param {TransformationFunction} fn The transformation function itself. This argument can be used to retry a transformation.
  * @returns {TransformationOutput|Promise<TransformationOutput>}
@@ -241,7 +241,7 @@ export class CSVReader extends ReadableStream {
 /**
  * A function to handle errors thrown by a transformation function.
  * @callback TransformationErrorFunctionBatch
- * @param {Array<Array<string>>} rows The rows of input CSV data passed to the transformation function which threw the error.
+ * @param {Array<Array<any>>} rows The rows of input CSV data passed to the transformation function which threw the error.
  * @param {Error} error The error thrown by the transformation function.
  * @param {TransformationFunctionBatch} fn The transformation function itself. This argument can be used to retry a transformation.
  * @returns {TransformationOutput|Promise<TransformationOutput>}
@@ -432,6 +432,13 @@ export class CSVTransformer extends TransformStream {
   /** @type {import('node:stream/web').TransformerTransformCallback<string,string>} */
   async #transform(chunk, controller) {
     const row = this.#rawInput ? chunk : JSON.parse(chunk);
+
+    // If row is an array of objects, then the transformation has "normalized" the data and there is no header row.
+    // Instead, the header data has been incorporated into the object keys. The transformation is responsible
+    // for "denormalizing" the object back into an (extra) header row in the output. Ignore `handleHeaders`.
+    if (typeof row[0] === 'object') {
+      this.#firstChunk = false;
+    }
 
     if (this.#firstChunk) {
       this.#firstChunk = false;

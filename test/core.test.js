@@ -400,6 +400,17 @@ suite('CSVTransformer', { concurrency: true }, () => {
         ['1', '2']
       ]));
   });
+  test('ignores handleHeaders when row is an array of objects (normalized)', { concurrency: true, only: true }, async () => {
+    await createCSVMockStream([
+      [{ value: 'a1' }, { value: 'b1' }],
+      [{ value: 'a2' }, { value: 'b2' }],
+    ])
+      .pipeThrough(new CSVTransformer(r => r.map(f => f.value), { handleHeaders: ['updatedA', 'updatedB'] }))
+      .pipeTo(csvStreamEqualWritable([
+        ['a1', 'b1'],
+        ['a2', 'b2']
+      ]));
+  });
   test('enqueues multiple rows when Array<Array<any>> is returned', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['columnA', 'columnB'],
