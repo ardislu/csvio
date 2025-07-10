@@ -73,7 +73,7 @@ export function expandScientificNotation(str, truncate = false) {
  * @property {'string'|'number'|'bigint'|'date'} [type='string'] The JavaScript data type to attempt to cast this column to. If
  * the data cannot be unmangled, the data passes through as a `string`. The default value is `'string'`.
  * @property {string} [displayName=name] Optional `string` value to indicate the desired header name in the output CSV.
- * @property {string} [defaultValue] Optional `string` value to use to fill empty CSV fields. If no value is provided, the
+ * @property {string} [defaultValue=''] Optional `string` value to use to fill empty CSV fields. If no value is provided, the
  * field value will be `''` (empty string) in the output CSV.
  */
 
@@ -122,7 +122,7 @@ export class CSVNormalizer extends TransformStream {
     this.#passthroughEmptyRows = options.passthroughEmptyRows ?? false;
     this.#typeCastOnly = options.typeCastOnly ?? false;
 
-    for (const { name, type, displayName = name, defaultValue = null } of headers) {
+    for (const { name, type, displayName = name, defaultValue = '' } of headers) {
       let normalizedType = type?.toLowerCase() ?? 'string';
       if (!['string', 'number', 'bigint', 'date'].includes(normalizedType)) {
         console.warn(`Type "${normalizedType}" is not supported, defaulting to string.`);
@@ -162,7 +162,7 @@ export class CSVNormalizer extends TransformStream {
     /** @type {Array<CSVNormalizerRow>} */
     const out = [];
     for (const { name, type, displayName, defaultValue, index } of this.#columns) {
-      let value = row[index];
+      let value = row[index] ?? '';
       const emptyField = value === '' ? true : false;
       switch (type) {
         case 'string': break;
@@ -170,7 +170,7 @@ export class CSVNormalizer extends TransformStream {
         case 'bigint': value = this.#typeCastOnly ? BigInt(value).toString() : CSVNormalizer.fixExcelBigInt(value); break;
         case 'date': value = this.#typeCastOnly ? new Date(value).toISOString() : CSVNormalizer.fixExcelDate(value); break;
       }
-      if (emptyField && defaultValue !== null) {
+      if (emptyField) {
         value = defaultValue;
       }
       out.push({ name, displayName, value, emptyField });

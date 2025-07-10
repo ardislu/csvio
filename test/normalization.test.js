@@ -293,6 +293,29 @@ suite('CSVNormalizer', { concurrency: true }, () => {
         ['', '', 's3']
       ]));
   });
+  test('handles uneven CSV', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['common', 'maybe1', 'maybe2', 'maybe3'],
+      ['c'],
+      ['c', 'm'],
+      ['c', 'm', 'm'],
+      ['c', 'm', 'm', 'm']
+    ])
+      .pipeThrough(new CSVNormalizer([
+        { name: 'common', type: 'string' },
+        { name: 'maybe1', type: 'string' },
+        { name: 'maybe2', type: 'string' },
+        { name: 'maybe3', type: 'string' },
+      ]))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['common', 'maybe1', 'maybe2', 'maybe3'],
+        ['c', '', '', ''],
+        ['c', 'm', '', ''],
+        ['c', 'm', 'm', ''],
+        ['c', 'm', 'm', 'm'],
+      ]));
+  });
   test('defaults to "string" type', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['columnA', 'columnB'],
