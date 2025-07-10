@@ -272,6 +272,21 @@ suite('CSVNormalizer', { concurrency: true }, () => {
         ['a', 'b']
       ]));
   });
+  test('defaults to "string" type', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'columnB'],
+      ['1E9', '44309']
+    ])
+      .pipeThrough(new CSVNormalizer([
+        { name: 'columnA' },
+        { name: 'columnB' }
+      ]))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA', 'columnB'],
+        ['1E9', '44309']
+      ]));
+  });
   test('can pass through numbers', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['columnA', 'columnB'],

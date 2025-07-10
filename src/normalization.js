@@ -70,8 +70,8 @@ export function expandScientificNotation(str, truncate = false) {
  * @property {string} name The name of the CSV column, in camelCase. Values in the header row of the CSV will be
  * transformed to camelCase for comparison purposes and for downstream usage (e.g., a header with the value `Example Column`
  * in the input CSV will match with a `name` value of `exampleColumn`).
- * @property {'string'|'number'|'bigint'|'date'} type The JavaScript data type to attempt to cast this column to. If
- * the data cannot be unmangled, the data passes through as a `string`.
+ * @property {'string'|'number'|'bigint'|'date'} [type='string'] The JavaScript data type to attempt to cast this column to. If
+ * the data cannot be unmangled, the data passes through as a `string`. The default value is `'string'`.
  * @property {string} [displayName=name] Optional `string` value to indicate the desired header name in the output CSV.
  * @property {string} [defaultValue] Optional `string` value to use to fill empty CSV fields. If no value is provided, the
  * field value will be `''` (empty string) in the output CSV.
@@ -123,7 +123,7 @@ export class CSVNormalizer extends TransformStream {
     this.#typeCastOnly = options.typeCastOnly ?? false;
 
     for (const { name, type, displayName = name, defaultValue = null } of headers) {
-      let normalizedType = type.toLowerCase();
+      let normalizedType = type?.toLowerCase() ?? 'string';
       if (!['string', 'number', 'bigint', 'date'].includes(normalizedType)) {
         console.warn(`Type "${normalizedType}" is not supported, defaulting to string.`);
         normalizedType = 'string';
