@@ -475,6 +475,16 @@ export class CSVTransformer extends TransformStream {
 }
 
 /**
+ * @typedef CSVWriterStatus The current status of the CSVWriter.
+ * @property {string} name The name of the output CSV file that this writer is writing to.
+ * @property {number} elapsed The number of milliseconds that have elapsed between this writer's creation and the output CSV file
+ * handle closing, or until now if the writer is still writing. Measured using `performance.now()`.
+ * @property {number} rows The estimated number of CSV rows that have been written. If the data passed to the writer is
+ * a string, the string is counted as one CSV row (i.e., raw string data is NOT parsed again). Includes the header row (first row).
+ * @property {boolean} done If `true`, the writer is finished writing to the output CSV file and the file handle is closed.
+ */
+
+/**
  * Write a streamed CSV file to disk.
  * 
  * A simple wrapper around Node.js's [`fs.writeFile`](https://nodejs.org/api/fs.html#fspromiseswritefilefile-data-options) to write
@@ -531,16 +541,6 @@ export class CSVWriter extends WritableStream {
 
     this.#status = status;
   }
-
-  /**
-   * @typedef CSVWriterStatus The current status of the CSVWriter.
-   * @property {string} name The name of the output CSV file that this writer is writing to.
-   * @property {number} elapsed The number of milliseconds that have elapsed between this writer's creation and the output CSV file
-   * handle closing, or until now if the writer is still writing. Measured using `performance.now()`.
-   * @property {number} rows The estimated number of CSV rows that have been written. If the data passed to the writer is
-   * a string, the string is counted as one CSV row (i.e., raw string data is NOT parsed again). Includes the header row (first row).
-   * @property {boolean} done If `true`, the writer is finished writing to the output CSV file and the file handle is closed.
-   */
 
   /** @type {CSVWriterStatus} */
   get status() {
