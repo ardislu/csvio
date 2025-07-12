@@ -4,6 +4,12 @@ export { ErrorStrategies } from './errorStrategies.js';
 
 /** @typedef {import('./core.js').CSVReaderOptions} CSVReaderOptions */
 /** @typedef {import('./core.js').TransformationOutput} TransformationOutput */
+/** @typedef {import('./core.js').TransformationFunction} TransformationFunction */
+/** @typedef {import('./core.js').TransformationFunctionRaw} TransformationFunctionRaw */
+/** @typedef {import('./core.js').TransformationFunctionBatch} TransformationFunctionBatch */
+/** @typedef {import('./core.js').TransformationErrorFunction} TransformationErrorFunction */
+/** @typedef {import('./core.js').TransformationErrorFunctionRaw} TransformationErrorFunctionRaw */
+/** @typedef {import('./core.js').TransformationErrorFunctionBatch} TransformationErrorFunctionBatch */
 /** @typedef {import('./core.js').CSVTransformerOptions} CSVTransformerOptions */
 /** @typedef {import('./core.js').CSVTransformerOptionsRaw} CSVTransformerOptionsRaw */
 /** @typedef {import('./core.js').CSVTransformerOptionsBatch} CSVTransformerOptionsBatch */
