@@ -258,6 +258,29 @@ suite('CSVNormalizer', { concurrency: true }, () => {
         ['a', 'b']
       ]));
   });
+  test('passes through empty rows when passthroughEmptyRows is true', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'columnB'],
+      ['', ''],
+      ['a', 'b'],
+      ['', ''],
+      ['', ''],
+      ['', '']
+    ])
+      .pipeThrough(new CSVNormalizer([
+        { name: 'columnA', type: 'string' },
+        { name: 'columnB', type: 'string' }
+      ], { passthroughEmptyRows: true }))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA', 'columnB'],
+        ['', ''],
+        ['a', 'b'],
+        ['', ''],
+        ['', ''],
+        ['', '']
+      ]));
+  });
   test('can remove empty columns', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['columnA', '', 'columnB', '', ''],
