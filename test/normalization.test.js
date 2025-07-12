@@ -239,6 +239,50 @@ suite('CSVNormalizer', { concurrency: true }, () => {
         ['a', 'b']
       ]));
   });
+  test('removes columns that have the same normalized name (last column prevails)', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'column A', 'column-A'],
+      ['a1', 'a2', 'a3']
+    ])
+      .pipeThrough(new CSVNormalizer([
+        { name: 'columnA' }
+      ]))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA'],
+        ['a3']
+      ]));
+  });
+  test('can match by literal column names', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'column A', 'column-A'],
+      ['a1', 'a2', 'a3']
+    ])
+      .pipeThrough(new CSVNormalizer([
+        { name: 'columnA' },
+        { name: 'column A' },
+        { name: 'column-A' }
+      ], { useLiteralNames: true }))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA', 'column A', 'column-A'],
+        ['a1', 'a2', 'a3']
+      ]));
+  });
+  test('removes columns that have the same literal name (last column prevails)', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'columnA', 'columnA'],
+      ['a1', 'a2', 'a3']
+    ])
+      .pipeThrough(new CSVNormalizer([
+        { name: 'columnA' }
+      ], { useLiteralNames: true }))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA'],
+        ['a3']
+      ]));
+  });
   test('can remove empty rows', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['columnA', 'columnB'],

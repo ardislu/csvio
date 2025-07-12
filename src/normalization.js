@@ -80,6 +80,9 @@ export function expandScientificNotation(str, truncate = false) {
 /**
  * Options to configure `CSVNormalizer`.
  * @typedef {Object} CSVNormalizerOptions
+ * @property {boolean} [useLiteralNames=false] Set to `true` to use the literal `name` value to match with literal input CSV header
+ * names. Otherwise, both `name` and the input CSV header name will be normalized (i.e., trimmed and converted to camelCase).
+ * The default value is `false`.
  * @property {boolean} [passthroughEmptyRows=false] Set to `true` to send empty rows (i.e., rows where all field values are
  * `''`) downstream. Otherwise, empty rows will be removed. The default value is `false`.
  * @property {boolean} [typeCastOnly=false] Set to `true` to NOT apply any error correction to 'number', `bigint`, or `date`
@@ -106,6 +109,7 @@ export function expandScientificNotation(str, truncate = false) {
 export class CSVNormalizer extends TransformStream {
   #columns = [];
   #firstChunk = true;
+  #useLiteralNames;
   #passthroughEmptyRows;
   #typeCastOnly;
 
@@ -119,6 +123,7 @@ export class CSVNormalizer extends TransformStream {
       transform: (chunk, controller) => this.#transform(chunk, controller)
     });
 
+    this.#useLiteralNames = options.useLiteralNames ?? false;
     this.#passthroughEmptyRows = options.passthroughEmptyRows ?? false;
     this.#typeCastOnly = options.typeCastOnly ?? false;
 
@@ -129,7 +134,7 @@ export class CSVNormalizer extends TransformStream {
         normalizedType = 'string';
       }
       this.#columns.push({
-        name: toCamelCase(name),
+        name: this.#useLiteralNames ? name : toCamelCase(name),
         type: normalizedType,
         displayName,
         defaultValue,
@@ -145,7 +150,7 @@ export class CSVNormalizer extends TransformStream {
     // Assume first row is headers and use it to prepare the columns object
     // Note: the headers row is NOT forwarded downstream
     if (this.#firstChunk) {
-      const normalizedRow = row.map(f => toCamelCase(f));
+      const normalizedRow = this.#useLiteralNames ? row : row.map(f => toCamelCase(f));
       let i = 0;
       for (const header of normalizedRow) {
         const col = this.#columns.find(c => c.name === header);
