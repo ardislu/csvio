@@ -43,7 +43,7 @@ export function parsePathLike(path) {
  * @returns {ReadableStream<Uint8Array<ArrayBufferLike>>}
  */
 export function createFileStream(path) {
-  /** @type FileHandle */
+  /** @type {FileHandle} */
   let handle;
   let position = 0;
 
@@ -509,7 +509,7 @@ export class CSVWriter extends WritableStream {
       rows: 0,
       done: false
     };
-    /** @type FileHandle */
+    /** @type {FileHandle} */
     let handle;
     super({
       async start() {

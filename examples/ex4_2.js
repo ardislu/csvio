@@ -8,7 +8,7 @@ import { CSVReader, CSVWriter, CSVNormalizer, CSVDenormalizer, CSVTransformer } 
 /** @import { CSVNormalizerHeader } from '../src/normalization.js'; */
 
 // A minimal declaration to tell `CSVNormalizer` to trim empty rows and columns but otherwise don't touch the data
-/** @type { Array<CSVNormalizerHeader> } */
+/** @type {Array<CSVNormalizerHeader>} */
 const headers = [
   { name: 'columnA' },
   { name: 'columnB' },

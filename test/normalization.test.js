@@ -492,7 +492,7 @@ suite('CSVDenormalizer', { concurrency: true }, () => {
 
 suite('CSVNormalizer and CSVDenormalizer end-to-end', { concurrency: true }, () => {
   test('can normalize', { concurrency: true }, async () => {
-    /** @type { Array<CSVNormalizerHeader> } */
+    /** @type {Array<CSVNormalizerHeader>} */
     const headers = [
       { name: 'stringCol', displayName: 'String Column', type: 'string', defaultValue: 'N/A' },
       { name: 'numberCol', displayName: 'Number Column', type: 'number' },
@@ -510,7 +510,7 @@ suite('CSVNormalizer and CSVDenormalizer end-to-end', { concurrency: true }, () 
       ]));
   });
   test('can normalize with transformation', { concurrency: true }, async () => {
-    /** @type { Array<CSVNormalizerHeader> } */
+    /** @type {Array<CSVNormalizerHeader>} */
     const headers = [
       { name: 'columnA' },
       { name: 'columnB' }
