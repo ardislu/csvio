@@ -38,14 +38,14 @@ export function parsePathLike(path) {
 /**
  * Creates a readable byte stream from a local file.
  * 
- * Most code was copied from https://streams.spec.whatwg.org/#example-rbs-pull
+ * @see {@link https://streams.spec.whatwg.org/#example-rbs-pull}
+ * @see {@link https://github.com/nodejs/node/blob/049664bbdc421c63b2145c85a18c64d184b40aa5/lib/internal/fs/promises.js#L277-L346}
  * @param {PathLike} path A `string`, `Buffer`, or `URL` representing a path to a local file.
  * @returns {ReadableStream<Uint8Array<ArrayBufferLike>>}
  */
 export function createFileStream(path) {
   /** @type {FileHandle} */
   let handle;
-  let position = 0;
 
   // Can replace with Promise.withResolvers after Node.js v20 is no longer LTS
   /** @type {() => void} */
@@ -56,7 +56,7 @@ export function createFileStream(path) {
     type: 'bytes',
     autoAllocateChunkSize: 65536, // 64 KiB
     async start() {
-      handle = await open(path, "r");
+      handle = await open(path, 'r');
       resolveReady();
     },
     async pull(controller) {
@@ -68,16 +68,12 @@ export function createFileStream(path) {
       // impossible to respond to the byobRequest and set view to null before this moment).
       const view = /** @type {ArrayBufferView<ArrayBufferLike>} */(byobRequest.view);
 
-      const { bytesRead } = await handle.read(view, 0, view.byteLength, position);
+      const { bytesRead } = await handle.read(view, view.byteOffset, view.byteLength);
       if (bytesRead === 0) {
         await handle.close();
         controller.close();
-        byobRequest.respond(0);
       }
-      else {
-        position += bytesRead;
-        byobRequest.respond(bytesRead);
-      }
+      byobRequest.respond(bytesRead);
     },
     async cancel() {
       await ready; // If cancel() is called immediately after stream instantiation, start() may not have finished yet.
