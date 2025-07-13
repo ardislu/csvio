@@ -158,9 +158,14 @@ In addition to the core API, optional utilities are provided to address common C
 
 ### `CSVNormalizer` and `CSVDenormalizer`
 
-`CSVNormalizer` is a `TransformStream` that attempts to fix CSVs that have been mangled by spreadsheet programs such as Excel.
+`CSVNormalizer` is a `TransformStream` that applies opinionated transformations to correct data mangling caused by spreadsheet programs and manual user manipulation:
+- **Remove empty or extra data**: Spreadsheet programs may append empty rows or columns at the ends of a CSV file, or users may insert empty rows or columns for formatting purposes. These empty rows are removed. Additionally, columns which are not explicitly listed in the `CSVNormalizerHeader` array are also removed.
+- **Fix date and number mangling**: Spreadsheet programs may [automatically cast data types in unexpected ways](https://www.theverge.com/2020/8/6/21355674/human-genes-rename-microsoft-excel-misreading-dates). `CSVNormalizer` will perform various transformations to reverse data type casting that was unlikely to be intentional.
+- **Flexible column naming**: Column names are normalized to camelCase to prevent issues with subtly inconsistent names (e.g., `Column A`, `column A`, and `ColumnA` are all considered to be the same name).
+- **Column ordering**: Columns may appear in any order on the input CSV. The columns in the output are re-ordered to match the order in the `CSVNormalizerHeader` array.
+- **Stream of objects**: The stream is transformed from an `Array<string>` to an `Array<CSVNormalizerRow>` to provide a better developer experience for subsequent transformations.
 
-`CSVDenormalizer` is a `TransformStream` that will convert objects normalized by `CSVNormalizer` back into a plain array.
+`CSVDenormalizer` is a `TransformStream` that will convert an `Array<CSVNormalizerRow>` created by `CSVNormalizer` back into an `Array<string>`, ready for writing to a file.
 
 ```javascript
 import { CSVNormalizer, CSVDenormalizer } from './src/index.js';
