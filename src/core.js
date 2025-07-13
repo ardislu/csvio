@@ -111,7 +111,7 @@ export class CSVReader extends ReadableStream {
   constructor(path, options = {}) {
     const { encoding = 'utf-8' } = options;
     const readableStream = createFileStream(path)
-      .pipeThrough(new TextDecoderStream(encoding))
+      .pipeThrough(new TextDecoderStream(encoding)) // Byte order mark (BOM) is removed, if present
       .pipeThrough(new TransformStream({
         transform: (chunk, controller) => this.#transform(chunk, controller),
         flush: (controller) => this.#flush(controller)
@@ -158,7 +158,7 @@ export class CSVReader extends ReadableStream {
             this.#field += char;
           }
         }
-        else if (char === '\r' || char === '\uFEFF') { } // Ignore CR (newline logic is handled by LF) and byte order mark
+        else if (char === '\r') { } // Ignore CR (newline logic is handled by LF)
         else if (char === ',') { // Terminate the field and do not add char to field
           this.#row.push(this.#field);
           this.#field = '';
