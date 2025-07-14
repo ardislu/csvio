@@ -37,7 +37,7 @@
     "postpack": "node ./npm/postpack.js"
   },
   "devDependencies": {
-    "@types/node": "^24.0.12",
+    "@types/node": "^24.0.13",
     "typescript": "^5.8.3"
   }
 }
