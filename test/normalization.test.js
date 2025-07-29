@@ -461,6 +461,10 @@ suite('CSVNormalizer', { concurrency: true }, () => {
         ['a', 'b']
       ]));
   });
+  test('works with instanceof', { concurrency: true }, async () => {
+    const s = new CSVNormalizer([]);
+    deepStrictEqual(s instanceof CSVNormalizer, true);
+  });
 });
 
 suite('CSVDenormalizer', { concurrency: true }, () => {
@@ -487,6 +491,10 @@ suite('CSVDenormalizer', { concurrency: true }, () => {
         ['a1', 'b1'],
         ['a2', 'b2']
       ]));
+  });
+  test('works with instanceof', { concurrency: true }, async () => {
+    const s = new CSVDenormalizer();
+    deepStrictEqual(s instanceof CSVDenormalizer, true);
   });
 });
 

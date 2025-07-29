@@ -293,6 +293,12 @@ suite('CSVReader', { concurrency: true }, () => {
     const c = await s.getReader().read().then(({ value }) => value);
     deepStrictEqual(c, undefined);
   });
+  test('works with instanceof', { concurrency: true }, async () => {
+    const path = new URL('./data/simple.csv', import.meta.url);
+    const s = new CSVReader(path);
+    deepStrictEqual(s instanceof CSVReader, true);
+    await s.cancel();
+  });
 });
 
 suite('CSVTransformer', { concurrency: true }, () => {
@@ -547,6 +553,10 @@ suite('CSVTransformer', { concurrency: true }, () => {
       ]));
     deepStrictEqual(fn.mock.callCount(), 2);
   });
+  test('works with instanceof', { concurrency: true }, async () => {
+    const s = new CSVTransformer(r => r);
+    deepStrictEqual(s instanceof CSVTransformer, true);
+  });
 });
 
 suite('CSVWriter', { concurrency: true }, () => {
@@ -707,6 +717,13 @@ suite('CSVWriter', { concurrency: true }, () => {
     await stream.abort();
     await rejects(writer.write('b'));
     await new CSVReader(temp).pipeTo(csvStreamEqualWritable([['a']]));
+  });
+  test('works with instanceof', { concurrency: true }, async (t) => {
+    const temp = await createTempFile();
+    t.after(async () => await unlink(temp));
+    const s = new CSVWriter(temp);
+    deepStrictEqual(s instanceof CSVWriter, true);
+    await s.abort();
   });
 });
 
