@@ -1,7 +1,7 @@
 import { mkdir, open } from 'node:fs/promises';
 import { dirname, basename, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ReadableStream, WritableStream, TransformStream } from 'node:stream/web';
+import { ReadableStream, WritableStream, TransformStream, TextDecoderStream } from 'node:stream/web';
 /** @import { PathLike } from 'node:fs'; */
 /** @import { FileHandle } from 'node:fs/promises'; */
 
@@ -83,6 +83,26 @@ export function createFileStream(path) {
 }
 
 /**
+ * Creates a simple `Proxy` that tries property access on `primary` and falls back to `underlying` if the property
+ * does not exist in `primary`. Only the `get` trap is implemented.
+ *
+ * @template T, U
+ * @param {T} primary The primary target object of the proxy.
+ * @param {U} underlying The fallback object to proxy property accesses to if not found on `primary`.
+ * @returns {T&U} A `Proxy` that behaves like `primary`, with fallback to `underlying` for missing properties.
+ */
+function createProxy(primary, underlying) {
+  return new Proxy(primary, {
+    get(target, prop, receiver) {
+      if (prop in target) {
+        return Reflect.get(target, prop, receiver);
+      }
+      return Reflect.get(underlying, prop, receiver);
+    }
+  });
+}
+
+/**
  * Options to configure `CSVReader`.
  * @typedef {Object} CSVReaderOptions
  * @property {string} [encoding='utf-8'] The character encoding of the input CSV file. Can be any [Encoding API
@@ -93,9 +113,8 @@ export function createFileStream(path) {
  * A simple streaming parser for CSV files.
  * 
  * Each chunk is one row of the CSV file, in the form of a string that may be deserialized using `JSON.parse()`.
- * @extends ReadableStream<string>
  */
-export class CSVReader extends ReadableStream {
+export class CSVReader {
   /** @type {Array<string>} */
   #row = [];
   #field = '';
@@ -105,29 +124,33 @@ export class CSVReader extends ReadableStream {
   #justExitedEscapeMode = false;
 
   /**
-   * @param {PathLike} path A `string`, `Buffer`, or `URL` representing a path to a local CSV file.
-   * @param {CSVReaderOptions} options Object containing flags to configure the reader.
+   * @overload
+   * @param {PathLike} path A `string`, `Buffer`, or `URL` representing a path to a local CSV file or
+   * `null` to create a `TransformStream`.
+   * @param {CSVReaderOptions} [options] Object containing flags to configure the reader.
+   * @returns {CSVReader&ReadableStream<string>}
    */
-  constructor(path, options = {}) {
-    const { encoding = 'utf-8' } = options;
-    const readableStream = createFileStream(path)
-      .pipeThrough(new TextDecoderStream(encoding)) // Byte order mark (BOM) is removed, if present
-      .pipeThrough(new TransformStream({
-        transform: (chunk, controller) => this.#transform(chunk, controller),
-        flush: (controller) => this.#flush(controller)
-      }));
-    const reader = readableStream.getReader();
-    super({
-      async pull(controller) {
-        const { done, value } = await reader.read();
-        if (done) {
-          controller.close();
-        }
-        else {
-          controller.enqueue(value);
-        }
-      }
+  /**
+   * @overload
+   * @param {null} [path] A `string`, `Buffer`, or `URL` representing a path to a local CSV file or
+   * `null` to create a `TransformStream`.
+   * @returns {CSVReader&TransformStream<string,string>}
+   */
+  constructor(path = null, options = {}) {
+    /** @type {ReadableStream<string>|TransformStream<string,string>} */
+    let stream;
+    stream = new TransformStream({
+      transform: (chunk, controller) => this.#transform(chunk, controller),
+      flush: (controller) => this.#flush(controller)
     });
+    if (path !== null) {
+      const { encoding = 'utf-8' } = options;
+      stream = createFileStream(path)
+        .pipeThrough(new TextDecoderStream(encoding)) // Byte order mark (BOM) is removed, if present
+        .pipeThrough(stream);
+    }
+    // Proxy is required to simulate a dynamic superclass
+    return createProxy(this, stream);
   }
 
   /** @type {import('node:stream/web').TransformerTransformCallback<string,string>} */

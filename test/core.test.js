@@ -4,7 +4,7 @@ import { unlink } from 'node:fs/promises';
 import { normalize, basename, resolve } from 'node:path';
 import { setTimeout } from 'node:timers/promises';
 import { pathToFileURL } from 'node:url';
-import { ReadableStream } from 'node:stream/web';
+import { ReadableStream, DecompressionStream, TextDecoderStream } from 'node:stream/web';
 
 import { csvStreamEqualWritable, csvStreamNotEqualWritable, createCSVMockStream, createTempFile } from './utils.js';
 import { parsePathLike, createFileStream, CSVReader, CSVTransformer, CSVWriter } from '../src/core.js';
@@ -298,6 +298,19 @@ suite('CSVReader', { concurrency: true }, () => {
     const s = new CSVReader(path);
     deepStrictEqual(s instanceof CSVReader, true);
     await s.cancel();
+  });
+  test('can create TransformStream (simple.csv.gz)', { concurrency: true }, async () => {
+    const path = new URL('./data/simple.csv.gz', import.meta.url);
+    await createFileStream(path)
+      .pipeThrough(new DecompressionStream('gzip'))
+      .pipeThrough(new TextDecoderStream())
+      .pipeThrough(new CSVReader())
+      .pipeTo(csvStreamEqualWritable([
+        ['column1', 'column2', 'column3'],
+        ['abc', 'def', 'ghi'],
+        ['123', '456', '789'],
+        ['aaa', 'bbb', 'ccc']
+      ]));
   });
 });
 
