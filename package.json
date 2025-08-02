@@ -34,7 +34,8 @@
     "test:coverage": "npm run test -- --experimental-test-coverage",
     "bench": "node ./benchmark/core.bench.js",
     "prepack": "node ./npm/prepack.js",
-    "postpack": "node ./npm/postpack.js"
+    "postpack": "node ./npm/postpack.js",
+    "pack:dev": "npm run prepack -- --dev && npm pack"
   },
   "devDependencies": {
     "@types/node": "^24.0.13",
