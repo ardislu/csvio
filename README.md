@@ -18,7 +18,7 @@ npm i -D @types/node
 
 ## Example
 
-Assume you have a `./in.csv` file that looks like:
+Suppose you have a `./in.csv` file that looks like:
 
 Code    | Quantity | Price
 ------- | -------- | -----
@@ -168,7 +168,7 @@ In addition to the core API, optional utilities are provided to address common C
 `CSVDenormalizer` is a `TransformStream` that will convert an `Array<CSVNormalizerRow>` created by `CSVNormalizer` back into an `Array<string>`, ready for writing to a file.
 
 ```javascript
-import { CSVNormalizer, CSVDenormalizer } from './src/index.js';
+import { CSVNormalizer, CSVDenormalizer } from '@ardislu/csvio';
 
 const headers = [
   { name: 'numberCol', displayName: 'Number Column', type: 'number' },
