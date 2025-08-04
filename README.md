@@ -97,12 +97,12 @@ const readableStream = new CSVReader('./examples/data/ex1_1-in.csv');
 for await (const row of readableStream) {
   console.log(row);
 }
-// ["columnA","columnB"]
-// ["1","1"]
-// ["100","100"]
-// ["223423","455947"]
-// ["348553","692708"]
-// ["536368","676147"]
+// [ 'columnA', 'columnB' ]
+// [ '1', '1' ]
+// [ '100', '100' ]
+// [ '223423', '455947' ]
+// [ '348553', '692708' ]
+// [ '536368', '676147' ]
 ```
 
 ### `CSVTransformer`
@@ -119,19 +119,19 @@ function edit(row) {
 const transformStream = new CSVTransformer(edit);
 
 const rows = ReadableStream.from((function* () {
-  yield '["header"]';
-  yield '["1"]';
-  yield '["2"]';
-  yield '["3"]';
+  yield ['header'];
+  yield ['1'];
+  yield ['2'];
+  yield ['3'];
 })()).pipeThrough(transformStream);
 
 for await (const row of rows) {
   console.log(row);
 }
-// ["header"]
-// ["1: transformed!"]
-// ["2: transformed!"]
-// ["3: transformed!"]
+// [ 'header' ]
+// [ '1: transformed!' ]
+// [ '2: transformed!' ]
+// [ '3: transformed!' ]
 ```
 
 ### `CSVWriter`
@@ -144,10 +144,10 @@ import { CSVWriter } from '@ardislu/csvio';
 const writableStream = new CSVWriter('./example.csv');
 
 await ReadableStream.from((function* () {
-  yield '["header1","header2"]';
-  yield '["1","1"]';
-  yield '["2","2"]';
-  yield '["3","3"]';
+  yield ['header1', 'header2'];
+  yield ['1', '1'];
+  yield ['2', '2'];
+  yield ['3', '3'];
 })()).pipeTo(writableStream);
 // A new ./example.csv file is created with the CSV data
 ```
@@ -176,11 +176,11 @@ const headers = [
 ]
 
 const rows = ReadableStream.from((function* () {
-  yield '["numberCol","dateCol","",""]'; // Empty columns inserted
-  yield '["1E+18","45292","",""]'; // Number mangled to scientific notation; date mangled to number
-  yield '["","","",""]'; // Empty rows inserted
-  yield '["","","",""]';
-  yield '["","","",""]';
+  yield ['numberCol', 'dateCol', '', '']; // Empty columns inserted
+  yield ['1E+18', '45292', '', '']; // Number mangled to scientific notation; date mangled to number
+  yield ['', '', '', '']; // Empty rows inserted
+  yield ['', '', '', ''];
+  yield ['', '', '', ''];
 })())
   .pipeThrough(new CSVNormalizer(headers))
   .pipeThrough(new CSVDenormalizer());
@@ -188,8 +188,8 @@ const rows = ReadableStream.from((function* () {
 for await (const row of rows) {
   console.log(row);
 }
-// ["Number Column","Date Column"]
-// [1000000000000000000,"2024-01-01T00:00:00.000Z"]
+// [ 'Number Column', 'Date Column' ]
+// [ 1000000000000000000, '2024-01-01T00:00:00.000Z' ]
 ```
 
 ## Tests

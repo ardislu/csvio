@@ -324,28 +324,6 @@ suite('CSVTransformer', { concurrency: true }, () => {
       .pipeThrough(new CSVTransformer(r => r))
       .pipeTo(csvStreamEqualWritable(csv));
   });
-  test('passes through raw input', { concurrency: true }, async () => {
-    await ReadableStream.from((function* () {
-      yield '["headerA","headerB"]';
-      yield '["111","222"]';
-    })())
-      .pipeThrough(new CSVTransformer(r => r, { handleHeaders: true, rawInput: true }))
-      .pipeTo(csvStreamEqualWritable([
-        ['headerA', 'headerB'],
-        ['111', '222']
-      ]));
-  });
-  test('passes through raw output', { concurrency: true }, async () => {
-    await createCSVMockStream([
-      ['columnA', 'columnB'],
-      ['a', 'b']
-    ])
-      .pipeThrough(new CSVTransformer(() => '["abc", "def"]', { handleHeaders: true, rawOutput: true }))
-      .pipeTo(csvStreamEqualWritable([
-        ['abc', 'def'],
-        ['abc', 'def']
-      ]));
-  });
   test('handles ArrayLike outputs', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['columnA', 'columnB'],
@@ -682,7 +660,7 @@ suite('CSVWriter', { concurrency: true }, () => {
     const temp = await createTempFile();
     t.after(async () => await unlink(temp));
     await createCSVMockStream([['']])
-      .pipeThrough(new CSVTransformer(() => 'row 1,a\r\nrow 2,b\r\nrow 3,c', { handleHeaders: true, rawOutput: true }))
+      .pipeThrough(new CSVTransformer(() => 'row 1,a\r\nrow 2,b\r\nrow 3,c', { handleHeaders: true }))
       .pipeTo(new CSVWriter(temp));
     await new CSVReader(temp).pipeTo(
       csvStreamEqualWritable([
@@ -697,8 +675,8 @@ suite('CSVWriter', { concurrency: true }, () => {
     const writer = new CSVWriter(temp);
     await rejects(async () => {
       await ReadableStream.from((function* () {
-        yield '["header1","header2"]';
-        yield '["1","1"]';
+        yield ['header1', 'header2'];
+        yield ['1', '1'];
         throw new Error();
       })()).pipeTo(writer)
     });
@@ -803,7 +781,7 @@ suite('CSVWriter status', { concurrency: true }, () => {
     t.after(async () => await unlink(temp));
     const writer = new CSVWriter(temp);
     await createCSVMockStream([['']])
-      .pipeThrough(new CSVTransformer(() => 'row 1,a\r\nrow 2,b\r\nrow 3,c', { handleHeaders: true, rawOutput: true }))
+      .pipeThrough(new CSVTransformer(() => 'row 1,a\r\nrow 2,b\r\nrow 3,c', { handleHeaders: true }))
       .pipeTo(writer);
     deepStrictEqual(writer.status.rows, 1);
     await new CSVReader(temp)

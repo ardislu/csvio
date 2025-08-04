@@ -34,21 +34,20 @@ suite('large: 100000 row x 100 column CSV (~100 MB)', { concurrency: 1 }, async 
     const reader = new CSVReader(temp);
     let rowCount = 0;
     for await (const row of reader) {
-      const parsed = JSON.parse(row);
       if (rowCount === 0) {
-        deepStrictEqual(parsed[0], '1717370683'); // A1
-        deepStrictEqual(parsed[49], '1159187275'); // AX1
-        deepStrictEqual(parsed[99], '398856332'); // CV1
+        deepStrictEqual(row[0], '1717370683'); // A1
+        deepStrictEqual(row[49], '1159187275'); // AX1
+        deepStrictEqual(row[99], '398856332'); // CV1
       }
       else if (rowCount === 49_999) {
-        deepStrictEqual(parsed[0], '1950971124'); // A50000
-        deepStrictEqual(parsed[49], '1212575531'); // AX50000
-        deepStrictEqual(parsed[99], '135758415'); // CV50000
+        deepStrictEqual(row[0], '1950971124'); // A50000
+        deepStrictEqual(row[49], '1212575531'); // AX50000
+        deepStrictEqual(row[99], '135758415'); // CV50000
       }
       else if (rowCount === 99_999) {
-        deepStrictEqual(parsed[0], '737583361'); // A100000
-        deepStrictEqual(parsed[49], '793036957'); // AX100000
-        deepStrictEqual(parsed[99], '1923608001'); // CV100000
+        deepStrictEqual(row[0], '737583361'); // A100000
+        deepStrictEqual(row[49], '793036957'); // AX100000
+        deepStrictEqual(row[99], '1923608001'); // CV100000
       }
       rowCount++;
     }
@@ -66,21 +65,20 @@ suite('large: 100000 row x 100 column CSV (~100 MB)', { concurrency: 1 }, async 
       .pipeThrough(new CSVTransformer(r => r.map(f => Number(f) + 1), { handleHeaders: true }));
     let rowCount = 0;
     for await (const row of reader) {
-      const parsed = JSON.parse(row);
       if (rowCount === 0) {
-        deepStrictEqual(parsed[0], 1717370684);
-        deepStrictEqual(parsed[49], 1159187276);
-        deepStrictEqual(parsed[99], 398856333);
+        deepStrictEqual(row[0], 1717370684);
+        deepStrictEqual(row[49], 1159187276);
+        deepStrictEqual(row[99], 398856333);
       }
       else if (rowCount === 49_999) {
-        deepStrictEqual(parsed[0], 1950971125);
-        deepStrictEqual(parsed[49], 1212575532);
-        deepStrictEqual(parsed[99], 135758416);
+        deepStrictEqual(row[0], 1950971125);
+        deepStrictEqual(row[49], 1212575532);
+        deepStrictEqual(row[99], 135758416);
       }
       else if (rowCount === 99_999) {
-        deepStrictEqual(parsed[0], 737583362);
-        deepStrictEqual(parsed[49], 793036958);
-        deepStrictEqual(parsed[99], 1923608002);
+        deepStrictEqual(row[0], 737583362);
+        deepStrictEqual(row[49], 793036958);
+        deepStrictEqual(row[99], 1923608002);
       }
       rowCount++;
     }
@@ -116,21 +114,20 @@ suite('large: 100 row x 100000 column CSV (~100 MB)', { concurrency: 1 }, async 
     const reader = new CSVReader(temp);
     let rowCount = 0;
     for await (const row of reader) {
-      const parsed = JSON.parse(row);
       if (rowCount === 0) {
-        deepStrictEqual(parsed[0], '1717370683');
-        deepStrictEqual(parsed[49_999], '689610881');
-        deepStrictEqual(parsed[99_999], '183082010');
+        deepStrictEqual(row[0], '1717370683');
+        deepStrictEqual(row[49_999], '689610881');
+        deepStrictEqual(row[99_999], '183082010');
       }
       else if (rowCount === 49) {
-        deepStrictEqual(parsed[0], '1521260985');
-        deepStrictEqual(parsed[49_999], '1397216552');
-        deepStrictEqual(parsed[99_999], '817708515');
+        deepStrictEqual(row[0], '1521260985');
+        deepStrictEqual(row[49_999], '1397216552');
+        deepStrictEqual(row[99_999], '817708515');
       }
       else if (rowCount === 99) {
-        deepStrictEqual(parsed[0], '1749947568');
-        deepStrictEqual(parsed[49_999], '2119460449');
-        deepStrictEqual(parsed[99_999], '127114681');
+        deepStrictEqual(row[0], '1749947568');
+        deepStrictEqual(row[49_999], '2119460449');
+        deepStrictEqual(row[99_999], '127114681');
       }
       rowCount++;
     }
@@ -148,21 +145,20 @@ suite('large: 100 row x 100000 column CSV (~100 MB)', { concurrency: 1 }, async 
       .pipeThrough(new CSVTransformer(r => r.map(f => Number(f) + 1), { handleHeaders: true }));
     let rowCount = 0;
     for await (const row of reader) {
-      const parsed = JSON.parse(row);
       if (rowCount === 0) {
-        deepStrictEqual(parsed[0], 1717370684);
-        deepStrictEqual(parsed[49_999], 689610882);
-        deepStrictEqual(parsed[99_999], 183082011);
+        deepStrictEqual(row[0], 1717370684);
+        deepStrictEqual(row[49_999], 689610882);
+        deepStrictEqual(row[99_999], 183082011);
       }
       else if (rowCount === 49) {
-        deepStrictEqual(parsed[0], 1521260986);
-        deepStrictEqual(parsed[49_999], 1397216553);
-        deepStrictEqual(parsed[99_999], 817708516);
+        deepStrictEqual(row[0], 1521260986);
+        deepStrictEqual(row[49_999], 1397216553);
+        deepStrictEqual(row[99_999], 817708516);
       }
       else if (rowCount === 99) {
-        deepStrictEqual(parsed[0], 1749947569);
-        deepStrictEqual(parsed[49_999], 2119460450);
-        deepStrictEqual(parsed[99_999], 127114682);
+        deepStrictEqual(row[0], 1749947569);
+        deepStrictEqual(row[49_999], 2119460450);
+        deepStrictEqual(row[99_999], 127114682);
       }
       rowCount++;
     }

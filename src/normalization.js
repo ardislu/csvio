@@ -143,14 +143,12 @@ export class CSVNormalizer extends TransformStream {
     }
   }
 
-  /** @type {import('node:stream/web').TransformerTransformCallback<string,string>} */
+  /** @type {import('node:stream/web').TransformerTransformCallback<Array<string>,Array<CSVNormalizerRow>>} */
   #transform(chunk, controller) {
-    const row = JSON.parse(chunk);
-
     // Assume first row is headers and use it to prepare the columns object
     // Note: the headers row is NOT forwarded downstream
     if (this.#firstChunk) {
-      const normalizedRow = this.#useLiteralNames ? row : row.map(f => toCamelCase(f));
+      const normalizedRow = this.#useLiteralNames ? chunk : chunk.map(f => toCamelCase(f));
       let i = 0;
       for (const header of normalizedRow) {
         const col = this.#columns.find(c => c.name === header);
@@ -167,7 +165,7 @@ export class CSVNormalizer extends TransformStream {
     /** @type {Array<CSVNormalizerRow>} */
     const out = [];
     for (const { name, type, displayName, defaultValue, index } of this.#columns) {
-      let value = row[index] ?? '';
+      let value = chunk[index] ?? '';
       const emptyField = value === '' ? true : false;
       switch (type) {
         case 'string': break;
@@ -183,7 +181,7 @@ export class CSVNormalizer extends TransformStream {
 
     if (!this.#passthroughEmptyRows && out.every(f => f.emptyField)) { return; }
 
-    controller.enqueue(JSON.stringify(out));
+    controller.enqueue(out);
   }
 
   /**
@@ -308,14 +306,13 @@ export class CSVDenormalizer extends TransformStream {
   constructor() {
     let firstRow = true;
     super({
-      /** @type {import('node:stream/web').TransformerTransformCallback<string,string>} */
+      /** @type {import('node:stream/web').TransformerTransformCallback<Array<CSVNormalizerRow>,Array<string>>} */
       transform(chunk, controller) {
-        const row = JSON.parse(chunk);
         if (firstRow) {
           firstRow = false;
-          controller.enqueue(JSON.stringify(row.map(f => f?.displayName ?? f.name)));
+          controller.enqueue(chunk.map(f => f?.displayName ?? f.name));
         }
-        controller.enqueue(JSON.stringify(row.map(f => f.value)));
+        controller.enqueue(chunk.map(f => f.value instanceof Date ? f.value.toISOString() : f.value));
       }
     });
   }

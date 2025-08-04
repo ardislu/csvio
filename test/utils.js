@@ -19,10 +19,9 @@ export function csvStreamEqualWritable(csv) {
   let i = 0;
   return new WritableStream({
     write(chunk) {
-      const row = JSON.parse(chunk);
-      deepStrictEqual(row.length, csv[i].length);
+      deepStrictEqual(chunk.length, csv[i].length);
       for (let j = 0; j < csv[i].length; j++) {
-        deepStrictEqual(row[j], csv[i][j]);
+        deepStrictEqual(chunk[j], csv[i][j]);
       }
       i++;
     }
@@ -40,9 +39,8 @@ export function csvStreamNotEqualWritable(csv) {
   let i = 0;
   return new WritableStream({
     write(chunk) {
-      const row = JSON.parse(chunk);
       for (let j = 0; j < csv[i].length; j++) {
-        notStrictEqual(row[j], csv[i][j]);
+        notStrictEqual(chunk[j], csv[i][j]);
       }
       i++;
     }
@@ -149,7 +147,7 @@ export function createCSVMockStream(data) {
         controller.close();
       }
       else {
-        controller.enqueue(JSON.stringify(value));
+        controller.enqueue(value.slice());
       }
     }
   });
@@ -222,7 +220,7 @@ export function createRandomCSV(rows, columns, seed) {
       const data = new Uint32Array(columns);
       getPseudoRandomValues(data, seed);
       seed = data[columns - 1];
-      yield JSON.stringify(Array.from(data));
+      yield Array.from(data);
     }
   })();
   return ReadableStream.from(chunks);

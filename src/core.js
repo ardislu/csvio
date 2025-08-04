@@ -112,7 +112,7 @@ function createProxy(primary, underlying) {
 /**
  * A simple streaming parser for CSV files.
  * 
- * Each chunk is one row of the CSV file, in the form of a string that may be deserialized using `JSON.parse()`.
+ * Each chunk is one row of the CSV file as an `Array<string>`.
  */
 export class CSVReader {
   /** @type {Array<string>} */
@@ -128,16 +128,16 @@ export class CSVReader {
    * @param {PathLike} path A `string`, `Buffer`, or `URL` representing a path to a local CSV file or
    * `null` to create a `TransformStream`.
    * @param {CSVReaderOptions} [options] Object containing flags to configure the reader.
-   * @returns {CSVReader&ReadableStream<string>}
+   * @returns {CSVReader&ReadableStream<Array<string>>}
    */
   /**
    * @overload
    * @param {null} [path] A `string`, `Buffer`, or `URL` representing a path to a local CSV file or
    * `null` to create a `TransformStream`.
-   * @returns {CSVReader&TransformStream<string,string>}
+   * @returns {CSVReader&TransformStream<string,Array<string>>}
    */
   constructor(path = null, options = {}) {
-    /** @type {ReadableStream<string>|TransformStream<string,string>} */
+    /** @type {ReadableStream<Array<string>>|TransformStream<string,Array<string>>} */
     let stream;
     stream = new TransformStream({
       transform: (chunk, controller) => this.#transform(chunk, controller),
@@ -153,7 +153,7 @@ export class CSVReader {
     return createProxy(this, stream);
   }
 
-  /** @type {import('node:stream/web').TransformerTransformCallback<string,string>} */
+  /** @type {import('node:stream/web').TransformerTransformCallback<string,Array<string>>} */
   #transform(chunk, controller) {
     for (const char of chunk) {
       /* Escape mode logic */
@@ -189,7 +189,7 @@ export class CSVReader {
         else if (char === '\n') { // Terminate the field and row and do not add char to field
           this.#row.push(this.#field);
           this.#field = '';
-          controller.enqueue(JSON.stringify(this.#row));
+          controller.enqueue(this.#row.slice());
           this.#row.length = 0;
         }
         else { // No special cases match, add the literal char
@@ -201,14 +201,14 @@ export class CSVReader {
     }
   }
 
-  /** @type {import('node:stream/web').TransformerFlushCallback<string>} */
+  /** @type {import('node:stream/web').TransformerFlushCallback<Array<string>>} */
   #flush(controller) {
     if (this.#field !== '' || this.#row.length !== 0) { // CSV terminated without a trailing CRLF, leaving a row in the queue
       this.#row.push(this.#field); // Last field is always un-pushed if CSV terminated with nothing
-      controller.enqueue(JSON.stringify(this.#row));
+      controller.enqueue(this.#row.slice());
     }
     else if (this.#lastChar === null) { // CSV is blank
-      controller.enqueue(JSON.stringify(['']));
+      controller.enqueue(['']);
     }
   }
 }
@@ -222,13 +222,6 @@ export class CSVReader {
  * A function to process a row of CSV data from `CSVReader`.
  * @callback TransformationFunction
  * @param {Array<any>} row A row of input CSV data before transformation.
- * @returns {TransformationOutput|Promise<TransformationOutput>}
- */
-
-/**
- * A function to process a row or rows of raw CSV data from `CSVReader`.
- * @callback TransformationFunctionRaw
- * @param {string} row A row or rows of input CSV data represented as a raw `string`.
  * @returns {TransformationOutput|Promise<TransformationOutput>}
  */
 
@@ -250,15 +243,6 @@ export class CSVReader {
 
 /**
  * A function to handle errors thrown by a transformation function.
- * @callback TransformationErrorFunctionRaw
- * @param {string} row A row or rows of raw input CSV data passed to the transformation function which threw the error.
- * @param {Error} error The error thrown by the transformation function.
- * @param {TransformationFunctionRaw} fn The transformation function itself. This argument can be used to retry a transformation.
- * @returns {TransformationOutput|Promise<TransformationOutput>}
- */
-
-/**
- * A function to handle errors thrown by a transformation function.
  * @callback TransformationErrorFunctionBatch
  * @param {Array<Array<any>>} rows The rows of input CSV data passed to the transformation function which threw the error.
  * @param {Error} error The error thrown by the transformation function.
@@ -275,37 +259,9 @@ export class CSVReader {
  * to the `TransformationFunction`. The default value is `false`.
  * 
  * NOTE: If the CSV has no header row, set `handleHeaders` to `true` and process the first row normally in `fn()`.
- * @property {false} [rawInput] Set to `true` to send the raw CSV row to `fn()` as a `string`. Otherwise, the CSV row will be deserialized
- * using `JSON.parse()` before being sent to `fn()`. The default value is `false`.
- * @property {boolean} [rawOutput=false] Set to `true` to send the raw return value of `fn()` to the next stream. Otherwise, the return value of
- * `fn()` will be serialized using `JSON.stringify()` before being sent to the next stream. The default value is `false`.
  * @property {null|TransformationErrorFunction} [onError=null] Set to a function to catch errors thrown by the transformation function. The
  * input data, the error that was thrown, and the transformation function itself will be passed to the `onError` function. The default value is
  * `null` (errors will not be caught).
- * @property {number} [maxConcurrent=1] The maximum concurrent executions of the transformation function (greedy). The transformation function
- * will be automatically turned into a promise if it isn't already async. Execution is blocked until all promises in a concurrent group settle
- * (i.e., if one transformation in a group is hanging, further rows will NOT be processed even if all other transformations in the group are
- * resolved). The default value is `1`.
- */
-
-/**
- * Options to configure `CSVTransformer`.
- * @typedef {Object} CSVTransformerOptionsRaw
- * @property {boolean|Array<any>|TransformationFunctionRaw} [handleHeaders=false] A `boolean`, `Array<any>`, or `TransformationFunctionRaw` to
- * process the header row (first row) of the CSV. If `false`, the header row will pass through the stream. If `true`, the header row will be passed
- * to `fn()`. If `Array<any>`, the header row will be replaced with the `Array<any>`. If `TransformationFunctionRaw`, the header row will be passed
- * to the `TransformationFunctionRaw` as a `string`. The default value is `false`.
- * 
- * NOTE: If the CSV has no header row, set `handleHeaders` to `true` and process the first row normally in `fn()`.
- * @property {true} rawInput Set to `true` to send the raw CSV row to `fn()` as a `string`. Otherwise, the CSV row will be deserialized
- * using `JSON.parse()` before being sent to `fn()`. The default value is `false`.
- * @property {boolean} [rawOutput=false] Set to `true` to send the raw return value of `fn()` to the next stream. Otherwise, the return value of
- * `fn()` will be serialized using `JSON.stringify()` before being sent to the next stream. The default value is `false`.
- * @property {null|TransformationErrorFunctionRaw} [onError=null] Set to a function to catch errors thrown by the transformation function. The
- * input data, the error that was thrown, and the transformation function itself will be passed to the `onError` function. The default value is
- * `null` (errors will not be caught).
- * @property {number} [maxBatchSize=1] Set to the maximum number of rows that will be passed to the transformation function per function call
- * (greedy).
  * @property {number} [maxConcurrent=1] The maximum concurrent executions of the transformation function (greedy). The transformation function
  * will be automatically turned into a promise if it isn't already async. Execution is blocked until all promises in a concurrent group settle
  * (i.e., if one transformation in a group is hanging, further rows will NOT be processed even if all other transformations in the group are
@@ -321,10 +277,6 @@ export class CSVReader {
  * to the `TransformationFunction`. The default value is `false`.
  * 
  * NOTE: If the CSV has no header row, set `handleHeaders` to `true` and process the first row normally in `fn()`.
- * @property {false} [rawInput] Set to `true` to send the raw CSV row to `fn()` as a `string`. Otherwise, the CSV row will be deserialized
- * using `JSON.parse()` before being sent to `fn()`. The default value is `false`.
- * @property {boolean} [rawOutput=false] Set to `true` to send the raw return value of `fn()` to the next stream. Otherwise, the return value of
- * `fn()` will be serialized using `JSON.stringify()` before being sent to the next stream. The default value is `false`.
  * @property {null|TransformationErrorFunctionBatch} [onError=null] Set to a function
  * to catch errors thrown by the transformation function. The input data, the error that was thrown, and the transformation function itself will
  * be passed to the `onError` function. The default value is `null` (errors will not be caught).
@@ -351,8 +303,6 @@ export class CSVTransformer extends TransformStream {
   #firstChunk = true;
 
   #handleHeaders;
-  #rawInput;
-  #rawOutput;
   #onError;
   #maxBatchSize;
   #maxConcurrent;
@@ -368,11 +318,6 @@ export class CSVTransformer extends TransformStream {
    */
   /**
    * @overload
-   * @param {TransformationFunctionRaw} fn A function to process a row or rows of CSV data represented as a raw `string`.
-   * @param {CSVTransformerOptionsRaw} options Object containing flags to configure the stream logic.
-   */
-  /**
-   * @overload
    * @param {TransformationFunctionBatch} fn A function to process multiple rows of CSV data from `CSVReader`.
    * @param {CSVTransformerOptionsBatch} options Object containing flags to configure the stream logic.
    */
@@ -383,8 +328,6 @@ export class CSVTransformer extends TransformStream {
     });
 
     this.#handleHeaders = options.handleHeaders ?? false;
-    this.#rawInput = options.rawInput ?? false;
-    this.#rawOutput = options.rawOutput ?? false;
     this.#onError = options.onError ?? null;
     this.#maxBatchSize = options.maxBatchSize ?? null;
     this.#maxConcurrent = options.maxConcurrent ?? 1;
@@ -414,19 +357,19 @@ export class CSVTransformer extends TransformStream {
     if (row === null || row === undefined) { // Input row is consumed without emitting any output row
       return;
     }
-    else if (this.#rawOutput || typeof row === 'string') {
+    else if (typeof row === 'string') {
       controller.enqueue(row);
     }
     else if (Array.isArray(row)) {
       if (Array.isArray(row[0])) { // Multiple rows returned, enqueue each row separately
-        row.forEach(r => controller.enqueue(JSON.stringify(r)));
+        row.forEach(r => controller.enqueue(r.slice()));
       }
       else { // One row returned
-        controller.enqueue(JSON.stringify(row));
+        controller.enqueue(row.slice());
       }
     }
     else { // Assume ArrayLike output
-      controller.enqueue(JSON.stringify(Array.from(row)));
+      controller.enqueue(Array.from(row));
     }
   }
 
@@ -448,33 +391,31 @@ export class CSVTransformer extends TransformStream {
     }
   }
 
-  /** @type {import('node:stream/web').TransformerTransformCallback<string,string>} */
+  /** @type {import('node:stream/web').TransformerTransformCallback<Array<string>,Array<string>>} */
   async #transform(chunk, controller) {
-    const row = this.#rawInput ? chunk : JSON.parse(chunk);
-
     // If row is an array of objects, then the transformation has "normalized" the data and there is no header row.
     // Instead, the header data has been incorporated into the object keys. The transformation is responsible
     // for "denormalizing" the object back into an (extra) header row in the output. Ignore `handleHeaders`.
-    if (typeof row[0] === 'object') {
+    if (typeof chunk[0] === 'object') {
       this.#firstChunk = false;
     }
 
     if (this.#firstChunk) {
       this.#firstChunk = false;
-      const out = await this.#wrappedHeaderFn(row);
+      const out = await this.#wrappedHeaderFn(chunk);
       this.#enqueueRow(out, controller);
       return;
     }
 
     if (this.#maxBatchSize !== null) {
-      this.#batch.push(row);
+      this.#batch.push(chunk);
       if (this.#batch.length === this.#maxBatchSize) {
         this.#concurrent.push(this.#wrappedFn(this.#batch));
         this.#batch.length = 0;
       }
     }
     else {
-      this.#concurrent.push(this.#wrappedFn(row));
+      this.#concurrent.push(this.#wrappedFn(chunk));
     }
 
     if (this.#concurrent.length === this.#maxConcurrent) {
@@ -482,7 +423,7 @@ export class CSVTransformer extends TransformStream {
     }
   }
 
-  /** @type {import('node:stream/web').TransformerFlushCallback<string>} */
+  /** @type {import('node:stream/web').TransformerFlushCallback<Array<string>>} */
   async #flush(controller) {
     if (this.#batch.length > 0) {
       this.#concurrent.push(this.#wrappedFn(this.#batch));
@@ -537,12 +478,11 @@ export class CSVWriter extends WritableStream {
       },
       async write(chunk) {
         let data;
-        try {
-          const parsed = JSON.parse(chunk);
-          data = CSVWriter.arrayToCSVString(parsed);
-          status.rows += parsed.length;
+        if (Array.isArray(chunk)) {
+          data = CSVWriter.arrayToCSVString(chunk);
+          status.rows += chunk.length;
         }
-        catch {
+        else {
           data = chunk;
           status.rows++;
         }
