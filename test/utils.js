@@ -32,25 +32,6 @@ export function csvStreamEqualWritable(csv) {
 }
 
 /**
- * Negative version of `csvStreamEqualWritable`. Tests that the piped stream is NOT equal to the given CSV.
- * 
- * @param {Array<Array<string>>} csv A 2-D array representing the CSV file, where each inner array
- * is a row of the CSV.
- * @returns {WritableStream} A `WritableStream` sink of a CSV stream that will be compared against the given array.
- */
-export function csvStreamNotEqualWritable(csv) {
-  let i = 0;
-  return new WritableStream({
-    write(chunk) {
-      for (let j = 0; j < csv[i].length; j++) {
-        notStrictEqual(chunk[j], csv[i][j]);
-      }
-      i++;
-    }
-  });
-}
-
-/**
  * @typedef AssertConsoleCounts Object containing the total number of times `console.log`, `console.info`, `console.warn`,
  * and `console.error` are expected to be called.
  * @property {number} [log=0] The number of times `console.log` is expected to be called.

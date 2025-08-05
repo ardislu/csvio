@@ -6,7 +6,7 @@ import { setTimeout } from 'node:timers/promises';
 import { pathToFileURL } from 'node:url';
 import { ReadableStream, DecompressionStream, TextDecoderStream } from 'node:stream/web';
 
-import { csvStreamEqualWritable, csvStreamNotEqualWritable, createCSVMockStream, createTempFile } from './utils.js';
+import { csvStreamEqualWritable, createCSVMockStream, createTempFile } from './utils.js';
 import { parsePathLike, createFileStream, CSVReader, CSVTransformer, CSVWriter } from '../src/core.js';
 
 suite('CSVWriter.arrayToCSVString', { concurrency: true }, () => {
@@ -271,19 +271,13 @@ suite('CSVReader', { concurrency: true }, () => {
       input: './data/blank.csv',
       output: [
         ['']
-      ],
-      negativeOutput: [
-        ['a']
       ]
     }
   ];
-  for (const { name, input, options = {}, output, negativeOutput } of vectors) {
+  for (const { name, input, options = {}, output } of vectors) {
     test(name, { concurrency: true }, async () => {
       const path = new URL(input, import.meta.url); // Makes the path relative to this file, not the command's execution directory
       await new CSVReader(path, options).pipeTo(csvStreamEqualWritable(output));
-      if (negativeOutput !== undefined) {
-        await new CSVReader(path, options).pipeTo(csvStreamNotEqualWritable(negativeOutput));
-      }
     });
   }
   test('can cancel', { concurrency: true }, async () => {
