@@ -86,20 +86,21 @@ export function createFileStream(path) {
  * Creates a simple `Proxy` that tries property access on `primary` and falls back to `underlying` if the property
  * does not exist in `primary`. Only the `get` trap is implemented.
  *
- * @template T, U
+ * @template {Object} T
+ * @template {Object} U
  * @param {T} primary The primary target object of the proxy.
  * @param {U} underlying The fallback object to proxy property accesses to if not found on `primary`.
  * @returns {T&U} A `Proxy` that behaves like `primary`, with fallback to `underlying` for missing properties.
  */
 function createProxy(primary, underlying) {
-  return new Proxy(primary, {
+  return /** @type {T&U} */(new Proxy(primary, {
     get(target, prop, receiver) {
       if (prop in target) {
         return Reflect.get(target, prop, receiver);
       }
       return Reflect.get(underlying, prop, receiver);
     }
-  });
+  }));
 }
 
 /**
