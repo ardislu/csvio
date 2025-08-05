@@ -338,15 +338,15 @@ suite('CSVTransformer', { concurrency: true }, () => {
   test('consumes input row without output row when null is returned', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['columnA', 'columnB'],
-      ['should be deleted', 'should be deleted'],
+      ['delete'],
       ['a', 'b'],
-      ['should be deleted', 'should be deleted'],
+      ['delete'],
       ['a', 'b'],
-      ['should be deleted', 'should be deleted'],
+      ['delete'],
       ['a', 'b'],
-      ['should be deleted', 'should be deleted']
+      ['delete']
     ])
-      .pipeThrough(new CSVTransformer(r => r.length % 2 ? r : null))
+      .pipeThrough(new CSVTransformer(r => r[0] === 'delete' ? null : r))
       .pipeTo(csvStreamEqualWritable([
         ['columnA', 'columnB'],
         ['a', 'b'],

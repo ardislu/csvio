@@ -24,6 +24,9 @@ export function csvStreamEqualWritable(csv) {
         deepStrictEqual(chunk[j], csv[i][j]);
       }
       i++;
+    },
+    close() {
+      deepStrictEqual(i, csv.length);
     }
   });
 }
