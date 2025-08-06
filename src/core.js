@@ -68,7 +68,7 @@ export function createFileStream(path) {
       // impossible to respond to the byobRequest and set view to null before this moment).
       const view = /** @type {ArrayBufferView<ArrayBufferLike>} */(byobRequest.view);
 
-      const { bytesRead } = await handle.read(view, view.byteOffset, view.byteLength);
+      const { bytesRead } = await handle.read(view, 0, view.byteLength);
       if (bytesRead === 0) {
         await handle.close();
         controller.close();

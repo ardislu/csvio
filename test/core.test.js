@@ -126,6 +126,16 @@ suite('createFileStream', { concurrency: true }, () => {
     deepStrictEqual(c?.[0], 99);
     deepStrictEqual(c2?.[0], 111);
   });
+  test('can read bytes into buffer', { concurrency: true }, async () => {
+    const path = new URL('./data/simple.csv', import.meta.url);
+    const s = createFileStream(path);
+    const r = s.getReader({ mode: 'byob' });
+    const b = new ArrayBuffer(3);
+    const v = new Uint8Array(b, 2, 1);
+    const res = await r.read(v);
+    deepStrictEqual(res.value?.[0], 99);
+    await r.cancel();
+  });
 });
 
 suite('CSVReader', { concurrency: true }, () => {
