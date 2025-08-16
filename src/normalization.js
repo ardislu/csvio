@@ -93,10 +93,10 @@ export function expandScientificNotation(str, truncate = false) {
  * The output of `CSVNormalizer`.
  * @typedef {Object} CSVNormalizerRow
  * @property {string} name The column name after normalization to camelCase.
- * @property {string} displayName The desired column name in the output CSV.
+ * @property {string} [displayName] The desired column name in the output CSV.
  * @property {string|number} value The value of the field after attempted data casting. If the original field was empty, this value
  * is set to the provided `defaultValue` or `''` (empty string) if no `defaultValue` was provided.
- * @property {boolean} emptyField Boolean to indicate whether the original field was empty.
+ * @property {boolean} [emptyField] Boolean to indicate whether the original field was empty.
  */
 
 /**
@@ -143,7 +143,7 @@ export class CSVNormalizer extends TransformStream {
     }
   }
 
-  /** @type {import('node:stream/web').TransformerTransformCallback<Array<string>,Array<CSVNormalizerRow>>} */
+  /** @type {import('node:stream/web').TransformerTransformCallback<Array<string>,Array<Required<CSVNormalizerRow>>>} */
   #transform(chunk, controller) {
     // Assume first row is headers and use it to prepare the columns object
     // Note: the headers row is NOT forwarded downstream
@@ -162,7 +162,7 @@ export class CSVNormalizer extends TransformStream {
       return;
     }
 
-    /** @type {Array<CSVNormalizerRow>} */
+    /** @type {Array<Required<CSVNormalizerRow>>} */
     const out = [];
     for (const { name, type, displayName, defaultValue, index } of this.#columns) {
       let value = chunk[index] ?? '';
