@@ -4,6 +4,8 @@ import { mkdtemp, open } from 'node:fs/promises';
 import { normalize } from 'node:path';
 import { ReadableStream } from 'node:stream/web';
 /** @import { TestContext } from 'node:test'; */
+/** @import { PathLike } from 'node:fs'; */
+/** @import { FileHandle } from 'node:fs/promises'; */
 
 import { utils } from '../src/errorStrategies.js';
 
@@ -208,4 +210,31 @@ export function createRandomCSV(rows, columns, seed) {
     }
   })();
   return ReadableStream.from(chunks);
+}
+
+/**
+ * Creates a writable file stream for a local file.
+ * 
+ * @see {@link https://streams.spec.whatwg.org/#example-ws-backpressure}
+ * @param {PathLike} path A `string`, `Buffer`, or `URL` representing a path to a local file.
+ * @returns {WritableStream<Uint8Array<ArrayBuffer>>}
+ */
+export function createWritableFileStream(path) {
+  /** @type {FileHandle} */
+  let handle;
+
+  return new WritableStream({
+    async start() {
+      handle = await open(path, 'w');
+    },
+    async write(chunk) {
+      await handle.write(chunk, 0, chunk.length);
+    },
+    async close() {
+      await handle.close();
+    },
+    async abort() {
+      await handle.close();
+    }
+  });
 }

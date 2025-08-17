@@ -1,12 +1,12 @@
 import { suite, test } from 'node:test';
 import { ok, deepStrictEqual, throws, rejects } from 'node:assert/strict';
-import { unlink } from 'node:fs/promises';
+import { unlink, readFile } from 'node:fs/promises';
 import { normalize, basename, resolve } from 'node:path';
 import { setTimeout } from 'node:timers/promises';
 import { pathToFileURL } from 'node:url';
-import { ReadableStream, DecompressionStream, TextDecoderStream } from 'node:stream/web';
+import { ReadableStream, DecompressionStream, CompressionStream, TextDecoderStream } from 'node:stream/web';
 
-import { csvStreamEqualWritable, createCSVMockStream, createTempFile } from './utils.js';
+import { csvStreamEqualWritable, createCSVMockStream, createTempFile, createWritableFileStream } from './utils.js';
 import { parsePathLike, createFileStream, CSVReader, CSVTransformer, CSVWriter } from '../src/core.js';
 
 suite('CSVWriter.arrayToCSVString', { concurrency: true }, () => {
@@ -720,6 +720,32 @@ suite('CSVWriter', { concurrency: true }, () => {
     deepStrictEqual(s instanceof CSVWriter, true);
     await s.abort();
   });
+  test('can create TransformStream (raw strings)', { concurrency: true }, async (t) => {
+    const input = new URL('./data/simple.csv', import.meta.url);
+    const stream = new CSVReader(input).pipeThrough(new CSVWriter());
+    const expected = [
+      'column1,column2,column3\r\n',
+      'abc,def,ghi\r\n',
+      '123,456,789\r\n',
+      'aaa,bbb,ccc\r\n'
+    ];
+    for await (const row of stream) {
+      deepStrictEqual(row, expected.shift());
+    }
+  });
+  test('can create TransformStream (simple.csv.gz)', { concurrency: true }, async (t) => {
+    const temp = await createTempFile();
+    t.after(async () => await unlink(temp));
+    const input = new URL('./data/simple.csv', import.meta.url);
+    const output = new URL('./data/simple.csv.gz', import.meta.url);
+    await new CSVReader(input)
+      .pipeThrough(new CSVWriter())
+      .pipeThrough(new CompressionStream('gzip'))
+      .pipeTo(createWritableFileStream(temp));
+    const expected = await readFile(output);
+    const actual = await readFile(temp);
+    ok(actual.equals(expected));
+  });
 });
 
 suite('CSVWriter status', { concurrency: true }, () => {
@@ -729,6 +755,12 @@ suite('CSVWriter status', { concurrency: true }, () => {
     const writer = new CSVWriter(temp);
     await createCSVMockStream([['']]).pipeTo(writer);
     deepStrictEqual(writer.status.name, basename(temp));
+  });
+  test('records file name of "null" if CSVWriter is a TransformStream', { concurrency: true }, async (t) => {
+    const writer = new CSVWriter();
+    const stream = createCSVMockStream([['']]).pipeThrough(writer);
+    deepStrictEqual(writer.status.name, null);
+    for await (const _ of stream) { }
   });
   test('records elapsed time', { concurrency: true }, async (t) => {
     const temp = await createTempFile();

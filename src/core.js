@@ -437,7 +437,8 @@ export class CSVTransformer extends TransformStream {
 
 /**
  * @typedef CSVWriterStatus The current status of the CSVWriter.
- * @property {string} name The name of the output CSV file that this writer is writing to.
+ * @property {string|null} name The name of the output CSV file that this writer is writing to, or `null` if the writer is
+ * a `TransformStream`.
  * @property {number} elapsed The number of milliseconds that have elapsed between this writer's creation and the output CSV file
  * handle closing, or until now if the writer is still writing. Measured using `performance.now()`.
  * @property {number} rows The estimated number of CSV rows that have been written. If the data passed to the writer is
@@ -445,73 +446,107 @@ export class CSVTransformer extends TransformStream {
  * @property {boolean} done If `true`, the writer is finished writing to the output CSV file and the file handle is closed.
  */
 
+/** @type {WeakMap<CSVWriter, CSVWriterStatus>} Simulated private field for CSVWriter, required to simulate a dynamic superclass. */
+const _status = new WeakMap();
+
 /**
  * Write a streamed CSV file to disk.
  * 
  * A simple wrapper around Node.js's [`fs.writeFile`](https://nodejs.org/api/fs.html#fspromiseswritefilefile-data-options) to write
  * streamed data to a file. If the input data is JSON, the data is converted to a string representing a RFC 4180 CSV record. If the
  * data is not JSON (e.g., if it is already converted to a CSV string), the data is written to the CSV file directly.
- * @extends WritableStream
  */
-export class CSVWriter extends WritableStream {
-  #status;
-
+export class CSVWriter {
   /**
+   * @overload
    * @param {PathLike} path A `string`, `Buffer`, or `URL` representing a path to a local CSV file destination. If the file already
    * exists, its **data will be overwritten**.
+   * @returns {CSVWriter&WritableStream<any>}
    */
-  constructor(path) {
-    const fullPath = parsePathLike(path);
-    const dir = dirname(fullPath);
+  /**
+   * @overload
+   * @param {null} [path] A `string`, `Buffer`, or `URL` representing a path to a local CSV file destination. If the file already
+   * exists, its **data will be overwritten**.
+   * @returns {CSVWriter&TransformStream<Array<string>,string>}
+   */
+  constructor(path = null) {
     const status = {
-      name: basename(fullPath),
       start: performance.now(),
       elapsed: 0,
       rows: 0,
       done: false
-    };
-    /** @type {FileHandle} */
-    let handle;
-    super({
-      async start() {
-        await mkdir(dir, { recursive: true });
-        handle = await open(fullPath, 'w');
-      },
-      async write(chunk) {
-        let data;
-        if (Array.isArray(chunk)) {
-          data = CSVWriter.arrayToCSVString(chunk);
-          status.rows += chunk.length;
-        }
-        else {
-          data = chunk;
-          status.rows++;
-        }
-        await handle.write(data);
-      },
-      async close() {
-        await handle.close();
-        status.elapsed = performance.now() - status.start;
-        status.done = true;
-      },
-      async abort() {
-        await this.close();
-      }
-    }, new CountQueuingStrategy({ highWaterMark: 4 })); // "4" picked based on manual benchmarks
+    }
 
-    this.#status = status;
+    /** @type {WritableStream<any>|TransformStream<Array<string>,string>} */
+    let stream;
+    if (path === null) {
+      status.name = null;
+      stream = new TransformStream({
+        transform(chunk, controller) {
+          let data;
+          if (Array.isArray(chunk)) {
+            data = CSVWriter.arrayToCSVString(chunk);
+            status.rows += chunk.length;
+          }
+          else {
+            data = chunk;
+            status.rows++;
+          }
+          controller.enqueue(data);
+        }
+      });
+    }
+    else {
+      const fullPath = parsePathLike(path);
+      const dir = dirname(fullPath);
+      status.name = basename(fullPath);
+      /** @type {FileHandle} */
+      let handle;
+      stream = new WritableStream({
+        async start() {
+          await mkdir(dir, { recursive: true });
+          handle = await open(fullPath, 'w');
+        },
+        async write(chunk) {
+          let data;
+          if (Array.isArray(chunk)) {
+            data = CSVWriter.arrayToCSVString(chunk);
+            status.rows += chunk.length;
+          }
+          else {
+            data = chunk;
+            status.rows++;
+          }
+          await handle.write(data);
+        },
+        async close() {
+          await handle.close();
+          status.elapsed = performance.now() - status.start;
+          status.done = true;
+        },
+        async abort() {
+          await this.close();
+        }
+      }, new CountQueuingStrategy({ highWaterMark: 4 })); // "4" picked based on manual benchmarks
+    }
+
+    // Proxy is required to simulate a dynamic superclass
+    const proxy = createProxy(this, stream);
+    _status.set(proxy, status);
+    return proxy;
   }
 
   /** @type {CSVWriterStatus} */
   get status() {
-    if (!this.#status.done) {
-      this.#status.elapsed = performance.now() - this.#status.start;
+    const status = _status.get(this);
+    if (!status.done) {
+      status.elapsed = performance.now() - status.start;
     }
     return {
-      name: this.#status.name,
-      elapsed: this.#status.elapsed,
-      rows: this.#status.rows,
-      done: this.#status.done
+      name: status.name,
+      elapsed: status.elapsed,
+      rows: status.rows,
+      done: status.done
     }
   }
 
