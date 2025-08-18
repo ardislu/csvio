@@ -29,6 +29,7 @@
   },
   "scripts": {
     "types": "tsc",
+    "types:check": "tsc --noEmit --checkJS",
     "test": "node --test --test-skip-pattern=\"/^large:/\"",
     "test:large": "node --test --test-name-pattern=\"/^large:/\" --expose-gc",
     "test:coverage": "npm run test -- --experimental-test-coverage",
