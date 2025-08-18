@@ -827,4 +827,12 @@ suite('CSVWriter status', { concurrency: true }, () => {
         ['row 3', 'c']
       ]));
   });
+  test('counts raw CSV string as one row when TransformStream', { concurrency: true }, async (t) => {
+    const writer = new CSVWriter();
+    const stream = createCSVMockStream([['']])
+      .pipeThrough(new CSVTransformer(() => 'row 1,a\r\nrow 2,b\r\nrow 3,c', { handleHeaders: true }))
+      .pipeThrough(writer);
+    for await (const _ of stream) { }
+    deepStrictEqual(writer.status.rows, 1);
+  });
 });
