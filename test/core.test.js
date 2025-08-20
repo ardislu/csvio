@@ -6,7 +6,7 @@ import { setTimeout } from 'node:timers/promises';
 import { pathToFileURL } from 'node:url';
 import { ReadableStream, DecompressionStream, CompressionStream, TextDecoderStream } from 'node:stream/web';
 
-import { csvStreamEqualWritable, createCSVMockStream, createTempFile, createWritableFileStream } from './utils.js';
+import { csvStreamEqualWritable, createCSVMockStream, createTempFile, createWritableFileStream, setGzipOSByteToUnknown } from './utils.js';
 import { parsePathLike, createFileStream, CSVReader, CSVTransformer, CSVWriter } from '../src/core.js';
 
 suite('CSVWriter.arrayToCSVString', { concurrency: true }, () => {
@@ -742,6 +742,7 @@ suite('CSVWriter', { concurrency: true }, () => {
       .pipeThrough(new CSVWriter())
       .pipeThrough(new CompressionStream('gzip'))
       .pipeTo(createWritableFileStream(temp));
+    await setGzipOSByteToUnknown(temp); // Allows this test to work across platforms
     const expected = await readFile(output);
     const actual = await readFile(temp);
     ok(actual.equals(expected));

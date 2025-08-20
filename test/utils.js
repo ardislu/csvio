@@ -238,3 +238,18 @@ export function createWritableFileStream(path) {
     }
   });
 }
+
+/**
+ * Sets the "OS" (filesystem) header byte of a given gzip file to `255` ("Unknown"). This function
+ * is useful to strip a gzip file of platform-specific metadata.
+ * 
+ * @param {PathLike} path A `string`, `Buffer`, or `URL` representing a path to a local file.
+ */
+export async function setGzipOSByteToUnknown(path) {
+  // https://en.wikipedia.org/wiki/Gzip#File_structure
+  const offset = 9;
+  const byte = new Uint8Array([255]);
+  const file = await open(path, 'r+');
+  await file.write(byte, 0, 1, offset);
+  await file.close();
+}
