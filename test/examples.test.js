@@ -1,7 +1,10 @@
 import { suite, after, test } from 'node:test';
 import { ok } from 'node:assert/strict';
+import { createReadStream, createWriteStream } from 'node:fs';
 import { mkdir, cp, opendir, readFile, rm } from 'node:fs/promises';
-import { pathToFileURL } from 'node:url';
+import { pathToFileURL, fileURLToPath } from 'node:url';
+import { spawn } from 'node:child_process';
+import { finished } from 'node:stream/promises';
 
 import { createTempFolder, assertConsole } from './utils.js';
 
@@ -28,18 +31,29 @@ for await (const file of files) {
   tests.push({
     name,
     code: new URL(`${name}.js`, tempExamples),
+    input: new URL(`./data/${name}-in.csv`, tempExamples),
     output: new URL(`./data/${name}-out.csv`, tempExamples)
   });
 }
 
 suite('examples', { concurrency: true }, () => {
   after(async () => await rm(dir, { recursive: true, force: true }));
-  for (const { name, code, output } of tests) {
+  for (const { name, code, input, output } of tests) {
     if (name === 'ex1_6') {
       test(name, { concurrency: true }, async (t) => {
         assertConsole(t, { log: 1 });
         const expected = await readFile(output);
         await import(code);
+        const actual = await readFile(output);
+        ok(actual.equals(expected));
+      });
+    }
+    else if (name === 'ex1_8') {
+      test(name, { concurrency: true }, async () => {
+        const expected = await readFile(output);
+        const child = spawn(process.execPath, [fileURLToPath(code)]);
+        createReadStream(input).pipe(child.stdin); // Equivalent to `cat ${input} | child`
+        await finished(child.stdout.pipe(createWriteStream(output))); // Equivalent to `child > ${output}`
         const actual = await readFile(output);
         ok(actual.equals(expected));
       });

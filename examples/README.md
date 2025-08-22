@@ -28,6 +28,8 @@ These examples demonstrate the most common, expected usage.
 
 [Example 1.7: Abort a transformation](./ex1_7.js) ([input](./data/ex1_7-in.csv), [output](./data/ex1_7-out.csv))
 
+[Example 1.8: Read from `stdin` and write to `stdout`](./ex1_8.js) ([input](./data/ex1_8-in.csv), [output](./data/ex1_8-out.csv))
+
 ### Section 2: Error strategies
 
 These examples demonstrate using the `onError` option to handle transformations that may throw errors.
