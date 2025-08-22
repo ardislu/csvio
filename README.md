@@ -163,9 +163,9 @@ In addition to the core API, optional utilities are provided to address common C
 - **Fix date and number mangling**: Spreadsheet programs may [automatically cast data types in unexpected ways](https://www.theverge.com/2020/8/6/21355674/human-genes-rename-microsoft-excel-misreading-dates). `CSVNormalizer` will perform various transformations to reverse data type casting that was unlikely to be intentional.
 - **Flexible column naming**: Column names are normalized to camelCase to prevent issues with subtly inconsistent names (e.g., `Column A`, `column A`, and `ColumnA` are all considered to be the same name).
 - **Column ordering**: Columns may appear in any order on the input CSV. The columns in the output are re-ordered to match the order in the `CSVNormalizerHeader` array.
-- **Stream of objects**: The stream is transformed from an `Array<string>` to an `Array<CSVNormalizerRow>` to provide a better developer experience for subsequent transformations.
+- **Stream of objects**: The stream is transformed from an `Array<string>` to an `Array<CSVNormalizerField>` to provide a better developer experience for subsequent transformations.
 
-`CSVDenormalizer` is a `TransformStream` that will convert an `Array<CSVNormalizerRow>` created by `CSVNormalizer` back into an `Array<string>`, ready for writing to a file.
+`CSVDenormalizer` is a `TransformStream` that will convert an `Array<CSVNormalizerField>` created by `CSVNormalizer` back into an `Array<string>`, ready for writing to a file.
 
 ```javascript
 import { CSVNormalizer, CSVDenormalizer } from '@ardislu/csvio';

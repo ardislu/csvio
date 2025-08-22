@@ -13,6 +13,6 @@ export { ErrorStrategies } from './errorStrategies.js';
 /** @typedef {import('./core.js').CSVWriterStatus} CSVWriterStatus */
 /** @typedef {import('./normalization.js').CSVNormalizerHeader} CSVNormalizerHeader */
 /** @typedef {import('./normalization.js').CSVNormalizerOptions} CSVNormalizerOptions */
-/** @typedef {import('./normalization.js').CSVNormalizerRow} CSVNormalizerRow */
+/** @typedef {import('./normalization.js').CSVNormalizerField} CSVNormalizerField */
 /** @typedef {import('./errorStrategies.js').RetryOptions} RetryOptions */
 /** @typedef {import('./errorStrategies.js').BackoffOptions} BackoffOptions */

@@ -91,7 +91,7 @@ export function expandScientificNotation(str, truncate = false) {
 
 /**
  * The output of `CSVNormalizer`.
- * @typedef {Object} CSVNormalizerRow
+ * @typedef {Object} CSVNormalizerField
  * @property {string} name The column name after normalization to camelCase.
  * @property {string} [displayName] The desired column name in the output CSV.
  * @property {string|number} value The value of the field after attempted data casting. If the original field was empty, this value
@@ -143,7 +143,7 @@ export class CSVNormalizer extends TransformStream {
     }
   }
 
-  /** @type {import('node:stream/web').TransformerTransformCallback<Array<string>,Array<Required<CSVNormalizerRow>>>} */
+  /** @type {import('node:stream/web').TransformerTransformCallback<Array<string>,Array<Required<CSVNormalizerField>>>} */
   #transform(chunk, controller) {
     // Assume first row is headers and use it to prepare the columns object
     // Note: the headers row is NOT forwarded downstream
@@ -162,7 +162,7 @@ export class CSVNormalizer extends TransformStream {
       return;
     }
 
-    /** @type {Array<Required<CSVNormalizerRow>>} */
+    /** @type {Array<Required<CSVNormalizerField>>} */
     const out = [];
     for (const { name, type, displayName, defaultValue, index } of this.#columns) {
       let value = chunk[index] ?? '';
@@ -299,14 +299,14 @@ export class CSVNormalizer extends TransformStream {
 }
 
 /**
- * A `TransformStream` to transform a `CSVNormalizerRow` into an array that can be converted to CSV data.
+ * A `TransformStream` to transform a `Array<CSVNormalizerField>` into an array that can be converted to CSV data.
  * @extends TransformStream
  */
 export class CSVDenormalizer extends TransformStream {
   constructor() {
     let firstRow = true;
     super({
-      /** @type {import('node:stream/web').TransformerTransformCallback<Array<CSVNormalizerRow>,Array<string>>} */
+      /** @type {import('node:stream/web').TransformerTransformCallback<Array<CSVNormalizerField>,Array<string>>} */
       transform(chunk, controller) {
         if (firstRow) {
           firstRow = false;
