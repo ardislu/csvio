@@ -94,7 +94,7 @@ export function expandScientificNotation(str, truncate = false) {
  * @typedef {Object} CSVNormalizerField
  * @property {string} name The column name after normalization to camelCase.
  * @property {string} [displayName] The desired column name in the output CSV.
- * @property {string|number} value The value of the field after attempted data casting. If the original field was empty, this value
+ * @property {any} value The value of the field after attempted data casting. If the original field was empty, this value
  * is set to the provided `defaultValue` or `''` (empty string) if no `defaultValue` was provided.
  * @property {boolean} [emptyField] Boolean to indicate whether the original field was empty.
  */
