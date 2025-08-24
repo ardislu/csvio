@@ -107,6 +107,13 @@ Example release note description:
 Example sentence with [a link](https://example.com)."
 ```
 
+For long release notes, it may be easier to save the notes to a temporary file and pass the file:
+
+```
+$VERSION="v1.0.0"
+git tag -a $VERSION -F m.txt
+```
+
 To check the release notes for a version:
 
 ```
