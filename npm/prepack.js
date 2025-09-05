@@ -27,6 +27,7 @@ else {
     await copyFile('./package.json', './package.backup.json');
   }
   execSync('npm run types');
+  execSync('npm pkg delete devEngines');
   execSync('npm pkg delete scripts');
   execSync('npm pkg delete devDependencies');
 }
