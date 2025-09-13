@@ -1,12 +1,14 @@
 import { suite, test } from 'node:test';
 import { ok, deepStrictEqual, throws, rejects } from 'node:assert/strict';
+import { createWriteStream } from 'node:fs';
 import { unlink, readFile } from 'node:fs/promises';
 import { normalize, basename, resolve } from 'node:path';
 import { setTimeout } from 'node:timers/promises';
 import { pathToFileURL } from 'node:url';
+import { Writable } from 'node:stream';
 import { ReadableStream, DecompressionStream, CompressionStream, TextDecoderStream } from 'node:stream/web';
 
-import { csvStreamEqualWritable, createCSVMockStream, createTempFile, createWritableFileStream, setGzipOSByteToUnknown } from './utils.js';
+import { csvStreamEqualWritable, createCSVMockStream, createTempFile, setGzipOSByteToUnknown } from './utils.js';
 import { parsePathLike, createFileStream, CSVReader, CSVTransformer, CSVWriter } from '../src/core.js';
 
 suite('CSVWriter.arrayToCSVString', { concurrency: true }, () => {
@@ -741,7 +743,7 @@ suite('CSVWriter', { concurrency: true }, () => {
     await new CSVReader(input)
       .pipeThrough(new CSVWriter())
       .pipeThrough(new CompressionStream('gzip'))
-      .pipeTo(createWritableFileStream(temp));
+      .pipeTo(Writable.toWeb(createWriteStream(temp)));
     await setGzipOSByteToUnknown(temp); // Allows this test to work across platforms
     const expected = await readFile(output);
     const actual = await readFile(temp);

@@ -213,33 +213,6 @@ export function createRandomCSV(rows, columns, seed) {
 }
 
 /**
- * Creates a writable file stream for a local file.
- * 
- * @see {@link https://streams.spec.whatwg.org/#example-ws-backpressure}
- * @param {PathLike} path A `string`, `Buffer`, or `URL` representing a path to a local file.
- * @returns {WritableStream<Uint8Array<ArrayBuffer>>}
- */
-export function createWritableFileStream(path) {
-  /** @type {FileHandle} */
-  let handle;
-
-  return new WritableStream({
-    async start() {
-      handle = await open(path, 'w');
-    },
-    async write(chunk) {
-      await handle.write(chunk, 0, chunk.length);
-    },
-    async close() {
-      await handle.close();
-    },
-    async abort() {
-      await handle.close();
-    }
-  });
-}
-
-/**
  * Sets the "OS" (filesystem) header byte of a given gzip file to `255` ("Unknown"). This function
  * is useful to strip a gzip file of platform-specific metadata.
  * 
