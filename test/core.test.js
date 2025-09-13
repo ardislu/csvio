@@ -720,7 +720,7 @@ suite('CSVWriter', { concurrency: true }, () => {
     deepStrictEqual(s instanceof CSVWriter, true);
     await s.abort();
   });
-  test('can create TransformStream (raw strings)', { concurrency: true }, async (t) => {
+  test('can create TransformStream (raw strings)', { concurrency: true }, async () => {
     const input = new URL('./data/simple.csv', import.meta.url);
     const stream = new CSVReader(input).pipeThrough(new CSVWriter());
     const expected = [
@@ -757,7 +757,7 @@ suite('CSVWriter status', { concurrency: true }, () => {
     await createCSVMockStream([['']]).pipeTo(writer);
     deepStrictEqual(writer.status.name, basename(temp));
   });
-  test('records file name of "null" if CSVWriter is a TransformStream', { concurrency: true }, async (t) => {
+  test('records file name of "null" if CSVWriter is a TransformStream', { concurrency: true }, async () => {
     const writer = new CSVWriter();
     const stream = createCSVMockStream([['']]).pipeThrough(writer);
     deepStrictEqual(writer.status.name, null);
@@ -828,7 +828,7 @@ suite('CSVWriter status', { concurrency: true }, () => {
         ['row 3', 'c']
       ]));
   });
-  test('counts raw CSV string as one row when TransformStream', { concurrency: true }, async (t) => {
+  test('counts raw CSV string as one row when TransformStream', { concurrency: true }, async () => {
     const writer = new CSVWriter();
     const stream = createCSVMockStream([['']])
       .pipeThrough(new CSVTransformer(() => 'row 1,a\r\nrow 2,b\r\nrow 3,c', { handleHeaders: true }))

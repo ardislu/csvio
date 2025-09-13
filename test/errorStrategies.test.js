@@ -46,7 +46,7 @@ suite('ErrorStrategies.skip', { concurrency: true }, () => {
       ['2', '2', '2'],
       ['3', '3', '3']
     ])
-      .pipeThrough(new CSVTransformer(r => { throw new Error(); }, { onError: skip() }))
+      .pipeThrough(new CSVTransformer(() => { throw new Error(); }, { onError: skip() }))
       .pipeTo(csvStreamEqualWritable([
         ['header', 'header', 'header']
       ]));
@@ -59,7 +59,7 @@ suite('ErrorStrategies.placeholder', { concurrency: true }, () => {
       ['header', 'header', 'header'],
       ['1', '1', '1']
     ])
-      .pipeThrough(new CSVTransformer(r => { throw new Error(); }, { onError: placeholder('n/a') }))
+      .pipeThrough(new CSVTransformer(() => { throw new Error(); }, { onError: placeholder('n/a') }))
       .pipeTo(csvStreamEqualWritable([
         ['header', 'header', 'header'],
         ['n/a', 'n/a', 'n/a']
@@ -71,7 +71,7 @@ suite('ErrorStrategies.placeholder', { concurrency: true }, () => {
       ['1', '1', '1'],
       ['1', '1', '1']
     ])
-      .pipeThrough(new CSVTransformer(r => { throw new Error(); }, { onError: placeholder('n/a') }))
+      .pipeThrough(new CSVTransformer(() => { throw new Error(); }, { onError: placeholder('n/a') }))
       .pipeTo(csvStreamEqualWritable([
         ['header', 'header', 'header'],
         ['n/a', 'n/a', 'n/a'],
@@ -83,7 +83,7 @@ suite('ErrorStrategies.placeholder', { concurrency: true }, () => {
       ['header', 'header', 'header'],
       ['1']
     ])
-      .pipeThrough(new CSVTransformer(r => { throw new Error(); }, { onError: placeholder('n/a') }))
+      .pipeThrough(new CSVTransformer(() => { throw new Error(); }, { onError: placeholder('n/a') }))
       .pipeTo(csvStreamEqualWritable([
         ['header', 'header', 'header'],
         ['n/a']
@@ -94,7 +94,7 @@ suite('ErrorStrategies.placeholder', { concurrency: true }, () => {
       ['header', 'header', 'header'],
       []
     ])
-      .pipeThrough(new CSVTransformer(r => { throw new Error(); }, { onError: placeholder('n/a') }))
+      .pipeThrough(new CSVTransformer(() => { throw new Error(); }, { onError: placeholder('n/a') }))
       .pipeTo(csvStreamEqualWritable([
         ['header', 'header', 'header'],
         ['n/a']
