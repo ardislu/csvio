@@ -11,15 +11,19 @@ import { createTempFolder, assertConsole } from './utils.js';
 const dir = await createTempFolder();
 const tempExamples = pathToFileURL(`${dir}/examples/`); // Trailing forward slash is REQUIRED for using this URL as a URL base later
 const tempSrc = pathToFileURL(`${dir}/src/`);
+const tempTest = pathToFileURL(`${dir}/test/`);
 const actualExamples = new URL('../examples/', import.meta.url);
 const actualSrc = new URL('../src/', import.meta.url);
+const actualTest = new URL('../test/', import.meta.url);
 await Promise.all([
   mkdir(tempExamples, { recursive: true }),
-  mkdir(tempSrc, { recursive: true })
+  mkdir(tempSrc, { recursive: true }),
+  mkdir(tempTest, { recursive: true })
 ]);
 await Promise.all([
   cp(actualExamples, tempExamples, { recursive: true }),
-  cp(actualSrc, tempSrc, { recursive: true })
+  cp(actualSrc, tempSrc, { recursive: true }),
+  cp(actualTest, tempTest, { recursive: true })
 ]);
 
 const tests = [];
@@ -54,6 +58,15 @@ suite('examples', { concurrency: true }, () => {
         const child = spawn(process.execPath, [fileURLToPath(code)]);
         createReadStream(input).pipe(child.stdin); // Equivalent to `cat ${input} | child`
         await finished(child.stdout.pipe(createWriteStream(output))); // Equivalent to `child > ${output}`
+        const actual = await readFile(output);
+        ok(actual.equals(expected));
+      });
+    }
+    else if (name === 'ex1_9') {
+      test(name, { concurrency: true }, async () => {
+        const output = new URL(`./data/${name}-out.csv.gz`, tempExamples);
+        const expected = await readFile(output);
+        await import(code);
         const actual = await readFile(output);
         ok(actual.equals(expected));
       });
