@@ -39,6 +39,7 @@
   },
   "scripts": {
     "types": "tsc",
+    "posttypes": "node ./npm/posttypes.js",
     "types:check": "tsc --noEmit --checkJS",
     "test": "node --test --test-skip-pattern=\"/^large:/\"",
     "test:large": "node --test --test-name-pattern=\"/^large:/\" --expose-gc",

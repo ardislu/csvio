@@ -12,6 +12,8 @@ npm run types:check
 
 All reasonable type issues (i.e., those not resulting from limitations of `tsc`) should be fixed.
 
+To work around `tsc` limitations, add manual type definitions in `./npm/ambient.d.ts`. These type definitions are appended to the output of `tsc` and override the `tsc` outputs if there are conflicts.
+
 ## 2. Tests
 
 Run tests:
