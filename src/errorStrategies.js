@@ -26,14 +26,20 @@ function skip() {
 
 /**
  * Create a `TransformationErrorFunction` that handles errors by filling the output row with a given placeholder value.
+ * To set a blank row without any commas, pass an empty array `[]`. To set a blank row with commas to match the number
+ * of columns in the rest of the CSV, pass an empty string `''`.
  * 
- * @param {string} value The placeholder value to fill the row with. This value will be used for each field in the row.
+ * @param {Array<string>|string} value The placeholder value to fill the row with. If an `Array<string>` is passed, `value`
+ * will be used as the literal row. If a `string` is passed, `value` will be used to fill each field in the row.
  * @returns {TransformationErrorFunction} A `TransformationErrorFunction` that may be passed to a `CSVTransformer`'s
  * `onError` option.
  */
 function placeholder(value) {
   return (row) => {
-    if (row.length === 0) {
+    if (Array.isArray(value)) {
+      return value;
+    }
+    else if (row.length === 0) {
       return [value];
     }
     else {
@@ -46,7 +52,7 @@ function placeholder(value) {
  * @typedef {Object} RetryOptions
  * @property {number} [interval] The duration (in milliseconds) to wait in between each retry. The default value is `0`
  * (retry immediately).
- * @property {string} [placeholder] A placeholder value to set if the function still errors after the final iteration.
+ * @property {Array<string>|string} [placeholder] A placeholder value to set if the function still errors after the final iteration.
  * If unset, the final error thrown by the function is re-thrown.
  */
 
@@ -79,7 +85,7 @@ function retry(iterations, options = {}) {
  * @property {number} [maxExponent] If provided, the maximum exponent used to calculate the retry duration. In other words,
  * the `iterations` number at which the retry duration stops increasing. If `maxExponent` is unset, the retry duration
  * is unbounded and will increase after each retry.
- * @property {string} [placeholder] A placeholder value to set if the function still errors after the final iteration.
+ * @property {Array<string>|string} [placeholder] A placeholder value to set if the function still errors after the final iteration.
  * If unset, the final error thrown by the function is re-thrown.
  */
 

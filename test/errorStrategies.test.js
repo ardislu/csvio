@@ -54,6 +54,45 @@ suite('ErrorStrategies.skip', { concurrency: true }, () => {
 });
 
 suite('ErrorStrategies.placeholder', { concurrency: true }, () => {
+  test('sets exact placeholder row if an array is passed', async () => {
+    await createCSVMockStream([
+      ['header', 'header', 'header'],
+      ['1', '1', '1'],
+      ['1', '1', '1']
+    ])
+      .pipeThrough(new CSVTransformer(() => { throw new Error(); }, { onError: placeholder(['n/a 1', 'n/a 2', 'n/a 3']) }))
+      .pipeTo(csvStreamEqualWritable([
+        ['header', 'header', 'header'],
+        ['n/a 1', 'n/a 2', 'n/a 3'],
+        ['n/a 1', 'n/a 2', 'n/a 3']
+      ]));
+  });
+  test('sets empty row if an empty array is passed', async () => {
+    await createCSVMockStream([
+      ['header', 'header', 'header'],
+      ['1', '1', '1'],
+      ['1', '1', '1']
+    ])
+      .pipeThrough(new CSVTransformer(() => { throw new Error(); }, { onError: placeholder([]) }))
+      .pipeTo(csvStreamEqualWritable([
+        ['header', 'header', 'header'],
+        [],
+        []
+      ]));
+  });
+  test('sets empty row matching column count if an empty string is passed', async () => {
+    await createCSVMockStream([
+      ['header', 'header', 'header'],
+      ['1', '1', '1'],
+      ['1', '1', '1']
+    ])
+      .pipeThrough(new CSVTransformer(() => { throw new Error(); }, { onError: placeholder('') }))
+      .pipeTo(csvStreamEqualWritable([
+        ['header', 'header', 'header'],
+        ['', '', ''],
+        ['', '', '']
+      ]));
+  });
   test('sets placeholders on all fields in a row', async () => {
     await createCSVMockStream([
       ['header', 'header', 'header'],
