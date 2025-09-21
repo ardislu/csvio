@@ -20,7 +20,7 @@
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": "24.7.0"
+      "version": "24.8.0"
     },
     "packageManager": {
       "name": "npm",
@@ -50,7 +50,7 @@
     "pack:dev": "npm run prepack -- --dev && npm pack"
   },
   "devDependencies": {
-    "@types/node": "^24.3.0",
+    "@types/node": "^24.5.2",
     "typescript": "^5.9.2"
   }
 }
