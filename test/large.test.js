@@ -2,6 +2,7 @@ import { suite, test, before, after } from 'node:test';
 import { ok, deepStrictEqual } from 'node:assert/strict';
 import { unlink, stat } from 'node:fs/promises';
 import { memoryUsage } from 'node:process';
+import { setTimeout } from 'node:timers/promises';
 
 import { createRandomCSV, createTempFile } from './utils.js';
 import { CSVReader, CSVTransformer, CSVWriter } from '../src/core.js';
@@ -9,28 +10,46 @@ import { CSVReader, CSVTransformer, CSVWriter } from '../src/core.js';
 /** Maximum variance allowed for memory leak testing. */
 const MEMORY_THRESHOLD = 10 * 1024 * 1024; // 10 MB, or 10% of the CSV file size
 
+/** Snapshot of memory usage before any tests have begun. */
+const MEMORY_BEFORE = memoryUsage().heapUsed;
+
+/**
+ * Helper function that will block until garbage collection is performed.
+ * 
+ * **WARNING:** By design, JavaScript garbage collection is unpredictable and may never happen (i.e., this
+ * function may never resolve). Use this function with caution.
+ */
+async function garbageCollection() {
+  const { promise, resolve } = Promise.withResolvers();
+  const registry = new FinalizationRegistry(resolve);
+  (() => registry.register({}, ''))();
+
+  // Theoretically, you can just do:
+  // global.gc?.();
+  // await promise;
+  // However, in testing, `promise` never resolves. So, the infinite loop with `setTimeout` is required.
+  let collected = false;
+  promise.then(() => collected = true);
+
+  global.gc?.();
+  while (!collected) {
+    await setTimeout(0);
+  }
+}
+
 suite('large: 100000 row x 100 column CSV (~100 MB)', { concurrency: 1 }, async () => {
+  /** @type {string} */
   let temp;
   before(async () => { temp = await createTempFile() });
   after(async () => await unlink(temp));
 
   test('CSVWriter writes file', async () => {
-    global.gc?.();
-    const memoryBefore = memoryUsage().heapUsed;
-
     await createRandomCSV(100000, 100, 1).pipeTo(new CSVWriter(temp));
     const { size } = await stat(temp, { bigint: true });
     ok(size > 100_000_000n);
-
-    global.gc?.();
-    const memoryAfter = memoryUsage().heapUsed;
-    ok(memoryAfter - memoryBefore < MEMORY_THRESHOLD);
   });
 
   test('CSVReader reads file', async () => {
-    global.gc?.();
-    const memoryBefore = memoryUsage().heapUsed;
-
     const reader = new CSVReader(temp);
     let rowCount = 0;
     for await (const row of reader) {
@@ -51,16 +70,9 @@ suite('large: 100000 row x 100 column CSV (~100 MB)', { concurrency: 1 }, async 
       }
       rowCount++;
     }
-
-    global.gc?.();
-    const memoryAfter = memoryUsage().heapUsed;
-    ok(memoryAfter - memoryBefore < MEMORY_THRESHOLD);
   });
 
   test('CSVTransformer transforms file', async () => {
-    global.gc?.();
-    const memoryBefore = memoryUsage().heapUsed;
-
     const reader = new CSVReader(temp)
       .pipeThrough(new CSVTransformer(r => r.map(f => Number(f) + 1), { handleHeaders: true }));
     let rowCount = 0;
@@ -82,35 +94,22 @@ suite('large: 100000 row x 100 column CSV (~100 MB)', { concurrency: 1 }, async 
       }
       rowCount++;
     }
-
-    global.gc?.();
-    const memoryAfter = memoryUsage().heapUsed;
-    ok(memoryAfter - memoryBefore < MEMORY_THRESHOLD);
   });
 });
 
 suite('large: 100 row x 100000 column CSV (~100 MB)', { concurrency: 1 }, async () => {
+  /** @type {string} */
   let temp;
   before(async () => { temp = await createTempFile() });
   after(async () => await unlink(temp));
 
   test('CSVWriter writes file', async () => {
-    global.gc?.();
-    const memoryBefore = memoryUsage().heapUsed;
-
     await createRandomCSV(100, 100000, 1).pipeTo(new CSVWriter(temp));
     const { size } = await stat(temp, { bigint: true });
     ok(size > 100_000_000n);
-
-    global.gc?.();
-    const memoryAfter = memoryUsage().heapUsed;
-    ok(memoryAfter - memoryBefore < MEMORY_THRESHOLD);
   });
 
   test('CSVReader reads file', async () => {
-    global.gc?.();
-    const memoryBefore = memoryUsage().heapUsed;
-
     const reader = new CSVReader(temp);
     let rowCount = 0;
     for await (const row of reader) {
@@ -131,16 +130,9 @@ suite('large: 100 row x 100000 column CSV (~100 MB)', { concurrency: 1 }, async 
       }
       rowCount++;
     }
-
-    global.gc?.();
-    const memoryAfter = memoryUsage().heapUsed;
-    ok(memoryAfter - memoryBefore < MEMORY_THRESHOLD);
   });
 
   test('CSVTransformer transforms file', async () => {
-    global.gc?.();
-    const memoryBefore = memoryUsage().heapUsed;
-
     const reader = new CSVReader(temp)
       .pipeThrough(new CSVTransformer(r => r.map(f => Number(f) + 1), { handleHeaders: true }));
     let rowCount = 0;
@@ -162,9 +154,11 @@ suite('large: 100 row x 100000 column CSV (~100 MB)', { concurrency: 1 }, async 
       }
       rowCount++;
     }
-
-    global.gc?.();
-    const memoryAfter = memoryUsage().heapUsed;
-    ok(memoryAfter - memoryBefore < MEMORY_THRESHOLD);
   });
+});
+
+test('large: memory is released after test suites finish, within acceptable threshold', { concurrency: 1 }, async () => {
+  await garbageCollection();
+  const memoryAfter = memoryUsage().heapUsed;
+  ok(memoryAfter - MEMORY_BEFORE < MEMORY_THRESHOLD);
 });
