@@ -276,14 +276,26 @@ export class CSVNormalizer extends TransformStream {
 
     // Excel converted date to a number
     // This check MUST come before the new Date() check because numbers can be parsed as dates.
+    // Assumptions about what the number represents, with date bounds:
+    // num <= 200000 (2447-07-30): native Excel date
+    // 200000 (1970-01-03) < num <= 10000000000 (2286-11-20): Unix timestamp (seconds)
+    // 10000000000 (1970-04-26) < num: Unix timestamp (milliseconds)
     const num = Number(original);
     if (!Number.isNaN(num)) {
-      const day = Math.trunc(num); // Days elapsed since January 1, 1900, including non-existent February 29, 1900
-      const time = (num % 1) * 86400000; // Time of day as decimal, so 0 = 12 AM and 0.999... = 11:59:59.999... PM
-      if (num < 61) {
-        return new Date(Date.UTC(0, 0, day, 0, 0, 0, time));
+      if (num <= 200000) { // Assume it's a native Excel date casted to number
+        const day = Math.trunc(num); // Days elapsed since January 1, 1900, including non-existent February 29, 1900
+        const time = (num % 1) * 86400000; // Time of day as decimal, so 0 = 12 AM and 0.999... = 11:59:59.999... PM
+        if (num < 61) {
+          return new Date(Date.UTC(0, 0, day, 0, 0, 0, time));
+        }
+        return new Date(Date.UTC(0, 0, day - 1, 0, 0, 0, time)); // Offset for non-existent February 29, 1900
       }
-      return new Date(Date.UTC(0, 0, day - 1, 0, 0, 0, time)); // Offset for non-existent February 29, 1900
+      else if (200000 < num && num <= 10000000000) { // Assume it's a Unix timestamp (seconds)
+        return new Date(num * 1000);
+      }
+      else { // Assume it's a Unix timestamp (milliseconds)
+        return new Date(num);
+      }
     }
 
     // Can parse normally without any fixes
