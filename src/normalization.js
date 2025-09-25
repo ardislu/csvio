@@ -151,7 +151,9 @@ export class CSVNormalizer extends TransformStream {
       const normalizedRow = this.#useLiteralNames ? chunk : chunk.map(f => toCamelCase(f));
       let i = 0;
       for (const header of normalizedRow) {
-        const col = this.#columns.find(c => c.name === header);
+        const col = this.#useLiteralNames
+          ? this.#columns.find(c => c.name === header)
+          : this.#columns.find(c => c.name.toLocaleLowerCase() === header.toLocaleLowerCase());
         if (col !== undefined) { // Drop columns provided in the CSV but not the headers input
           col.index = i;
         }

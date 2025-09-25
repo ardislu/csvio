@@ -248,8 +248,8 @@ suite('CSVNormalizer', { concurrency: true }, () => {
   });
   test('removes columns that have the same normalized name (last column prevails)', { concurrency: true }, async () => {
     await createCSVMockStream([
-      ['columnA', 'column A', 'column-A'],
-      ['a1', 'a2', 'a3']
+      ['columnA', 'column A', 'column-A', 'columna'],
+      ['a1', 'a2', 'a3', 'a4']
     ])
       .pipeThrough(new CSVNormalizer([
         { name: 'columnA' }
@@ -257,23 +257,52 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
         ['columnA'],
-        ['a3']
+        ['a4']
       ]));
   });
   test('can match by literal column names', { concurrency: true }, async () => {
     await createCSVMockStream([
-      ['columnA', 'column A', 'column-A'],
-      ['a1', 'a2', 'a3']
+      ['columnA', 'column A', 'column-A', 'columna'],
+      ['a1', 'a2', 'a3', 'a4']
     ])
       .pipeThrough(new CSVNormalizer([
         { name: 'columnA' },
         { name: 'column A' },
-        { name: 'column-A' }
+        { name: 'column-A' },
+        { name: 'columna' }
       ], { useLiteralNames: true }))
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
-        ['columnA', 'column A', 'column-A'],
-        ['a1', 'a2', 'a3']
+        ['columnA', 'column A', 'column-A', 'columna'],
+        ['a1', 'a2', 'a3', 'a4']
+      ]));
+  });
+  test('is NOT case sensitive on column names', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['datetime', 'dateTime'],
+      ['a1', 'a2']
+    ])
+      .pipeThrough(new CSVNormalizer([
+        { name: 'datetime' }
+      ]))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['datetime'],
+        ['a2']
+      ]));
+  });
+  test('is case sensitive on column names when `useLiteralNames: true`', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['datetime', 'dateTime'],
+      ['a1', 'a2']
+    ])
+      .pipeThrough(new CSVNormalizer([
+        { name: 'datetime' }
+      ], { useLiteralNames: true }))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['datetime'],
+        ['a1']
       ]));
   });
   test('removes columns that have the same literal name (last column prevails)', { concurrency: true }, async () => {
