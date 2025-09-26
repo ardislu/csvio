@@ -159,7 +159,7 @@ In addition to the core API, optional utilities are provided to address common C
 ### `CSVNormalizer` and `CSVDenormalizer`
 
 `CSVNormalizer` is a `TransformStream` that applies opinionated transformations to correct data mangling caused by spreadsheet programs and manual user manipulation:
-- **Remove empty or extra data**: Spreadsheet programs may append empty rows or columns at the ends of a CSV file, or users may insert empty rows or columns for formatting purposes. These empty rows are removed. Additionally, columns which are not explicitly listed in the `CSVNormalizerHeader` array are also removed.
+- **Remove empty or extra data**: Spreadsheet programs may append empty rows or columns at the ends of a CSV file, or users may insert empty rows or columns for formatting purposes. These empty rows are removed. Additionally, columns which are not explicitly listed in the `CSVNormalizerHeader` array are also removed. Note that empty rows that come *before* the header row are *always* removed, even if you have set `passthroughEmptyRows: true`.
 - **Fix date and number mangling**: Spreadsheet programs may [automatically cast data types in unexpected ways](https://www.theverge.com/2020/8/6/21355674/human-genes-rename-microsoft-excel-misreading-dates). `CSVNormalizer` will perform various transformations to reverse data type casting that was unlikely to be intentional.
 - **Flexible column naming**: Column names are normalized to camelCase to prevent issues with subtly inconsistent names (e.g., `Column A`, `column A`, and `ColumnA` are all considered to be the same name).
 - **Column ordering**: Columns may appear in any order on the input CSV. The columns in the output are re-ordered to match the order in the `CSVNormalizerHeader` array.
@@ -176,11 +176,12 @@ const headers = [
 ]
 
 const rows = ReadableStream.from((function* () {
-  yield ['numberCol', 'dateCol', '', '']; // Empty columns inserted
-  yield ['1E+18', '45292', '', '']; // Number mangled to scientific notation; date mangled to number
-  yield ['', '', '', '']; // Empty rows inserted
-  yield ['', '', '', ''];
-  yield ['', '', '', ''];
+  yield ['', '', '', '', '']; // Empty row inserted before the header row
+  yield ['', 'numberCol', 'dateCol', '', '']; // Empty columns inserted, including before the data
+  yield ['', '1E+18', '45292', '', '']; // Number mangled to scientific notation; date mangled to number
+  yield ['', '', '', '', '']; // Empty rows inserted
+  yield ['', '', '', '', ''];
+  yield ['', '', '', '', ''];
 })())
   .pipeThrough(new CSVNormalizer(headers))
   .pipeThrough(new CSVDenormalizer());

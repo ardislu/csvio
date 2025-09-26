@@ -108,7 +108,7 @@ export function expandScientificNotation(str, truncate = false) {
  */
 export class CSVNormalizer extends TransformStream {
   #columns = [];
-  #firstChunk = true;
+  #headersCaptured = false;
   #useLiteralNames;
   #passthroughEmptyRows;
   #typeCastOnly;
@@ -145,9 +145,10 @@ export class CSVNormalizer extends TransformStream {
 
   /** @type {import('node:stream/web').TransformerTransformCallback<Array<string>,Array<Required<CSVNormalizerField>>>} */
   #transform(chunk, controller) {
-    // Assume first row is headers and use it to prepare the columns object
+    // Assume first non-empty row is headers and use it to prepare the columns object
     // Note: the headers row is NOT forwarded downstream
-    if (this.#firstChunk) {
+    if (!this.#headersCaptured) {
+      if (chunk.every(v => v === '')) { return; } // All empty rows before the header row are removed, even if passthroughEmptyRows is true
       const normalizedRow = this.#useLiteralNames ? chunk : chunk.map(f => toCamelCase(f));
       let i = 0;
       for (const header of normalizedRow) {
@@ -160,7 +161,7 @@ export class CSVNormalizer extends TransformStream {
         i++;
       }
       this.#columns = this.#columns.filter(c => c.index !== null); // Drop columns provided in the headers input but not in the CSV
-      this.#firstChunk = false;
+      this.#headersCaptured = true;
       return;
     }
 
