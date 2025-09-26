@@ -121,13 +121,13 @@ suite('CSVNormalizer.fixExcelNumber', { concurrency: true }, () => {
 
 suite('CSVNormalizer.fixExcelBigInt', { concurrency: true }, () => {
   const vectors = [
-    { name: 'parses BigInt', input: '123456789123456789123456789', output: '123456789123456789123456789' },
-    { name: 'fixes scientific notation mangling', input: '1E+18', output: '1000000000000000000' },
-    { name: 'fixes scientific notation mangling with decimal', input: '1.123456789123456789E18', output: '1123456789123456789' },
-    { name: 'fixes scientific notation mangling with decimal (truncated)', input: '1.1234567891234567891234E18', output: '1123456789123456789' },
-    { name: 'fixes accounting mangling integer', input: ' $123.00 ', output: '123' },
-    { name: 'fixes accounting mangling number (truncated)', input: ' $123.45 ', output: '123' },
-    { name: 'fixes accounting mangling BigInt with commas', input: '  $1,123,123,123,123,123,123.12  ', output: '1123123123123123123' },
+    { name: 'parses BigInt', input: '123456789123456789123456789', output: 123456789123456789123456789n },
+    { name: 'fixes scientific notation mangling', input: '1E+18', output: 1000000000000000000n },
+    { name: 'fixes scientific notation mangling with decimal', input: '1.123456789123456789E18', output: 1123456789123456789n },
+    { name: 'fixes scientific notation mangling with decimal (truncated)', input: '1.1234567891234567891234E18', output: 1123456789123456789n },
+    { name: 'fixes accounting mangling integer', input: ' $123.00 ', output: 123n },
+    { name: 'fixes accounting mangling number (truncated)', input: ' $123.45 ', output: 123n },
+    { name: 'fixes accounting mangling BigInt with commas', input: '  $1,123,123,123,123,123,123.12  ', output: 1123123123123123123n },
     { name: 'passes through non-BigInt values', input: 'abc', output: 'abc', consoleCounts: { warn: 1 } },
     { name: 'passes through blank value', input: '', output: '' },
   ];
@@ -501,7 +501,7 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
         ['columnA', 'columnB'],
-        ['123', '456']
+        [123n, 456n]
       ]));
   });
   test('can pass through date', { concurrency: true }, async () => {
@@ -588,9 +588,9 @@ suite('CSVNormalizer and CSVDenormalizer end-to-end', { concurrency: true }, () 
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
         ['String Column', 'Number Column', 'BigInt Column', 'Date Column'],
-        ['abc 👨‍👩‍👧‍👦', 123456789.123456, '1000000000000000000', '2024-01-01T00:00:00.000Z'],
-        [', " 🏴‍☠️', 1000, '-1234567890000000000000000', '2024-06-01T00:00:00.000Z'],
-        ['N/A', 123100, '1000000000000000000', '2024-12-31T08:00:00.000Z']
+        ['abc 👨‍👩‍👧‍👦', 123456789.123456, 1000000000000000000n, '2024-01-01T00:00:00.000Z'],
+        [', " 🏴‍☠️', 1000, -1234567890000000000000000n, '2024-06-01T00:00:00.000Z'],
+        ['N/A', 123100, 1000000000000000000n, '2024-12-31T08:00:00.000Z']
       ]));
   });
   test('can normalize with transformation', { concurrency: true }, async () => {

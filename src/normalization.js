@@ -173,8 +173,8 @@ export class CSVNormalizer extends TransformStream {
       switch (type) {
         case 'string': break;
         case 'number': value = this.#typeCastOnly ? Number(value) : CSVNormalizer.fixExcelNumber(value); break;
-        case 'bigint': value = this.#typeCastOnly ? BigInt(value).toString() : CSVNormalizer.fixExcelBigInt(value); break;
-        case 'date': value = this.#typeCastOnly ? new Date(value).toISOString() : CSVNormalizer.fixExcelDate(value); break;
+        case 'bigint': value = this.#typeCastOnly ? BigInt(value) : CSVNormalizer.fixExcelBigInt(value); break;
+        case 'date': value = this.#typeCastOnly ? new Date(value) : CSVNormalizer.fixExcelDate(value); break;
       }
       if (emptyField) {
         value = defaultValue;
@@ -232,10 +232,7 @@ export class CSVNormalizer extends TransformStream {
    * 
    * For example, converting BigInt to scientific notation.
    * @param {string} str A string that might be a BigInt.
-   * @returns {string} If a fix was possible, a string that may be passed to the `BigInt()` constructor without error.
-   * Otherwise, the original string is returned.
-   * 
-   * Note that **a string is always returned** to simplify downstream use because BigInt serialization is not possible with `JSON.stringify()`.
+   * @returns {bigint|string} If a fix was possible, a `bigint`. Otherwise, the original string is returned.
    */
   static fixExcelBigInt(str) {
     if (str === '') { return str; }
@@ -243,13 +240,13 @@ export class CSVNormalizer extends TransformStream {
 
     // Can parse normally without any fixes
     try {
-      return BigInt(original).toString();
+      return BigInt(original);
     } catch { }
 
     // Excel converted to scientific notation
     try {
       const expanded = expandScientificNotation(original, true);
-      return BigInt(expanded).toString();
+      return BigInt(expanded);
     } catch { }
 
     // Excel added extra characters from setting the format to "Accounting" or other custom formats
@@ -258,7 +255,7 @@ export class CSVNormalizer extends TransformStream {
       const decimalSeparator = getDecimalSeparator();
       const str = original.replaceAll(new RegExp(`[^0-9${decimalSeparator}]`, 'g'), '');
       if (str === '') { throw new Error(); }
-      return BigInt(str.split(decimalSeparator)[0]).toString();
+      return BigInt(str.split(decimalSeparator)[0]);
     } catch { }
 
     // Otherwise, pass through as string
