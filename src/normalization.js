@@ -1,4 +1,5 @@
 import { TransformStream } from 'node:stream/web';
+/** @import { TransformerTransformCallback } from 'node:stream/web'; */
 
 /**
  * Get the decimal separator character to parse numbers formatted in different locales.
@@ -143,7 +144,7 @@ export class CSVNormalizer extends TransformStream {
     }
   }
 
-  /** @type {import('node:stream/web').TransformerTransformCallback<Array<string>,Array<Required<CSVNormalizerField>>>} */
+  /** @type {TransformerTransformCallback<Array<string>,Array<Required<CSVNormalizerField>>>} */
   #transform(chunk, controller) {
     // Assume first non-empty row is headers and use it to prepare the columns object
     // Note: the headers row is NOT forwarded downstream
@@ -318,7 +319,7 @@ export class CSVDenormalizer extends TransformStream {
   constructor() {
     let firstRow = true;
     super({
-      /** @type {import('node:stream/web').TransformerTransformCallback<Array<CSVNormalizerField>,Array<string>>} */
+      /** @type {TransformerTransformCallback<Array<CSVNormalizerField>,Array<string>>} */
       transform(chunk, controller) {
         if (firstRow) {
           firstRow = false;

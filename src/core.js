@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { ReadableStream, WritableStream, TransformStream, TextDecoderStream } from 'node:stream/web';
 /** @import { PathLike } from 'node:fs'; */
 /** @import { FileHandle } from 'node:fs/promises'; */
+/** @import { TransformerFlushCallback, TransformerTransformCallback } from 'node:stream/web'; */
 
 /**
  * Parse and normalize a `PathLike` object into a string.
@@ -154,7 +155,7 @@ export class CSVReader {
     return createProxy(this, stream);
   }
 
-  /** @type {import('node:stream/web').TransformerTransformCallback<string,Array<string>>} */
+  /** @type {TransformerTransformCallback<string,Array<string>>} */
   #transform(chunk, controller) {
     for (const char of chunk) {
       /* Escape mode logic */
@@ -202,7 +203,7 @@ export class CSVReader {
     }
   }
 
-  /** @type {import('node:stream/web').TransformerFlushCallback<Array<string>>} */
+  /** @type {TransformerFlushCallback<Array<string>>} */
   #flush(controller) {
     if (this.#field !== '' || this.#row.length !== 0) { // CSV terminated without a trailing CRLF, leaving a row in the queue
       this.#row.push(this.#field); // Last field is always un-pushed if CSV terminated with nothing
@@ -392,7 +393,7 @@ export class CSVTransformer extends TransformStream {
     }
   }
 
-  /** @type {import('node:stream/web').TransformerTransformCallback<Array<string>,Array<string>>} */
+  /** @type {TransformerTransformCallback<Array<string>,Array<string>>} */
   async #transform(chunk, controller) {
     // If row is an array of objects, then the transformation has "normalized" the data and there is no header row.
     // Instead, the header data has been incorporated into the object keys. The transformation is responsible
@@ -424,7 +425,7 @@ export class CSVTransformer extends TransformStream {
     }
   }
 
-  /** @type {import('node:stream/web').TransformerFlushCallback<Array<string>>} */
+  /** @type {TransformerFlushCallback<Array<string>>} */
   async #flush(controller) {
     if (this.#batch.length > 0) {
       this.#concurrent.push(this.#wrappedFn(this.#batch));

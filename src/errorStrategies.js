@@ -1,6 +1,5 @@
 import { setTimeout } from 'node:timers/promises';
-
-/** @import {TransformationErrorFunction} from './core.js'; */
+/** @import { TransformationErrorFunction } from './core.js'; */
 
 /**
  * A wrapper around `node:timers/promises`'s async `setTimeout`. This wrapper is required to mock for testing purposes.

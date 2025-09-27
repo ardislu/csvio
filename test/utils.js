@@ -5,7 +5,6 @@ import { normalize } from 'node:path';
 import { ReadableStream } from 'node:stream/web';
 /** @import { TestContext } from 'node:test'; */
 /** @import { PathLike } from 'node:fs'; */
-/** @import { FileHandle } from 'node:fs/promises'; */
 
 import { utils } from '../src/errorStrategies.js';
 
