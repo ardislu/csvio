@@ -188,8 +188,8 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       ['123', 'a', '123', '123', 'b']
     ])
       .pipeThrough(new CSVNormalizer([
-        { name: 'columnA', type: 'string' },
-        { name: 'columnB', type: 'string' }
+        { name: 'columnA' },
+        { name: 'columnB' }
       ]))
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
@@ -203,11 +203,11 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       ['a', 'b']
     ])
       .pipeThrough(new CSVNormalizer([
-        { name: 'columnA', type: 'string' },
-        { name: 'columnB', type: 'string' },
-        { name: 'extra1', type: 'string' },
-        { name: 'extra2', type: 'string' },
-        { name: 'extra3', type: 'string' }
+        { name: 'columnA' },
+        { name: 'columnB' },
+        { name: 'extra1' },
+        { name: 'extra2' },
+        { name: 'extra3' }
       ]))
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
@@ -221,9 +221,9 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       ['c', 'a', 'b']
     ])
       .pipeThrough(new CSVNormalizer([
-        { name: 'columnA', type: 'string' },
-        { name: 'columnB', type: 'string' },
-        { name: 'columnC', type: 'string' }
+        { name: 'columnA' },
+        { name: 'columnB' },
+        { name: 'columnC' }
       ]))
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
@@ -237,8 +237,8 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       ['a', 'b']
     ])
       .pipeThrough(new CSVNormalizer([
-        { name: 'columnA', type: 'string', displayName: 'Column A' },
-        { name: 'columnB', type: 'string', displayName: 'Column B' }
+        { name: 'columnA', displayName: 'Column A' },
+        { name: 'columnB', displayName: 'Column B' }
       ]))
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
@@ -329,8 +329,8 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       ['', '']
     ])
       .pipeThrough(new CSVNormalizer([
-        { name: 'columnA', type: 'string' },
-        { name: 'columnB', type: 'string' }
+        { name: 'columnA' },
+        { name: 'columnB' }
       ]))
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
@@ -348,8 +348,8 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       ['', '']
     ])
       .pipeThrough(new CSVNormalizer([
-        { name: 'columnA', type: 'string' },
-        { name: 'columnB', type: 'string' }
+        { name: 'columnA' },
+        { name: 'columnB' }
       ], { passthroughEmptyRows: true }))
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
@@ -371,8 +371,8 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       ['', ''],
     ])
       .pipeThrough(new CSVNormalizer([
-        { name: 'columnA', type: 'string' },
-        { name: 'columnB', type: 'string' }
+        { name: 'columnA' },
+        { name: 'columnB' }
       ]))
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
@@ -390,8 +390,8 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       ['', '']
     ])
       .pipeThrough(new CSVNormalizer([
-        { name: 'columnA', type: 'string' },
-        { name: 'columnB', type: 'string' }
+        { name: 'columnA' },
+        { name: 'columnB' }
       ], { passthroughEmptyRows: true }))
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
@@ -407,8 +407,8 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       ['a', '', 'b', '', '']
     ])
       .pipeThrough(new CSVNormalizer([
-        { name: 'columnA', type: 'string' },
-        { name: 'columnB', type: 'string' }
+        { name: 'columnA' },
+        { name: 'columnB' }
       ]))
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
@@ -424,9 +424,9 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       ['', '', 's3']
     ])
       .pipeThrough(new CSVNormalizer([
-        { name: 'sparse1', type: 'string' },
-        { name: 'sparse2', type: 'string' },
-        { name: 'sparse3', type: 'string' },
+        { name: 'sparse1' },
+        { name: 'sparse2' },
+        { name: 'sparse3' },
       ]))
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
@@ -445,10 +445,10 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       ['c', 'm', 'm', 'm']
     ])
       .pipeThrough(new CSVNormalizer([
-        { name: 'common', type: 'string' },
-        { name: 'maybe1', type: 'string' },
-        { name: 'maybe2', type: 'string' },
-        { name: 'maybe3', type: 'string' },
+        { name: 'common' },
+        { name: 'maybe1' },
+        { name: 'maybe2' },
+        { name: 'maybe3' },
       ]))
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
