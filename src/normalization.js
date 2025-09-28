@@ -170,7 +170,7 @@ export class CSVNormalizer extends TransformStream {
     const out = [];
     for (const { name, type, displayName, defaultValue, index } of this.#columns) {
       let value = chunk[index] ?? '';
-      const emptyField = value === '' ? true : false;
+      const emptyField = value === '';
       switch (type) {
         case 'string': break;
         case 'number': value = this.#typeCastOnly ? Number(value) : CSVNormalizer.fixExcelNumber(value); break;
