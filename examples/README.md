@@ -59,3 +59,5 @@ These examples demonstrate the extended API.
 [Example 4.2: Using `CSVNormalizer` and `CSVDenormalizer` with `CSVTransformer`](./ex4_2.js) ([input](./data/ex4_2-in.csv), [output](./data/ex4_2-out.csv))
 
 [Example 4.3: Using `CSVNormalizer.toObject()`](./ex4_3.js) ([input](./data/ex4_3-in.csv), [output](./data/ex4_3-out.csv))
+
+[Example 4.4: Using `CSVNormalizer.toFieldMap()`](./ex4_4.js) ([input](./data/ex4_4-in.csv), [output](./data/ex4_4-out.csv))

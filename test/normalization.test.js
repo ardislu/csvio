@@ -209,6 +209,48 @@ suite('CSVNormalizer.toObject', { concurrency: true }, () => {
   });
 });
 
+suite('CSVNormalizer.toFieldMap', { concurrency: true }, () => {
+  test('gets value by reference', { concurrency: true }, async () => {
+    const row = [{ name: 'a', value: 1 }];
+    const map = CSVNormalizer.toFieldMap(row);
+    deepStrictEqual(map.get('a'), 1);
+    row[0].value = 999;
+    deepStrictEqual(map.get('a'), 999);
+  });
+  test('sets value by reference', { concurrency: true }, async () => {
+    const row = [{ name: 'a', value: 1 }];
+    const map = CSVNormalizer.toFieldMap(row);
+    deepStrictEqual(row[0].value, 1);
+    map.set('a', 999);
+    deepStrictEqual(row[0].value, 999);
+  });
+  test('can chain set calls', { concurrency: true }, async () => {
+    const row = [{ name: 'a', value: 1 }];
+    const map = CSVNormalizer.toFieldMap(row);
+    deepStrictEqual(row[0].value, 1);
+    map.set('a', 222).set('a', 333).set('a', 444);
+    deepStrictEqual(row[0].value, 444);
+  });
+  test('pushes new fields', { concurrency: true }, async () => {
+    const row = [{ name: 'a', value: 1 }];
+    const map = CSVNormalizer.toFieldMap(row);
+    deepStrictEqual(row.length, 1);
+    map.set('b', 2).set('c', 3).set('d', 4);
+    deepStrictEqual(row.length, 4);
+  });
+  test('passes through .has() method', { concurrency: true }, async () => {
+    const row = [{ name: 'a', value: 1 }];
+    const map = CSVNormalizer.toFieldMap(row);
+    ok(map.has('a'));
+    ok(!map.has('b'));
+  });
+  test('passes through .size property', { concurrency: true }, async () => {
+    const row = [{ name: 'a', value: 1 }];
+    const map = CSVNormalizer.toFieldMap(row);
+    deepStrictEqual(map.size, 1);
+  });
+});
+
 suite('CSVNormalizer', { concurrency: true }, () => {
   test('can remove extra columns in CSV', { concurrency: true }, async () => {
     await createCSVMockStream([

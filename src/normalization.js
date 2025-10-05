@@ -325,6 +325,54 @@ export class CSVNormalizer extends TransformStream {
     }
     return object;
   }
+
+  /**
+   * Create a subset of the `Map` interface to get and set the `value` of a field using its `name`.
+   * 
+   * The return value of this method is a `Proxy` of a `Map` that intercepts the `Map` methods so that it gets and sets
+   * values by *reference* to the underlying `CSVNormalizerField`. This interception makes the `Map` stay in sync with the
+   * `row` array.
+   * 
+   * Only the methods `.get()`, `.set()`, `.has()` and the property `.size` are supported. All other methods are unsupported.
+   * For more advanced usage, use the underlying `row` object directly.
+   * 
+   * The `displayName` and `emptyField` values of a field cannot be accessed from the `Map`.
+   * 
+   * Calling `.set()` with a `name` that is not in the row will push a new field to the row.
+   * @param {Array<CSVNormalizerField>} row A normalized CSV row.
+   * @returns {Pick<Map<string,any>,'get'|'set'|'has'|'size'>} A `Proxy` over a `Map` object with keys set to the `name` of
+   * each field in the row.
+   */
+  static toFieldMap(row) {
+    const map = new Map();
+    for (const field of row) {
+      map.set(field.name, field);
+    }
+    return new Proxy(map, {
+      get(target, prop, receiver) {
+        if (prop === 'get') {
+          return name => target.get(name)?.value;
+        }
+        if (prop === 'set') {
+          return (name, value) => {
+            if (target.has(name)) {
+              target.get(name).value = value;
+            }
+            else {
+              const field = { name, value };
+              row.push(field);
+              target.set(name, field);
+            }
+            return receiver;
+          }
+        }
+        if (prop === 'has' || prop === 'size') {
+          const targetProp = Reflect.get(target, prop);
+          return typeof targetProp === 'function' ? targetProp.bind(target) : targetProp;
+        }
+      }
+    });
+  }
 }
 
 /**
