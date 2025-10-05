@@ -309,6 +309,22 @@ export class CSVNormalizer extends TransformStream {
     console.warn(`Could not fix date: "${original}". Passing through as a string.`);
     return original;
   }
+
+  /**
+   * Create a simple object that maps each `CSVNormalizerField` `name` to its `value`. Useful if you just want to read all the
+   * values in a normalized CSV row.
+   * 
+   * The `displayName` and `emptyField` values of a field are lost in the resulting object.
+   * @param {Array<CSVNormalizerField>} row A normalized CSV row.
+   * @returns {Record<string,any>} An object where each key is a field `name` and the value is the field's `value`.
+   */
+  static toObject(row) {
+    const object = {};
+    for (const field of row) {
+      object[field.name] = field.value;
+    }
+    return object;
+  }
 }
 
 /**

@@ -181,6 +181,34 @@ suite('CSVNormalizer.fixExcelDate', { concurrency: true }, () => {
   }
 });
 
+suite('CSVNormalizer.toObject', { concurrency: true }, () => {
+  test('converts simple fields', { concurrency: true }, async () => {
+    const row = [
+      { name: 'a', value: 1 },
+      { name: 'b', value: 2 },
+      { name: 'c', value: 3 }
+    ];
+    const obj = CSVNormalizer.toObject(row);
+    deepStrictEqual(obj.a, 1);
+    deepStrictEqual(obj.b, 2);
+    deepStrictEqual(obj.c, 3);
+  });
+  test('converts complex field names', { concurrency: true }, async () => {
+    const row = [
+      { name: '🏴‍☠️', value: 1 }
+    ];
+    const obj = CSVNormalizer.toObject(row);
+    deepStrictEqual(obj['🏴‍☠️'], 1);
+  });
+  test('converts complex field values', { concurrency: true }, async () => {
+    const row = [
+      { name: 'a', value: { 'b': [1n] } }
+    ];
+    const obj = CSVNormalizer.toObject(row);
+    deepStrictEqual(obj.a.b[0], 1n);
+  });
+});
+
 suite('CSVNormalizer', { concurrency: true }, () => {
   test('can remove extra columns in CSV', { concurrency: true }, async () => {
     await createCSVMockStream([
