@@ -376,7 +376,7 @@ export class CSVNormalizer extends TransformStream {
 }
 
 /**
- * A `TransformStream` to transform a `Array<CSVNormalizerField>` into an array that can be converted to CSV data.
+ * A `TransformStream` to transform a `Array<CSVNormalizerField>` into an `Array<string>` that can be converted to CSV data.
  * @extends TransformStream
  */
 export class CSVDenormalizer extends TransformStream {
@@ -389,7 +389,7 @@ export class CSVDenormalizer extends TransformStream {
           firstRow = false;
           controller.enqueue(chunk.map(f => f?.displayName ?? f.name));
         }
-        controller.enqueue(chunk.map(f => f.value instanceof Date ? f.value.toISOString() : f.value));
+        controller.enqueue(chunk.map(f => f.value instanceof Date ? f.value.toISOString() : f.value.toString()));
       }
     });
   }

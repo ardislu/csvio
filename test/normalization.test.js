@@ -556,7 +556,7 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
         ['columnA', 'columnB'],
-        [123, 456]
+        ['123', '456']
       ]));
   });
   test('can pass through BigInt', { concurrency: true }, async () => {
@@ -571,7 +571,7 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
         ['columnA', 'columnB'],
-        [123n, 456n]
+        ['123', '456']
       ]));
   });
   test('can pass through date', { concurrency: true }, async () => {
@@ -658,9 +658,9 @@ suite('CSVNormalizer and CSVDenormalizer end-to-end', { concurrency: true }, () 
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
         ['String Column', 'Number Column', 'BigInt Column', 'Date Column'],
-        ['abc 👨‍👩‍👧‍👦', 123456789.123456, 1000000000000000000n, '2024-01-01T00:00:00.000Z'],
-        [', " 🏴‍☠️', 1000, -1234567890000000000000000n, '2024-06-01T00:00:00.000Z'],
-        ['N/A', 123100, 1000000000000000000n, '2024-12-31T08:00:00.000Z']
+        ['abc 👨‍👩‍👧‍👦', '123456789.123456', '1000000000000000000', '2024-01-01T00:00:00.000Z'],
+        [', " 🏴‍☠️', '1000', '-1234567890000000000000000', '2024-06-01T00:00:00.000Z'],
+        ['N/A', '123100', '1000000000000000000', '2024-12-31T08:00:00.000Z']
       ]));
   });
   test('can normalize with transformation', { concurrency: true }, async () => {
