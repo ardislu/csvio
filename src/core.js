@@ -472,6 +472,7 @@ export class CSVWriter {
    */
   constructor(path = null) {
     const status = {
+      name: null,
       start: performance.now(),
       elapsed: 0,
       rows: 0,
@@ -481,7 +482,6 @@ export class CSVWriter {
     /** @type {WritableStream<any>|TransformStream<Array<string>,string>} */
     let stream;
     if (path === null) {
-      status.name = null;
       stream = new TransformStream({
         transform(chunk, controller) {
           let data;
