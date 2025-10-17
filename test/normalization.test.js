@@ -638,6 +638,30 @@ suite('CSVDenormalizer', { concurrency: true }, () => {
         ['a2', 'b2']
       ]));
   });
+  test('denormalizes null into empty string', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      [{ name: 'a', value: null }, { name: 'b', value: null }],
+      [{ name: 'a', value: null }, { name: 'b', value: null }],
+    ])
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['a', 'b'],
+        ['', ''],
+        ['', '']
+      ]));
+  });
+  test('denormalizes undefined into empty string', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      [{ name: 'a', value: undefined }, { name: 'b', value: undefined }],
+      [{ name: 'a', value: undefined }, { name: 'b', value: undefined }],
+    ])
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['a', 'b'],
+        ['', ''],
+        ['', '']
+      ]));
+  });
   test('works with instanceof', { concurrency: true }, async () => {
     const s = new CSVDenormalizer();
     deepStrictEqual(s instanceof CSVDenormalizer, true);

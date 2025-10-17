@@ -389,7 +389,12 @@ export class CSVDenormalizer extends TransformStream {
           firstRow = false;
           controller.enqueue(chunk.map(f => f?.displayName ?? f.name));
         }
-        controller.enqueue(chunk.map(f => f.value instanceof Date ? f.value.toISOString() : f.value.toString()));
+        controller.enqueue(chunk.map(f => {
+          if (f.value instanceof Date) {
+            return f.value.toISOString();
+          }
+          return f.value?.toString?.() ?? '';
+        }));
       }
     });
   }
