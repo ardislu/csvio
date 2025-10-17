@@ -123,4 +123,4 @@ $VERSION="v1.0.0"
 git for-each-ref --format="%(contents:subject)%0a%0a%(contents:body)" "refs/tags/$VERSION"
 ```
 
-The tags can also be viewed in [GitHub](https://github.com/ardislu/csvio/tags) or [Codeberg](https://codeberg.org/ardislu/csvio/tags).
+Previous tags and release notes can be viewed in [GitHub](https://github.com/ardislu/csvio/tags), [Codeberg](https://codeberg.org/ardislu/csvio/tags), or [git.ardis.lu](https://git.ardis.lu/?p=csvio;a=tags).
