@@ -8,14 +8,14 @@ import { CSVReader, CSVWriter, CSVNormalizer, CSVDenormalizer, CSVTransformer } 
 /** @import { CSVNormalizerHeader } from '../src/normalization.js'; */
 
 // A minimal declaration to tell `CSVNormalizer` to trim empty rows and columns but otherwise don't touch the data
-/** @type {Array<CSVNormalizerHeader>} */
+/** @type {Array<string|CSVNormalizerHeader>} */
 const headers = [
-  { name: 'columnA' },
-  { name: 'columnB' },
-  { name: 'columnC' },
-  { name: 'sparse1' },
-  { name: 'sparse2' },
-  { name: 'sparse3' }
+  'columnA', // Same as { name: 'columnA' } which is the same as { name: 'columnA', type: 'string' }
+  { name: 'columnB' }, // You can mix string and CSVNormalizerHeader in the same array
+  'columnC',
+  'sparse1',
+  'sparse2',
+  'sparse3'
 ];
 
 function transform(row) {
