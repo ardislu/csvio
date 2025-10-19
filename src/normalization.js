@@ -346,15 +346,22 @@ export class CSVNormalizer extends TransformStream {
    * values by *reference* to the underlying `CSVNormalizerField`. This interception makes the `Map` stay in sync with the
    * `row` array.
    * 
-   * Only the methods `.get()`, `.set()`, `.has()` and the property `.size` are supported. All other methods are unsupported.
-   * For more advanced usage, use the underlying `row` object directly.
+   * Only these methods and properties are supported:
+   * - `.get()`
+   * - `.set()`
+   * - `.has()`
+   * - `.delete()`
+   * - `.clear()`
+   * - `.size`
+   * 
+   * All other methods are unsupported. For more advanced usage, use the underlying `row` object directly.
    * 
    * The `displayName` and `emptyField` values of a field cannot be accessed from the `Map`.
    * 
    * Calling `.set()` with a `name` that is not in the row will push a new field to the row.
    * @param {Array<CSVNormalizerField>} row A normalized CSV row.
-   * @returns {Pick<Map<string,any>,'get'|'set'|'has'|'size'>} A `Proxy` over a `Map` object with keys set to the `name` of
-   * each field in the row.
+   * @returns {Pick<Map<string,any>,'get'|'set'|'has'|'delete'|'clear'|'size'>} A `Proxy` over a `Map` object with keys
+   * set to the `name` of each field in the row.
    */
   static toFieldMap(row) {
     const map = new Map();
@@ -382,6 +389,23 @@ export class CSVNormalizer extends TransformStream {
         if (prop === 'has' || prop === 'size') {
           const targetProp = Reflect.get(target, prop);
           return typeof targetProp === 'function' ? targetProp.bind(target) : targetProp;
+        }
+        if (prop === 'delete') {
+          return name => {
+            if (target.has(name)) {
+              const i = row.findIndex(f => f.name === name);
+              row.splice(i, 1);
+              target.delete(name);
+              return true;
+            }
+            return false;
+          }
+        }
+        if (prop === 'clear') {
+          return () => {
+            row.length = 0;
+            target.clear();
+          }
         }
       }
     });

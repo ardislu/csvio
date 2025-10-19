@@ -238,6 +238,24 @@ suite('CSVNormalizer.toFieldMap', { concurrency: true }, () => {
     map.set('b', 2).set('c', 3).set('d', 4);
     deepStrictEqual(row.length, 4);
   });
+  test('can delete fields', { concurrency: true }, async () => {
+    const row = [{ name: 'a', value: 1 }, { name: 'b', value: 1 }];
+    const map = CSVNormalizer.toFieldMap(row);
+    deepStrictEqual(row.length, 2);
+    ok(map.delete('a'));
+    ok(!map.delete('a'));
+    deepStrictEqual(row.length, 1);
+    ok(map.delete('b'));
+    ok(!map.delete('b'));
+    deepStrictEqual(row.length, 0);
+  });
+  test('can clear fields', { concurrency: true }, async () => {
+    const row = [{ name: 'a', value: 1 }, { name: 'b', value: 1 }];
+    const map = CSVNormalizer.toFieldMap(row);
+    deepStrictEqual(row.length, 2);
+    map.clear();
+    deepStrictEqual(row.length, 0);
+  });
   test('passes through .has() method', { concurrency: true }, async () => {
     const row = [{ name: 'a', value: 1 }];
     const map = CSVNormalizer.toFieldMap(row);
