@@ -115,8 +115,8 @@ export class CSVNormalizer extends TransformStream {
   #typeCastOnly;
 
   /**
-   * @param {Array<CSVNormalizerHeader>} headers An array of metadata objects to configure the data casting and
-   * cleanup transformations.
+   * @param {Array<CSVNormalizerHeader|string>} headers An array of `CSVNormalizerHeader` or `string` to configure the
+   * data casting and cleanup transformations. Passing a plain `string` is the same as passing `{ name: string }`.
    * @param {CSVNormalizerOptions} options Object containing flags to configure the stream logic. 
    */
   constructor(headers, options = {}) {
@@ -128,19 +128,32 @@ export class CSVNormalizer extends TransformStream {
     this.#passthroughEmptyRows = options.passthroughEmptyRows ?? false;
     this.#typeCastOnly = options.typeCastOnly ?? false;
 
-    for (const { name, type, displayName = name, defaultValue = '' } of headers) {
-      let normalizedType = type?.toLowerCase() ?? 'string';
-      if (!['string', 'number', 'bigint', 'date'].includes(normalizedType)) {
-        console.warn(`Type "${normalizedType}" is not supported, defaulting to string.`);
-        normalizedType = 'string';
+    for (const header of headers) {
+      if (typeof header === 'string') {
+        const name = this.#useLiteralNames ? header : toCamelCase(header);
+        this.#columns.push({
+          name,
+          type: 'string',
+          displayName: name,
+          defaultValue: '',
+          index: null
+        });
       }
-      this.#columns.push({
-        name: this.#useLiteralNames ? name : toCamelCase(name),
-        type: normalizedType,
-        displayName,
-        defaultValue,
-        index: null
-      });
+      else {
+        const { name, type, displayName = name, defaultValue = '' } = header;
+        let normalizedType = type?.toLowerCase() ?? 'string';
+        if (!['string', 'number', 'bigint', 'date'].includes(normalizedType)) {
+          console.warn(`Type "${normalizedType}" is not supported, defaulting to string.`);
+          normalizedType = 'string';
+        }
+        this.#columns.push({
+          name: this.#useLiteralNames ? name : toCamelCase(name),
+          type: normalizedType,
+          displayName,
+          defaultValue,
+          index: null
+        });
+      }
     }
   }
 

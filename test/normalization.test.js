@@ -252,6 +252,33 @@ suite('CSVNormalizer.toFieldMap', { concurrency: true }, () => {
 });
 
 suite('CSVNormalizer', { concurrency: true }, () => {
+  test('accepts string shorthand to set headers', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'columnB'],
+      ['a', 'b']
+    ])
+      .pipeThrough(new CSVNormalizer(['columnA', 'columnB']))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA', 'columnB'],
+        ['a', 'b']
+      ]));
+  });
+  test('accepts mixed string and CSVNormalizerHeader to set headers', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'columnB'],
+      ['a', 'b']
+    ])
+      .pipeThrough(new CSVNormalizer([
+        'columnA',
+        { name: 'columnB' }
+      ]))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA', 'columnB'],
+        ['a', 'b']
+      ]));
+  });
   test('can remove extra columns in CSV', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['extra1', 'columnA', 'extra2', 'extra3', 'columnB'],
