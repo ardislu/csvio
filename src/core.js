@@ -377,7 +377,6 @@ export class CSVTransformer extends TransformStream {
 
   async #enqueueConcurrent(controller) {
     const results = await Promise.allSettled(this.#concurrent);
-    this.#concurrent.length = 0;
     for (const r of results) {
       if (r.status === 'rejected') {
         if (r.reason instanceof Error) {
@@ -391,6 +390,10 @@ export class CSVTransformer extends TransformStream {
         this.#enqueueRow(r.value, controller);
       }
     }
+    // Only clear these arrays AFTER all transform processing is complete. Otherwise downstream functions
+    // may not be able to access the row data.
+    this.#concurrent.length = 0;
+    this.#batch.length = 0;
   }
 
   /** @type {TransformerTransformCallback<Array<string>,Array<string>>} */
@@ -413,7 +416,6 @@ export class CSVTransformer extends TransformStream {
       this.#batch.push(chunk);
       if (this.#batch.length === this.#maxBatchSize) {
         this.#concurrent.push(this.#wrappedFn(this.#batch));
-        this.#batch.length = 0;
       }
     }
     else {

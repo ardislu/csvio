@@ -482,6 +482,19 @@ suite('CSVTransformer', { concurrency: true }, () => {
       { name: 'Error', message: 'Not an error type' }
     );
   });
+  test('can batch row data', { concurrency: true }, async (t) => {
+    await createCSVMockStream([
+      ['columnA'],
+      ['1'],
+      ['2']
+    ])
+      .pipeThrough(new CSVTransformer(r => r, { maxBatchSize: 2 }))
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA'],
+        ['1'],
+        ['2']
+      ]));
+  });
   test('creates batch of 1 when maxBatchSize is equal to 1', { concurrency: true }, async (t) => {
     const fn = t.mock.fn(b => b.map(r => r.map(f => Number(f) * 2)));
     await createCSVMockStream([
