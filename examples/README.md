@@ -32,6 +32,8 @@ These examples demonstrate the most common, expected usage.
 
 [Example 1.9: Read and write a `.csv.gz` file](./ex1_9.js) ([input](./data/ex1_9-in.csv.gz), [output](./data/ex1_9-out.csv.gz))
 
+[Example 1.10: Return a ReadableStream from a transformation](./ex1_10.js) ([input](./data/ex1_10-in.csv), [output](./data/ex1_10-out.csv))
+
 ### Section 2: Error strategies
 
 These examples demonstrate using the `onError` option to handle transformations that may throw errors.

@@ -563,6 +563,75 @@ suite('CSVTransformer', { concurrency: true }, () => {
       ]));
     deepStrictEqual(fn.mock.callCount(), 2);
   });
+  test('handles ReadableStream', { concurrency: true }, async (t) => {
+    await createCSVMockStream([
+      ['columnA'],
+      ['1'],
+      ['2']
+    ])
+      .pipeThrough(new CSVTransformer(row => {
+        return ReadableStream.from((function* () {
+          yield [`${row[0]}a`];
+          yield [`${row[0]}b`];
+          yield [`${row[0]}c`];
+        })());
+      }))
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA'],
+        ['1a'],
+        ['1b'],
+        ['1c'],
+        ['2a'],
+        ['2b'],
+        ['2c']
+      ]));
+  });
+  test('handles ReadableStream with batches', { concurrency: true }, async (t) => {
+    await createCSVMockStream([
+      ['columnA'],
+      ['1'],
+      ['2']
+    ])
+      .pipeThrough(new CSVTransformer(row => {
+        return ReadableStream.from((function* () {
+          yield [`${row[0][0]} + ${row[1][0]} a`];
+          yield [`${row[0][0]} + ${row[1][0]} b`];
+          yield [`${row[0][0]} + ${row[1][0]} c`];
+        })());
+      }, { maxBatchSize: 2 }))
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA'],
+        ['1 + 2 a'],
+        ['1 + 2 b'],
+        ['1 + 2 c']
+      ]));
+  });
+  test('handles ReadableStream with maxConcurrent', { concurrency: true }, async (t) => {
+    await createCSVMockStream([
+      ['columnA'],
+      ['1'],
+      ['2'],
+      ['3'],
+      ['4']
+    ])
+      .pipeThrough(new CSVTransformer(row => {
+        return ReadableStream.from((function* () {
+          yield [`${row[0]}a`];
+          yield [`${row[0]}b`];
+        })());
+      }, { maxConcurrent: 4 }))
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA'],
+        ['1a'],
+        ['1b'],
+        ['2a'],
+        ['2b'],
+        ['3a'],
+        ['3b'],
+        ['4a'],
+        ['4b']
+      ]));
+  });
   test('works with instanceof', { concurrency: true }, async () => {
     const s = new CSVTransformer(r => r);
     deepStrictEqual(s instanceof CSVTransformer, true);
