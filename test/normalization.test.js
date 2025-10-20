@@ -282,6 +282,18 @@ suite('CSVNormalizer', { concurrency: true }, () => {
         ['a', 'b']
       ]));
   });
+  test('accepts string shorthand with literal names', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'column_A', 'column A'],
+      ['1', '2', '3']
+    ])
+      .pipeThrough(new CSVNormalizer(['columnA', 'column_A', 'column A'], { useLiteralNames: true }))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA', 'column_A', 'column A'],
+        ['1', '2', '3']
+      ]));
+  });
   test('accepts mixed string and CSVNormalizerHeader to set headers', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['columnA', 'columnB'],
