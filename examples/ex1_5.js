@@ -8,13 +8,16 @@
 // or other arbitrary logic is required to determine the output header names.
 
 import { CSVReader, CSVTransformer, CSVWriter } from '../src/index.js';
+/** @import { TransformationFunction } from '../src/index.js'; */
 
 // It is useful to split the header transformation into a separate function because the logic for the header
 // is likely different from the rest of the CSV.
+/** @type {TransformationFunction} */
 function handleHeaders(headers) {
   return [...headers, 'min', 'max', 'mean']; // Duplicate input headers as the first headers in the output
 }
 
+/** @type {TransformationFunction} */
 function calculate(row) {
   const numbers = row.map(Number);
   const min = Math.min(...numbers);

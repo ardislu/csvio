@@ -9,7 +9,9 @@
 // - The expected output of the transformation function is another array representing 1 row of the output CSV.
 
 import { CSVReader, CSVTransformer, CSVWriter } from '../src/index.js';
+/** @import { TransformationFunction } from '../src/index.js'; */
 
+/** @type {TransformationFunction} */
 function timesTwo(row) {
   return [Number(row[0]) * 2, Number(row[1]) * 2];
 }

@@ -5,6 +5,7 @@
 // common CSV mangling by spreadsheet programs.
 
 import { CSVReader, CSVWriter, CSVNormalizer, CSVDenormalizer, CSVTransformer } from '../src/index.js';
+/** @import { TransformationFunction } from '../src/index.js'; */
 /** @import { CSVNormalizerHeader } from '../src/normalization.js'; */
 
 // A minimal declaration to tell `CSVNormalizer` to trim empty rows and columns but otherwise don't touch the data
@@ -18,6 +19,7 @@ const headers = [
   'sparse3'
 ];
 
+/** @type {TransformationFunction} */
 function transform(row) {
   let c = 0
   for (const field of row) {

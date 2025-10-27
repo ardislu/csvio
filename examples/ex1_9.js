@@ -9,12 +9,15 @@
 
 import { createWriteStream } from 'node:fs';
 import { Writable } from 'node:stream';
+import { DecompressionStream, TextDecoderStream, CompressionStream } from 'node:stream/web';
 
 import { CSVReader, CSVTransformer, CSVWriter } from '../src/index.js';
+/** @import { TransformationFunction } from '../src/index.js'; */
 
 import { createFileStream } from '../src/core.js';
 import { setGzipOSByteToUnknown } from '../test/utils.js';
 
+/** @type {TransformationFunction} */
 function timesTwo(row) {
   return [Number(row[0]) * 2, Number(row[1]) * 2];
 }

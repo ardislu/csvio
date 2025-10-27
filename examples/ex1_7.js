@@ -7,8 +7,10 @@
 // Aborting throws an error, so you must also add a `.catch()` to handle the abort.
 
 import { CSVReader, CSVTransformer, CSVWriter } from '../src/index.js';
+/** @import { TransformationFunction } from '../src/index.js'; */
 
 const controller = new AbortController();
+/** @type {TransformationFunction} */
 function identityWithAbort(row) {
   if (row[0] === 'abort') { // Arbitrary logic for aborting the transformation
     controller.abort();

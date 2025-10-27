@@ -7,7 +7,9 @@
 // - Setting `handleHeaders` to an array is the simplest way to rename headers, delete headers, or add new headers.
 
 import { CSVReader, CSVTransformer, CSVWriter } from '../src/index.js';
+/** @import { TransformationFunction } from '../src/index.js'; */
 
+/** @type {TransformationFunction} */
 function sum(row) {
   return [...row, Number(row[0]) + Number(row[1])];
 }
