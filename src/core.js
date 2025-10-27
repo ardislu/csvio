@@ -216,6 +216,12 @@ export class CSVReader {
 }
 
 /**
+ * A type that may either be a value or a `Promise` resolving to that value.
+ * @template T
+ * @typedef {T|Promise<T>} MaybePromise
+ */
+
+/**
  * A row or rows of output CSV data, or `null` to not output anything.
  * @typedef {Array<Array<any>>|Array<any>|ArrayLike<any>|string|null} TransformationOutput
  */
@@ -224,14 +230,14 @@ export class CSVReader {
  * A function to process a row of CSV data from `CSVReader`.
  * @callback TransformationFunction
  * @param {Array<any>} row A row of input CSV data before transformation.
- * @returns {TransformationOutput|Promise<TransformationOutput>|ReadableStream<TransformationOutput>}
+ * @returns {MaybePromise<TransformationOutput|ReadableStream<TransformationOutput>>}
  */
 
 /**
  * A function to process multiple rows of CSV data from `CSVReader`.
  * @callback TransformationFunctionBatch
  * @param {Array<Array<any>>} rows Multiple rows of input CSV data.
- * @returns {TransformationOutput|Promise<TransformationOutput>|ReadableStream<TransformationOutput>}
+ * @returns {MaybePromise<TransformationOutput|ReadableStream<TransformationOutput>>}
  */
 
 /**
@@ -240,7 +246,7 @@ export class CSVReader {
  * @param {Array<any>} row The row passed to the transformation function which threw the error.
  * @param {Error} error The error thrown by the transformation function.
  * @param {TransformationFunction} fn The transformation function itself. This argument can be used to retry a transformation.
- * @returns {TransformationOutput|Promise<TransformationOutput>|ReadableStream<TransformationOutput>}
+ * @returns {MaybePromise<TransformationOutput|ReadableStream<TransformationOutput>>}
  */
 
 /**
@@ -249,7 +255,7 @@ export class CSVReader {
  * @param {Array<Array<any>>} rows The rows of input CSV data passed to the transformation function which threw the error.
  * @param {Error} error The error thrown by the transformation function.
  * @param {TransformationFunctionBatch} fn The transformation function itself. This argument can be used to retry a transformation.
- * @returns {TransformationOutput|Promise<TransformationOutput>|ReadableStream<TransformationOutput>}
+ * @returns {MaybePromise<TransformationOutput|ReadableStream<TransformationOutput>>}
  */
 
 /**
