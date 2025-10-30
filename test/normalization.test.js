@@ -207,6 +207,14 @@ suite('CSVNormalizer.toObject', { concurrency: true }, () => {
     const obj = CSVNormalizer.toObject(row);
     deepStrictEqual(obj.a.b[0], 1n);
   });
+  test('is the inverse of .from', { concurrency: true }, async () => {
+    const obj = {
+      'a': '1',
+      'b': '2',
+      'c': '3'
+    };
+    deepStrictEqual(CSVNormalizer.toObject(CSVNormalizer.from(obj)), obj);
+  });
 });
 
 suite('CSVNormalizer.toFieldMap', { concurrency: true }, () => {
@@ -266,6 +274,40 @@ suite('CSVNormalizer.toFieldMap', { concurrency: true }, () => {
     const row = [{ name: 'a', value: 1 }];
     const map = CSVNormalizer.toFieldMap(row);
     deepStrictEqual(map.size, 1);
+  });
+});
+
+suite('CSVNormalizer.from', { concurrency: true }, () => {
+  test('converts a simple object', { concurrency: true }, async () => {
+    deepStrictEqual(CSVNormalizer.from({
+      'columnA': 'valueA',
+      'columnB': 'valueB'
+    }), [
+      { name: 'columnA', value: 'valueA' },
+      { name: 'columnB', value: 'valueB' },
+    ]);
+  });
+  test('converts an empty object', { concurrency: true }, async () => {
+    deepStrictEqual(CSVNormalizer.from({}), []);
+  });
+  test('preserves complex value types', { concurrency: true }, async () => {
+    deepStrictEqual(CSVNormalizer.from({
+      'a': 123n,
+      'b': { 'b-1': 'b-2' },
+      'c': ['c', 2, 3n]
+    }), [
+      { name: 'a', value: 123n },
+      { name: 'b', value: { 'b-1': 'b-2' } },
+      { name: 'c', value: ['c', 2, 3n] },
+    ]);
+  });
+  test('is the inverse of .toObject', { concurrency: true }, async () => {
+    const row = [
+      { name: 'a', value: '1' },
+      { name: 'b', value: '2' },
+      { name: 'c', value: '3' },
+    ];
+    deepStrictEqual(CSVNormalizer.from(CSVNormalizer.toObject(row)), row);
   });
 });
 

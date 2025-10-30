@@ -410,6 +410,19 @@ export class CSVNormalizer extends TransformStream {
       }
     });
   }
+
+  /**
+   * Create a new array of `CSVNormalizerField` from an object.
+   * @param {Object} obj An object to convert.
+   * @returns {Array<CSVNormalizerField>} An array of `CSVNormalizerField`.
+   */
+  static from(obj) {
+    const arr = [];
+    for (const [name, value] of Object.entries(obj)) {
+      arr.push({ name, value });
+    }
+    return arr;
+  }
 }
 
 /**
