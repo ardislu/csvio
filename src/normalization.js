@@ -340,6 +340,12 @@ export class CSVNormalizer extends TransformStream {
   }
 
   /**
+   * @typedef {Object} FieldMapExtensions
+   * @property {Array<CSVNormalizerField>} source The original CSV row object that was passed to `.toFieldMap` to
+   * create the `FieldMap` object.
+   */
+
+  /**
    * Create a subset of the `Map` interface to get and set the `value` of a field using its `name`.
    * 
    * The return value of this method is a `Proxy` of a `Map` that intercepts the `Map` methods so that it gets and sets
@@ -354,14 +360,16 @@ export class CSVNormalizer extends TransformStream {
    * - `.clear()`
    * - `.size`
    * 
-   * All other methods are unsupported. For more advanced usage, use the underlying `row` object directly.
+   * All other `Map` methods are unsupported.
    * 
-   * The `displayName` and `emptyField` values of a field cannot be accessed from the `Map`.
+   * The `displayName` and `emptyField` values of a field cannot be accessed from the `Map`. Calling `.set()` with a
+   * `name` that is not in the row will push a new field to the row.
    * 
-   * Calling `.set()` with a `name` that is not in the row will push a new field to the row.
+   * For more advanced usage, use the underlying `row` object directly. You can access the underlying `row` object by
+   * calling the `.source` property.
    * @param {Array<CSVNormalizerField>} row A normalized CSV row.
-   * @returns {Pick<Map<string,any>,'get'|'set'|'has'|'delete'|'clear'|'size'>} A `Proxy` over a `Map` object with keys
-   * set to the `name` of each field in the row.
+   * @returns {Pick<Map<string,any>,'get'|'set'|'has'|'delete'|'clear'|'size'>&FieldMapExtensions}} A `Proxy`
+   * over a `Map` object with keys set to the `name` of each field in the row.
    */
   static toFieldMap(row) {
     const map = new Map();
@@ -406,6 +414,9 @@ export class CSVNormalizer extends TransformStream {
             row.length = 0;
             target.clear();
           }
+        }
+        if (prop === 'source') {
+          return row;
         }
       }
     });

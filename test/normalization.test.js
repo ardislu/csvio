@@ -275,6 +275,15 @@ suite('CSVNormalizer.toFieldMap', { concurrency: true }, () => {
     const map = CSVNormalizer.toFieldMap(row);
     deepStrictEqual(map.size, 1);
   });
+  test('has a .source property to access the underlying row', { concurrency: true }, async () => {
+    const row = [{ name: 'a', value: 1 }];
+    const map = CSVNormalizer.toFieldMap(row);
+    ok(map.source === row); // Intentionally comparing by reference, do not use deepStrictEqual
+    row.push({ name: 'b', value: 2 });
+    ok(map.source === row);
+    map.source.push({ name: 'c', value: 3 });
+    ok(map.source === row);
+  });
 });
 
 suite('CSVNormalizer.from', { concurrency: true }, () => {
