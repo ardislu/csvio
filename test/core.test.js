@@ -360,6 +360,25 @@ suite('CSVTransformer', { concurrency: true }, () => {
         ['a', 'b'],
       ]));
   });
+  test('consumes input row without output row when undefined is returned', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'columnB'],
+      ['delete'],
+      ['a', 'b'],
+      ['delete'],
+      ['a', 'b'],
+      ['delete'],
+      ['a', 'b'],
+      ['delete']
+    ])
+      .pipeThrough(new CSVTransformer(r => r[0] === 'delete' ? undefined : r))
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA', 'columnB'],
+        ['a', 'b'],
+        ['a', 'b'],
+        ['a', 'b'],
+      ]));
+  });
   test('passes through header row when handleHeaders is true', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['a', 'b'],
