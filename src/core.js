@@ -222,8 +222,8 @@ export class CSVReader {
  */
 
 /**
- * A row or rows of output CSV data, or `null` to not output anything.
- * @typedef {Array<Array<any>>|Array<any>|ArrayLike<any>|string|null} TransformationOutput
+ * A row or rows of output CSV data, or `null` or `undefined` to not output anything.
+ * @typedef {Array<Array<any>>|Array<any>|ArrayLike<any>|string|null|undefined} TransformationOutput
  */
 
 /**
