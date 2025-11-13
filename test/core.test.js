@@ -582,6 +582,27 @@ suite('CSVTransformer', { concurrency: true }, () => {
       ]));
     deepStrictEqual(fn.mock.callCount(), 2);
   });
+  test('handles AsyncGenerator (async function*)', { concurrency: true }, async (t) => {
+    await createCSVMockStream([
+      ['columnA'],
+      ['1'],
+      ['2']
+    ])
+      .pipeThrough(new CSVTransformer(async function* (row) {
+        yield [`${row[0]}a`];
+        yield [`${row[0]}b`];
+        yield [`${row[0]}c`];
+      }))
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA'],
+        ['1a'],
+        ['1b'],
+        ['1c'],
+        ['2a'],
+        ['2b'],
+        ['2c']
+      ]));
+  });
   test('handles ReadableStream', { concurrency: true }, async (t) => {
     await createCSVMockStream([
       ['columnA'],
