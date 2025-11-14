@@ -603,6 +603,48 @@ suite('CSVTransformer', { concurrency: true }, () => {
         ['2c']
       ]));
   });
+  test('handles AsyncGenerator (async function*) with batches', { concurrency: true }, async (t) => {
+    await createCSVMockStream([
+      ['columnA'],
+      ['1'],
+      ['2']
+    ])
+      .pipeThrough(new CSVTransformer(async function* (row) {
+        yield [`${row[0][0]} + ${row[1][0]} a`];
+        yield [`${row[0][0]} + ${row[1][0]} b`];
+        yield [`${row[0][0]} + ${row[1][0]} c`];
+      }, { maxBatchSize: 2 }))
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA'],
+        ['1 + 2 a'],
+        ['1 + 2 b'],
+        ['1 + 2 c']
+      ]));
+  });
+  test('handles AsyncGenerator (async function*) with maxConcurrent', { concurrency: true }, async (t) => {
+    await createCSVMockStream([
+      ['columnA'],
+      ['1'],
+      ['2'],
+      ['3'],
+      ['4']
+    ])
+      .pipeThrough(new CSVTransformer(async function* (row) {
+        yield [`${row[0]}a`];
+        yield [`${row[0]}b`];
+      }, { maxConcurrent: 4 }))
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA'],
+        ['1a'],
+        ['1b'],
+        ['2a'],
+        ['2b'],
+        ['3a'],
+        ['3b'],
+        ['4a'],
+        ['4b']
+      ]));
+  });
   test('handles ReadableStream', { concurrency: true }, async (t) => {
     await createCSVMockStream([
       ['columnA'],
