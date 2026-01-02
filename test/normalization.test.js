@@ -284,6 +284,14 @@ suite('CSVNormalizer.toFieldMap', { concurrency: true }, () => {
     map.source.push({ name: 'c', value: 3 });
     ok(map.source === row);
   });
+  test('works with empty row', { concurrency: true }, async () => {
+    const map = CSVNormalizer.toFieldMap([]);
+    deepStrictEqual(map.size, 0);
+    ok(!map.has('a'));
+    map.set('a', 1);
+    deepStrictEqual(map.size, 1);
+    ok(map.has('a'));
+  });
 });
 
 suite('CSVNormalizer.from', { concurrency: true }, () => {
