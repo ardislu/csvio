@@ -76,6 +76,8 @@ export function expandScientificNotation(str, truncate = false) {
  * @property {string} [displayName=name] Optional `string` value to indicate the desired header name in the output CSV.
  * @property {string} [defaultValue=''] Optional `string` value to use to fill empty CSV fields. If no value is provided, the
  * field value will be `''` (empty string) in the output CSV.
+ * @property {Array<string>} [aliases=[]] Optional array of `string` values which are treated as alternate `name` values. A
+ * column name that matches an alias is treated the same as a column with the `name` name.
  */
 
 /**
@@ -136,11 +138,12 @@ export class CSVNormalizer extends TransformStream {
           type: 'string',
           displayName: name,
           defaultValue: '',
-          index: null
+          index: null,
+          aliases: []
         });
       }
       else {
-        const { name, type, displayName = name, defaultValue = '' } = header;
+        const { name, type, displayName = name, defaultValue = '', aliases = [] } = header;
         let normalizedType = type?.toLowerCase() ?? 'string';
         if (!['string', 'number', 'bigint', 'date'].includes(normalizedType)) {
           console.warn(`Type "${normalizedType}" is not supported, defaulting to string.`);
@@ -151,7 +154,8 @@ export class CSVNormalizer extends TransformStream {
           type: normalizedType,
           displayName,
           defaultValue,
-          index: null
+          index: null,
+          aliases: aliases.map(n => this.#useLiteralNames ? n : toCamelCase(n))
         });
       }
     }
@@ -167,8 +171,8 @@ export class CSVNormalizer extends TransformStream {
       let i = 0;
       for (const header of normalizedRow) {
         const col = this.#useLiteralNames
-          ? this.#columns.find(c => c.name === header)
-          : this.#columns.find(c => c.name.toLocaleLowerCase() === header.toLocaleLowerCase());
+          ? this.#columns.find(c => [c.name, ...c.aliases].includes(header))
+          : this.#columns.find(c => [c.name, ...c.aliases].map(n => n.toLocaleLowerCase()).includes(header.toLocaleLowerCase()));
         if (col !== undefined) { // Drop columns provided in the CSV but not the headers input
           col.index = i;
         }

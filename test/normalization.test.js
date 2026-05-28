@@ -446,6 +446,34 @@ suite('CSVNormalizer', { concurrency: true }, () => {
         ['a4']
       ]));
   });
+  test('removes columns that have the same name via aliases (last column prevails)', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'column A', 'column-B', 'columnb', 'columnC'],
+      ['a1', 'a2', 'a3', 'a4', 'a5']
+    ])
+      .pipeThrough(new CSVNormalizer([
+        { name: 'columnA', aliases: ['columnB', 'columnC'] }
+      ]))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['columnA'],
+        ['a5']
+      ]));
+  });
+  test('can match by column name alias', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['aaa', 'bbb', 'ccc', 'ddd', 'eee'],
+      ['a1', 'a2', 'a3', 'a4', 'a5']
+    ])
+      .pipeThrough(new CSVNormalizer([
+        { name: 'zzz', aliases: ['yyy', 'ddd'] }
+      ]))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['zzz'],
+        ['a4']
+      ]));
+  });
   test('can match by literal column names', { concurrency: true }, async () => {
     await createCSVMockStream([
       ['columnA', 'column A', 'column-A', 'columna'],
@@ -460,6 +488,23 @@ suite('CSVNormalizer', { concurrency: true }, () => {
       .pipeThrough(new CSVDenormalizer())
       .pipeTo(csvStreamEqualWritable([
         ['columnA', 'column A', 'column-A', 'columna'],
+        ['a1', 'a2', 'a3', 'a4']
+      ]));
+  });
+  test('can match by literal column name aliases', { concurrency: true }, async () => {
+    await createCSVMockStream([
+      ['columnA', 'column A', 'column-A', 'columna'],
+      ['a1', 'a2', 'a3', 'a4']
+    ])
+      .pipeThrough(new CSVNormalizer([
+        { name: 'aaa', aliases: ['columnA'] },
+        { name: 'bbb', aliases: ['column A'] },
+        { name: 'ccc', aliases: ['column-A'] },
+        { name: 'ddd', aliases: ['columna'] }
+      ], { useLiteralNames: true }))
+      .pipeThrough(new CSVDenormalizer())
+      .pipeTo(csvStreamEqualWritable([
+        ['aaa', 'bbb', 'ccc', 'ddd'],
         ['a1', 'a2', 'a3', 'a4']
       ]));
   });
