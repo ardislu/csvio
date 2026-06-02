@@ -462,7 +462,15 @@ export class CSVTransformer extends TransformStream {
  * @property {boolean} done If `true`, the writer is finished writing to the output CSV file and the file handle is closed.
  */
 
-/** @type {WeakMap<CSVWriter, CSVWriterStatus>} Simulated private field for CSVWriter, required to simulate a dynamic superclass. */
+/**
+ * @typedef _CSVWriterStatusInternal
+ * @property {number} start High resolution timestamp of when this writer was created, represented as the time elapsed since
+ * `Performance.timeOrigin` in milliseconds.
+ * @typedef {CSVWriterStatus&_CSVWriterStatusInternal} CSVWriterStatusInternal The current status of the CSVWriter including
+ * private internal fields.
+ */
+
+/** @type {WeakMap<CSVWriter, CSVWriterStatusInternal>} Simulated private field for CSVWriter, required to simulate a dynamic superclass. */
 const _status = new WeakMap();
 
 /**
@@ -486,6 +494,7 @@ export class CSVWriter {
    * @returns {CSVWriter&TransformStream<Array<string>,string>}
    */
   constructor(path = null) {
+    /** @type {CSVWriterStatusInternal} */
     const status = {
       name: null,
       start: performance.now(),
@@ -554,7 +563,7 @@ export class CSVWriter {
 
   /** @type {CSVWriterStatus} */
   get status() {
-    const status = _status.get(this);
+    const status = /** @type {CSVWriterStatusInternal} */(_status.get(this));
     if (!status.done) {
       status.elapsed = performance.now() - status.start;
     }
