@@ -1,14 +1,15 @@
 {
   "files": ["./src/index.js"],
   "compilerOptions": {
+    "rootDir": "./src",
     "outDir": "./types",
     "module": "NodeNext",
     "target": "ESNext",
     "lib": ["ESNext"],
+    "types": ["node"],
     "allowJs": true,
     "declaration": true,
     "declarationMap": true,
-    "emitDeclarationOnly": true,
-    "strict": true
+    "emitDeclarationOnly": true
   }
 }
