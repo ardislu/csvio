@@ -34,6 +34,6 @@ jobs:
           node-version-file: ".node-version"
           registry-url: "https://registry.npmjs.org"
           package-manager-cache: false
-      - run: npm install -g npm@latest # npm >=11.5.1 required for trusted publishing
+      - run: npm install -g npm@latest # npm >=11.15.0 required for staged publishing
       - run: npm ci
-      - run: npm publish --provenance --access public
+      - run: npm stage publish --provenance --access public
