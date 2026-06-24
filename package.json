@@ -37,6 +37,7 @@
       "default": "./src/index.js"
     }
   },
+  "types": "./types/index.d.ts",
   "scripts": {
     "types": "tsc",
     "posttypes": "node ./npm/posttypes.js",
